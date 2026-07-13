@@ -92,7 +92,7 @@ export default function Capturar() {
 
       <div className="canvas">
         <div className="col">
-          <div className="panel enter" style={{ padding: 14 }}>
+          <div className="panel enter painel-captura" style={{ padding: 16 }}>
             <div
               className={`drop ${dragOver ? 'hover' : ''} ${reading ? 'reading' : ''}`}
               ref={dropRef}

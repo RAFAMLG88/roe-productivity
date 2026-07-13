@@ -4,19 +4,23 @@ import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe } from '../state/RoeContext.jsx'
 
 const CAP = 120, SCALE = 160
-const SRCMAP = { interno: 'chefe', telefone: 'tel', obra: 'email', outros: 'email', ficheiro: 'email' }
+const TIPO_META = {
+  interno:  { ic: '👤', cls: 'chefe',  nome: 'interno' },
+  telefone: { ic: '✆',  cls: 'tel',    nome: 'telefone' },
+  obra:     { ic: '🏗', cls: 'obra',   nome: 'obra' },
+  outros:   { ic: '📌', cls: 'ideia',  nome: 'outros' },
+  ficheiro: { ic: '📧', cls: 'email',  nome: 'email' },
+}
 
 function fmt(min) {
   const h = Math.floor(min / 60), m = min % 60
   return (h > 0 ? h + 'h' : '') + (m > 0 ? (h > 0 ? String(m).padStart(2, '0') : m) + 'min' : (h > 0 ? '' : '0 min'))
 }
 
-export default function Briefing() {
-  const { fila, eleitas, adicionarEleita, eleger, paraFila, apagar, intencao, setIntencao } = useRoe()
+export default function Briefing({ onNavigate }) {
+  const { fila, eleitas, eleger, paraFila, intencao, setIntencao } = useRoe()
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
-  const [novaTarefa, setNovaTarefa] = useState('')
-  const [novoMin, setNovoMin] = useState(30)
   const [showSunrise, setShowSunrise] = useState(false)
   const sunriseRef = useRef(null)
 
@@ -24,19 +28,11 @@ export default function Briefing() {
   const min = eleitas.reduce((s, t) => s + t.min, 0)
 
   const verdict = useMemo(() => {
-    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: 'Elege tarefas para veres se o dia cabe no teu tempo.' }
+    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: 'Elege tarefas da fila para veres se o dia cabe no teu tempo.' }
     if (min <= 90) return { fill: 'var(--forest)', color: 'var(--forest-ink)', text: <><b>Vai dar.</b> Dia com espaço para respirar e absorver imprevistos.</> }
     if (min <= CAP) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite.</b> Dá, mas sem margem para imprevistos.</> }
     return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Sobrecarregado.</b> Corta uma — o importante merece espaço, não pressa.</>, warn: true }
   }, [min])
-
-  const addTarefa = (comoEleita) => {
-    const txt = novaTarefa.trim()
-    if (!txt) return
-    if (comoEleita) adicionarEleita({ texto: txt, min: novoMin })
-    else adicionarEleita({ texto: txt, min: novoMin, importante: false }) // vai para eleita; para fila usamos capturar
-    setNovaTarefa(''); setNovoMin(30)
-  }
 
   const startDay = () => {
     if (n === 0) return
@@ -52,13 +48,6 @@ export default function Briefing() {
       const ang = (i / 16) * 360; el.appendChild(r)
       r.animate([{ opacity: 0, transform: `translateX(-50%) rotate(${ang}deg) scaleY(.3)` }, { opacity: .7, transform: `translateX(-50%) rotate(${ang}deg) scaleY(1)` }, { opacity: 0, transform: `translateX(-50%) rotate(${ang}deg) scaleY(1.3)` }], { duration: 1700, delay: 600, easing: 'ease-out' })
       setTimeout(() => r.remove(), 2400)
-    }
-    for (let i = 0; i < 22; i++) {
-      const m = document.createElement('div')
-      m.style.cssText = `position:absolute;width:6px;height:6px;border-radius:50%;background:var(--mustard);opacity:0;left:${30 + Math.random() * 40}%;top:${55 + Math.random() * 30}%`
-      el.appendChild(m)
-      m.animate([{ opacity: 0, transform: 'translateY(0) scale(.5)' }, { opacity: .8, offset: .3 }, { opacity: 0, transform: `translateY(-${80 + Math.random() * 120}px) scale(1)` }], { duration: 2400 + Math.random() * 1600, delay: 400 + Math.random() * 900, easing: 'ease-out' })
-      setTimeout(() => m.remove(), 5000)
     }
   }
 
@@ -82,42 +71,43 @@ export default function Briefing() {
         <div className="col">
           <div className="panel intro-card enter">
             <div className="sunny" />
-            <div>
-              <div className="q">Começa por capturar o que tens em mente.</div>
-              <div className="h">Adiciona abaixo ou vai a <b>Capturar</b> — depois elege as poucas que merecem hoje.</div>
+            <div style={{ flex: 1 }}>
+              <div className="q">Elege as poucas que merecem o teu dia.</div>
+              <div className="h">O que capturares aparece na fila. <b>Toca em ↑ para eleger</b> as que contam hoje.</div>
             </div>
+            <button className="go-capturar" onClick={() => onNavigate && onNavigate('capturar')}>＋ Capturar</button>
           </div>
 
-          <div className="panel addbar enter" style={{ animationDelay: '.08s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>＋</span>Adicionar tarefa</div>
-            <div className="add-row">
-              <input type="text" value={novaTarefa} placeholder="O que precisas de fazer?"
-                onChange={(e) => setNovaTarefa(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') addTarefa(true) }} />
-              <div className="min-pick"><label>~</label><input type="number" min="5" step="5" value={novoMin} onChange={(e) => setNovoMin(e.target.value)} /><span>min</span></div>
-              <button className="add-btn eleger" onClick={() => addTarefa(true)}>Eleger hoje</button>
-            </div>
-          </div>
-
-          <div>
-            <div className="lab"><span>Eleição de hoje · toca para devolver à fila</span><span className="cnt">{n} escolhida{n === 1 ? '' : 's'}</span></div>
+          <div className="bloco-eleicao">
+            <div className="lab"><span className="lab-t">Eleição de hoje</span><span className="cnt">{n} escolhida{n === 1 ? '' : 's'} · {fmt(min)}</span></div>
             {eleitas.length === 0 ? (
-              <div className="empty">
-                <div className="empty-ic">◎</div>
-                <div className="empty-t">Ainda não elegeste nada para hoje.</div>
-                <div className="empty-s">Adiciona acima, ou promove algo da fila em baixo.</div>
+              <div className="empty grande">
+                <svg width="54" height="54" viewBox="0 0 100 100" style={{ opacity: .35 }}>
+                  <circle cx="50" cy="50" r="34" fill="none" stroke="#ADA590" strokeWidth="6" strokeDasharray="10 9" />
+                  <circle cx="50" cy="50" r="8" fill="#ADA590" />
+                </svg>
+                <div className="empty-t">O teu dia ainda está em branco.</div>
+                <div className="empty-s">Elege da fila em baixo, ou captura algo novo.</div>
               </div>
             ) : (
               <div className="picks">
-                {eleitas.map((p) => (
-                  <div key={p.id} className={`pick src-${SRCMAP[p.tipo] || 'email'} on`}>
-                    <div className="st" onClick={() => paraFila(p.id)} title="Devolver à fila"><span>✓</span></div>
-                    <div className="body">
-                      <div className="a">{p.texto}</div>
-                      <div className="b"><span className={`src-dot dot-${SRCMAP[p.tipo] || 'email'}`} />{p.importante ? 'importante · ' : ''}~{p.min} min</div>
+                {eleitas.map((p) => {
+                  const m = TIPO_META[p.tipo] || TIPO_META.outros
+                  return (
+                    <div key={p.id} className={`pick tp-${m.cls}`}>
+                      <div className="pk-ic">{m.ic}</div>
+                      <div className="body">
+                        <div className="a">{p.texto}</div>
+                        <div className="b">
+                          {p.importante && <span className="badge-imp">importante</span>}
+                          <span className="badge-tipo">{m.nome}</span>
+                          <span className="badge-min">~{p.min} min</span>
+                        </div>
+                      </div>
+                      <button className="pk-back" title="Devolver à fila" onClick={() => paraFila(p.id)}>↓ fila</button>
                     </div>
-                    <button className="pick-del" title="Apagar" onClick={() => apagar(p.id)}>✕</button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -125,23 +115,31 @@ export default function Briefing() {
           <div className="panel waiting enter" style={{ animationDelay: '.15s' }}>
             <div className="pt">
               <span className="pico" style={{ background: 'var(--sky-soft)' }}>🕰</span>Na fila
-              {fila.length > 0 && <span style={{ marginLeft: 'auto', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>{fila.length} em espera</span>}
+              {fila.length > 0 && <span className="fila-count">{fila.length} em espera</span>}
             </div>
             {fila.length === 0 ? (
               <div className="empty small">
-                <div className="empty-s">Nada em espera. O que capturares aparece aqui.</div>
+                <div className="empty-s">Nada em espera. O que capturares aparece aqui, pronto a eleger.</div>
               </div>
             ) : (
               <div className="wait-list">
-                {fila.map((q) => (
-                  <div key={q.id} className="wt">
-                    <span className="wi">{q.tipo === 'ficheiro' ? '📧' : '＋'}</span>
-                    <span className="t">{q.texto}</span>
-                    <span className="e">~{q.min} min</span>
-                    <button className="up" onClick={() => eleger(q.id)}>↑ eleger</button>
-                    <button className="wt-del" title="Apagar" onClick={() => apagar(q.id)}>✕</button>
-                  </div>
-                ))}
+                {fila.map((q) => {
+                  const m = TIPO_META[q.tipo] || TIPO_META.outros
+                  return (
+                    <div key={q.id} className={`wt tp-${m.cls}`}>
+                      <div className="wt-ic">{m.ic}</div>
+                      <div className="wt-body">
+                        <div className="wt-t">{q.texto}</div>
+                        <div className="wt-meta">
+                          {q.importante && <span className="badge-imp">importante</span>}
+                          <span className="badge-tipo">{m.nome}</span>
+                          <span className="badge-min">~{q.min} min</span>
+                        </div>
+                      </div>
+                      <button className="up" onClick={() => eleger(q.id)}>↑ eleger</button>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>

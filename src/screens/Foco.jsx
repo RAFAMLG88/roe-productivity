@@ -5,27 +5,55 @@ import { useRoe } from '../state/RoeContext.jsx'
 const C = { much: '#00C865', half: '#FFCE0A', low: '#FF1F3D' }
 const CIRC = 829, R = 132
 
-const SOURCES = {
-  spotify: { ic: '🎧', art: 'conic-gradient(from 0deg,#1DB954,#159c44,#1DB954)', accentBar: '#1DB954', accentPlay: '#1DB954', via: 'via Spotify · no teu PC',
-    list: [{ t: 'Weightless', a: 'Marconi Union', len: 489, cur: 0 }, { t: 'An Ending (Ascent)', a: 'Brian Eno', len: 263, cur: 0 }] },
-  youtube: { ic: '▶️', art: 'conic-gradient(from 0deg,#FF0000,#c50000,#FF0000)', accentBar: '#FF0000', accentPlay: '#FF0000', via: 'via YouTube · separador do PC',
-    list: [{ t: 'lofi hip hop radio', a: 'Lofi Girl', len: 0, cur: 0, live: true }] },
-  sistema: { ic: '🖥️', art: 'conic-gradient(from 0deg,#1FB8E0,#1496C4,#1FB8E0)', accentBar: '#1FB8E0', accentPlay: '#141207', via: 'áudio do sistema · qualquer app',
-    list: [{ t: 'Sem áudio a tocar', a: 'inicia música no teu PC', len: 1, cur: 0 }] },
-}
-const fmtS = (s) => s <= 0 ? 'AO VIVO' : Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0')
+// Ícones SVG desenhados — cuidar de ti
+const IcoOlho = () => (
+  <svg viewBox="0 0 48 48" fill="none" className="care-svg">
+    <path className="eye-lid" d="M6 24 C13 13, 35 13, 42 24 C35 35, 13 35, 6 24 Z" stroke="#FF1F3D" strokeWidth="3" fill="#FFF0F2"/>
+    <circle className="eye-iris" cx="24" cy="24" r="7.5" fill="#FF1F3D"/>
+    <circle cx="26.5" cy="21.5" r="2.2" fill="#fff"/>
+  </svg>
+)
+const IcoRespira = () => (
+  <svg viewBox="0 0 48 48" fill="none" className="care-svg">
+    <circle className="br-ring r1" cx="24" cy="24" r="9" stroke="#1FB8E0" strokeWidth="3"/>
+    <circle className="br-ring r2" cx="24" cy="24" r="15" stroke="#1FB8E0" strokeWidth="2" opacity=".45"/>
+    <circle className="br-ring r3" cx="24" cy="24" r="20" stroke="#1FB8E0" strokeWidth="1.5" opacity=".2"/>
+    <circle cx="24" cy="24" r="3.5" fill="#1FB8E0"/>
+  </svg>
+)
+const IcoPostura = () => (
+  <svg viewBox="0 0 48 48" fill="none" className="care-svg">
+    <circle cx="24" cy="10" r="5" fill="#FFCE0A"/>
+    <path className="spine" d="M24 16 L24 32" stroke="#FFCE0A" strokeWidth="4" strokeLinecap="round"/>
+    <path d="M24 20 L15 26 M24 20 L33 26" stroke="#FFCE0A" strokeWidth="3.5" strokeLinecap="round"/>
+    <path d="M24 32 L17 42 M24 32 L31 42" stroke="#FFCE0A" strokeWidth="3.5" strokeLinecap="round"/>
+  </svg>
+)
+const IcoGota = ({ nivel }) => (
+  <svg viewBox="0 0 48 48" fill="none" className="care-svg">
+    <defs>
+      <clipPath id="gclip"><path d="M24 5 C24 5, 38 22, 38 31 A14 14 0 0 1 10 31 C10 22, 24 5, 24 5 Z"/></clipPath>
+    </defs>
+    <path d="M24 5 C24 5, 38 22, 38 31 A14 14 0 0 1 10 31 C10 22, 24 5, 24 5 Z" stroke="#00C865" strokeWidth="3" fill="#EBFCF3"/>
+    <rect className="water-fill" x="8" y={45 - nivel * 4.5} width="32" height="40" fill="#00C865" opacity=".75" clipPath="url(#gclip)"/>
+  </svg>
+)
+
+const MUSICA = [
+  { id: 'lofi', nome: 'Lofi para focar', desc: 'YouTube · lofi girl radio', ic: '🎧', cor: 'var(--red)', corSoft: 'var(--red-soft)', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
+  { id: 'spotify', nome: 'Deep Focus', desc: 'Spotify · playlist oficial', ic: '🎵', cor: 'var(--forest)', corSoft: 'var(--forest-soft)', url: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ' },
+  { id: 'piano', nome: 'Piano calmo', desc: 'YouTube · peaceful piano', ic: '🎹', cor: 'var(--sky)', corSoft: 'var(--sky-soft)', url: 'https://www.youtube.com/watch?v=sAcj8me7wGI' },
+]
 
 export default function Foco() {
   const { eleitas, concluir, agua, addAgua, removeAgua, intencao } = useRoe()
 
-  // tarefa em foco: escolhida das eleitas
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
   const [secs, setSecs] = useState(0)
   const [total, setTotal] = useState(0)
   const [running, setRunning] = useState(false)
 
-  // se a tarefa em foco desaparece (concluída/apagada noutro ecrã), limpa
   useEffect(() => { if (taskId && !eleitas.find((t) => t.id === taskId)) { setTaskId(null); setRunning(false); setSecs(0); setTotal(0) } }, [eleitas, taskId])
 
   const frac = total > 0 ? secs / total : 1
@@ -39,10 +67,7 @@ export default function Foco() {
     return () => clearInterval(t)
   }, [running])
 
-  const iniciar = (t) => {
-    const m = t.min * 60
-    setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true)
-  }
+  const iniciar = (t) => { const m = t.min * 60; setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true) }
   const concluirTask = () => {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
@@ -50,7 +75,6 @@ export default function Foco() {
     setTimeout(() => { setCelebrate(false); concluir(id); setRunning(false); setSecs(0); setTotal(0) }, 3400)
   }
 
-  // MODO SANTUÁRIO
   const [dim, setDim] = useState(false)
   useEffect(() => {
     if (!task) { setDim(false); return }
@@ -64,41 +88,25 @@ export default function Foco() {
   // CUIDAR DE TI
   const [eyeShow, setEyeShow] = useState(false)
   const [eyeCnt, setEyeCnt] = useState(20)
-  const [vistaMsg, setVistaMsg] = useState('quando precisares')
+  const [vistaFeito, setVistaFeito] = useState(false)
   const eyeTimer = useRef(null)
-  const endEye = () => { clearInterval(eyeTimer.current); setEyeShow(false); setVistaMsg('feito ✓'); setTimeout(() => setVistaMsg('quando precisares'), 3000) }
+  const endEye = () => { clearInterval(eyeTimer.current); setEyeShow(false); setVistaFeito(true); setTimeout(() => setVistaFeito(false), 4000) }
   const startEye = () => { let n = 20; setEyeCnt(20); setEyeShow(true); clearInterval(eyeTimer.current); eyeTimer.current = setInterval(() => { n--; setEyeCnt(n); if (n <= 0) endEye() }, 1000) }
 
-  // respiração guiada
   const [breathShow, setBreathShow] = useState(false)
   const [breathPhase, setBreathPhase] = useState('inspira')
   const breathTimer = useRef(null)
   const startBreath = () => {
     setBreathShow(true)
     const cycle = ['inspira', 'segura', 'expira', 'segura']
-    let i = 0
-    setBreathPhase(cycle[0])
+    let i = 0; setBreathPhase(cycle[0])
     clearInterval(breathTimer.current)
     breathTimer.current = setInterval(() => { i = (i + 1) % 4; setBreathPhase(cycle[i]) }, 4000)
   }
   const endBreath = () => { clearInterval(breathTimer.current); setBreathShow(false) }
 
-  // postura (lembrete simples)
   const [postura, setPostura] = useState(false)
-
-  // CONTROLADOR DE MEDIA
-  const [curSrc, setCurSrc] = useState('spotify')
-  const [ti, setTi] = useState(0)
-  const [playing, setPlaying] = useState(false)
-  const [prog, setProg] = useState(0)
-  const S = SOURCES[curSrc]; const tr = S.list[ti]
-  useEffect(() => {
-    if (!playing) return
-    const t = setInterval(() => { setProg((p) => { if (tr.live) return p + 1; const np = p + 1; if (np >= tr.len) { setTi((i) => (i + 1) % S.list.length); return 0 } return np }) }, 1000)
-    return () => clearInterval(t)
-  }, [playing, curSrc, ti, tr, S])
-  const switchSource = (src) => { setCurSrc(src); setTi(0); setProg(0); setPlaying(false) }
-  const nextTrack = () => { setTi((i) => (i + 1) % S.list.length); setProg(0) }
+  const togglePostura = () => { setPostura(true); setTimeout(() => setPostura(false), 4000) }
 
   // CELEBRAÇÃO
   const [celebrate, setCelebrate] = useState(false)
@@ -137,7 +145,6 @@ export default function Foco() {
       </div>
 
       <div className="canvas">
-        {/* ESQUERDA */}
         <div className="col left">
           {task ? (
             <div className="panel task enter">
@@ -151,7 +158,6 @@ export default function Foco() {
               <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>◉</span>Escolhe o que focar</div>
               {porFocar.length === 0 ? (
                 <div className="foco-empty">
-                  <div className="fe-ic">◎</div>
                   <div className="fe-t">Nada eleito para hoje.</div>
                   <div className="fe-s">Vai ao Briefing eleger tarefas — aparecem aqui para focares.</div>
                 </div>
@@ -171,36 +177,46 @@ export default function Foco() {
           <div className="panel care enter" style={{ animationDelay: '.12s' }}>
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>🌿</span>Cuidar de ti</div>
             <div className="care-grid">
-              <button className="care-tile vista" onClick={startEye}>
-                <div className="ct-ic">👁️</div>
-                <div className="ct-t">Descanso de vista</div>
-                <div className="ct-s">{vistaMsg}</div>
+              <button className={`care-tile vista ${vistaFeito ? 'ok' : ''}`} onClick={startEye}>
+                <IcoOlho />
+                <div className="ct-body">
+                  <div className="ct-t">Descanso de vista</div>
+                  <div className="ct-s">{vistaFeito ? 'feito ✓ · olhos gratos' : 'regra 20-20-20 · 20 seg'}</div>
+                </div>
+                <span className="ct-go">▸</span>
               </button>
               <button className="care-tile breath" onClick={startBreath}>
-                <div className="ct-ic">🫁</div>
-                <div className="ct-t">Respirar</div>
-                <div className="ct-s">1 min · acalma</div>
+                <IcoRespira />
+                <div className="ct-body">
+                  <div className="ct-t">Respirar</div>
+                  <div className="ct-s">caixa 4-4-4 · acalma o ritmo</div>
+                </div>
+                <span className="ct-go">▸</span>
               </button>
-              <button className={`care-tile postura ${postura ? 'done' : ''}`} onClick={() => setPostura((v) => !v)}>
-                <div className="ct-ic">🪑</div>
-                <div className="ct-t">Postura</div>
-                <div className="ct-s">{postura ? 'endireitado ✓' : 'endireita-te'}</div>
+              <button className={`care-tile postura ${postura ? 'ok' : ''}`} onClick={togglePostura}>
+                <IcoPostura />
+                <div className="ct-body">
+                  <div className="ct-t">Postura</div>
+                  <div className="ct-s">{postura ? 'endireitado ✓' : 'costas direitas · ombros soltos'}</div>
+                </div>
+                <span className="ct-go">▸</span>
               </button>
               <div className="care-tile agua">
-                <div className="ct-ic">💧</div>
-                <div className="ct-t">Hidratação</div>
-                <div className="ct-agua">
-                  <button className="agua-btn" onClick={removeAgua} disabled={agua === 0}>−</button>
-                  <div className="agua-dots">{[0,1,2,3,4,5,6,7].map((i) => <b key={i} className={i < agua ? 'on' : ''} />)}</div>
-                  <button className="agua-btn" onClick={addAgua} disabled={agua === 8}>+</button>
+                <IcoGota nivel={agua} />
+                <div className="ct-body">
+                  <div className="ct-t">Hidratação</div>
+                  <div className="ct-agua">
+                    <button className="agua-btn" onClick={removeAgua} disabled={agua === 0}>−</button>
+                    <span className="agua-n">{agua}<small>/8</small></span>
+                    <button className="agua-btn mais" onClick={addAgua} disabled={agua === 8}>+</button>
+                  </div>
+                  <div className="ct-s">copos hoje</div>
                 </div>
-                <div className="ct-s">{agua} de 8 copos hoje</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CENTRO */}
         <div className="col mid">
           <div className="ring-zone">
             <div className="ring-wrap">
@@ -224,30 +240,22 @@ export default function Foco() {
           )}
         </div>
 
-        {/* DIREITA */}
         <div className="col right">
-          <div className="panel media enter">
-            <div className="pt"><span className="pico">🎵</span>A tocar agora <span style={{ marginLeft: 'auto', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>CONTROLA O TEU PC</span></div>
-            <div className="source-tabs">
-              {Object.keys(SOURCES).map((k) => (
-                <div key={k} className={`stab ${curSrc === k ? 'on' : ''}`} onClick={() => switchSource(k)}>
-                  <span className="si2">{k === 'spotify' ? '🟢' : k === 'youtube' ? '🔴' : '🖥️'}</span>
-                  <span className="sn">{k[0].toUpperCase() + k.slice(1)}</span>
-                </div>
+          <div className="panel musica enter">
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎵</span>Música para focar <span style={{ marginLeft: 'auto', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>ABRE NO TEU PC</span></div>
+            <div className="mus-list">
+              {MUSICA.map((m) => (
+                <a key={m.id} className="mus-item" href={m.url} target="_blank" rel="noreferrer" style={{ '--mc': m.cor, '--ms': m.corSoft }}>
+                  <div className="mus-ic">{m.ic}</div>
+                  <div className="mus-body">
+                    <div className="mus-t">{m.nome}</div>
+                    <div className="mus-s">{m.desc}</div>
+                  </div>
+                  <span className="mus-open">abrir ↗</span>
+                </a>
               ))}
             </div>
-            <div className={`np ${playing ? '' : 'paused'}`}>
-              <div className="cover"><div className="art" style={{ background: S.art }} /><span className="ci2">{S.ic}</span></div>
-              <div className="meta"><div className="trk">{tr.t}</div><div className="art-n">{tr.a}</div><div className="via"><span className="livedot" />{S.via}</div></div>
-            </div>
-            <div className="m-bar"><i style={{ width: (tr.live ? 100 : (tr.len > 1 ? prog / tr.len * 100 : 0)) + '%', background: S.accentBar }} /></div>
-            <div className="m-time"><span>{tr.live ? '• ao vivo' : fmtS(prog)}</span><span>{tr.live ? 'AO VIVO' : (tr.len > 1 ? fmtS(tr.len) : '--:--')}</span></div>
-            <div className="m-ctrl">
-              <button onClick={() => setProg(0)}>⏮</button>
-              <button className="play" style={{ background: S.accentPlay }} onClick={() => setPlaying((p) => !p)}>{playing ? '⏸' : '▶'}</button>
-              <button onClick={nextTrack}>⏭</button>
-            </div>
-            <div className="hint"><b>Controla o que já tocas</b> no PC — Spotify, YouTube ou o áudio do sistema. Sem contas, sem Premium.</div>
+            <div className="hint">Abre a tua música num separador e volta cá — o foco fica contigo. <b>Controlo direto do Spotify chega na Fase 2.</b></div>
           </div>
 
           {eleitas.length > 0 && (

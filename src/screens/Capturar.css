@@ -114,3 +114,9 @@
 .capturar .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .capturar .toast button{background:none;border:none;color:var(--mustard);font-family:var(--font-mono);font-size:12px;font-weight:700;cursor:pointer;padding:4px 12px}
 @media (prefers-reduced-motion: reduce){.capturar *{animation:none!important}.capturar .panel.enter{opacity:1;transform:none}}
+
+/* layout: esquerda ocupa altura toda */
+.capturar .col:first-child{min-height:0}
+.capturar .painel-captura{flex:1;display:flex;flex-direction:column;min-height:0}
+.capturar .painel-captura .drop{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px}
+.capturar .col .fontes{flex:none}
