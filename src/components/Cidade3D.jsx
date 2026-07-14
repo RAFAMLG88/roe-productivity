@@ -1,6 +1,38 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
+import { useRoe } from '../state/RoeContext.jsx'
 
 export default function Cidade3D({ onClose }) {
+  const { feitas } = useRoe()
+  const iframeRef = useRef(null)
+  const feitasRef = useRef(feitas)
+  feitasRef.current = feitas
+
+  useEffect(() => {
+    // espera a cidade carregar os modelos, restaura o progresso e,
+    // se houver conclusão recente, ergue o edifício com a grua (cinema)
+    let tries = 0
+    const timer = setInterval(() => {
+      tries++
+      const win = iframeRef.current && iframeRef.current.contentWindow
+      if (!win) return
+      let ready = false
+      try { ready = !!win._roeReady } catch { /* cross-origin não acontece: mesma origem */ }
+      if (!ready) { if (tries > 100) clearInterval(timer); return }
+      clearInterval(timer)
+      try {
+        const fs = feitasRef.current
+        const ultima = fs.length > 0 ? fs[fs.length - 1] : null
+        const recente = ultima && ultima.feitaEm && (Date.now() - ultima.feitaEm < 30000)
+        const anteriores = recente ? fs.length - 1 : fs.length
+        if (anteriores > 0 && typeof win.restoreProgress === 'function') win.restoreProgress(anteriores)
+        if (recente && typeof win.completeTask === 'function') {
+          setTimeout(() => win.completeTask(ultima.texto), 700) // deixa a cidade assentar → grua
+        }
+      } catch { /* silencioso */ }
+    }, 300)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100, background: '#0a0812',
@@ -28,9 +60,10 @@ export default function Cidade3D({ onClose }) {
         }}>← voltar à app</button>
       </div>
       <iframe
+        ref={iframeRef}
         src="./cidade-v41.html"
         title="ROE City 3D"
-        allow="geolocation; fullscreen"
+        allow="geolocation; fullscreen; autoplay"
         style={{ flex: 1, width: '100%', border: 'none' }}
       />
     </div>

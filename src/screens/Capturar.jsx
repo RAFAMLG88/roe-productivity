@@ -9,21 +9,22 @@ const TIPOS = {
   outros: { ci: 'ideia', icon: '📌', tag: 'outros', ph: 'O que tens em mente?' },
 }
 const TAGCLS = { interno: 'src-chefe', telefone: 'src-tel', obra: 'src-email', outros: 'src-ideia', ficheiro: 'src-ficheiro' }
+const PRIS = ['urgente', 'importante', 'normal']
+const PRI_LABEL = { urgente: 'Urgente', importante: 'Importante', normal: 'Normal' }
+const PRI_ICON = { urgente: '🔥', importante: '⭐', normal: '○' }
 
-// limpa o nome de um ficheiro de email para virar título de tarefa
 function nomeDeFicheiro(fname) {
   let n = fname.replace(/\.(eml|msg|txt|pdf)$/i, '')
   n = n.replace(/[_-]+/g, ' ').trim()
-  // .eml costuma vir "RE Fwd Assunto" — mantém legível
   return n.charAt(0).toUpperCase() + n.slice(1)
 }
 
 export default function Capturar() {
-  const { capturar, fila, feitas, apagar } = useRoe()
+  const { capturar, fila, feitas, apagar, atualizar } = useRoe()
   const [tipo, setTipo] = useState('outros')
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
-  const [imp, setImp] = useState(false)
+  const [pri, setPri] = useState('normal')
   const [toast, setToast] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [reading, setReading] = useState(false)
@@ -31,9 +32,7 @@ export default function Capturar() {
   const toastT = useRef(null)
   const dropRef = useRef(null)
 
-  // tarefas capturadas nesta sessão que ainda estão na fila (as feitas saem daqui)
   const lista = fila
-
   const showToast = (msg) => {
     setToast(msg); clearTimeout(toastT.current)
     toastT.current = setTimeout(() => setToast(''), 3000)
@@ -42,8 +41,8 @@ export default function Capturar() {
   const fazerCaptura = () => {
     const txt = texto.trim()
     if (!txt) return
-    capturar({ texto: txt, tipo, min, importante: imp })
-    setTexto(''); setImp(false); setMin(15)
+    capturar({ texto: txt, tipo, min, prioridade: pri })
+    setTexto(''); setPri('normal'); setMin(15)
     showToast('Capturado ✓')
     if (inputRef.current) inputRef.current.focus()
   }
@@ -62,7 +61,6 @@ export default function Capturar() {
     }
   }
 
-  // DRAG & DROP de ficheiros de email do PC
   const onDrop = (e) => {
     e.preventDefault(); setDragOver(false)
     const files = Array.from(e.dataTransfer.files || [])
@@ -70,23 +68,28 @@ export default function Capturar() {
     setReading(true)
     setTimeout(() => {
       setReading(false)
-      files.forEach((f) => {
-        capturar({ texto: nomeDeFicheiro(f.name), tipo: 'ficheiro', min: 15, importante: false })
-      })
+      files.forEach((f) => capturar({ texto: nomeDeFicheiro(f.name), tipo: 'ficheiro', min: 15, prioridade: 'normal' }))
       burst()
       showToast(files.length > 1 ? `${files.length} emails capturados ✓` : 'Email capturado ✓')
     }, 1400)
   }
 
-  const impCount = lista.filter((t) => t.importante).length
+  const ciclarPri = (t) => {
+    const i = PRIS.indexOf(t.prioridade || 'normal')
+    atualizar(t.id, { prioridade: PRIS[(i + 1) % 3] })
+  }
+
+  const nUrg = lista.filter((t) => t.prioridade === 'urgente').length
+  const nImp = lista.filter((t) => t.prioridade === 'importante').length
 
   return (
     <div className="capturar">
       <div className="topbar">
         <div><div className="l1">Entrada do dia · fricção zero</div><div className="l2">Capturar</div></div>
         <div className="tstats">
-          <div className="tst a"><span className="v">{lista.length}</span><span className="l">na fila<br />agora</span></div>
-          <div className="tst b"><span className="v">{impCount}</span><span className="l">importante<br />marcado</span></div>
+          <div className="tst u"><span className="v">{nUrg}</span><span className="l">urgentes</span></div>
+          <div className="tst b"><span className="v">{nImp}</span><span className="l">importantes</span></div>
+          <div className="tst a"><span className="v">{lista.length}</span><span className="l">na fila</span></div>
         </div>
       </div>
 
@@ -130,9 +133,15 @@ export default function Capturar() {
             </div>
             <input ref={inputRef} className="cap-input" type="text" value={texto} placeholder={TIPOS[tipo].ph}
               onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerCaptura() }} />
+            <div className="pri-row">
+              {PRIS.map((p) => (
+                <button key={p} className={`pri-chip ${p} ${pri === p ? 'on' : ''}`} onClick={() => setPri(p)}>
+                  <span className="pi">{PRI_ICON[p]}</span>{PRI_LABEL[p]}
+                </button>
+              ))}
+            </div>
             <div className="cap-row">
               <div className="min-pick"><label>~</label><input type="number" min="5" step="5" value={min} onChange={(e) => setMin(e.target.value)} /><span>min</span></div>
-              <button className={`imp-toggle ${imp ? 'on' : ''}`} onClick={() => setImp((v) => !v)}>{imp ? '🔴 importante' : '○ importante'}</button>
               <button className="cap-btn" onClick={fazerCaptura}>Capturar ↵</button>
             </div>
           </div>
@@ -146,26 +155,27 @@ export default function Capturar() {
         </div>
 
         <div className="col cap-col">
-          <div className="group-lab">Na fila · capturado {feitas.length > 0 && `· ${feitas.length} já concluída${feitas.length > 1 ? 's' : ''}`}</div>
+          <div className="group-lab">Na fila · toca na etiqueta p/ mudar prioridade {feitas.length > 0 && `· ${feitas.length} concluída${feitas.length > 1 ? 's' : ''}`}</div>
           <div id="list">
             {lista.length === 0 ? (
               <div className="empty-cap">
                 <div className="empty-ic">📥</div>
                 <div className="empty-t">Ainda não capturaste nada.</div>
-                <div className="empty-s">Arrasta um email ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Briefing.</div>
+                <div className="empty-s">Arrasta um email ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Escritório.</div>
               </div>
             ) : lista.map((c) => {
               const tp = TIPOS[c.tipo] || { ci: 'ficheiro', icon: '📧' }
               const isFile = c.tipo === 'ficheiro'
+              const p = c.prioridade || 'normal'
               return (
-                <div key={c.id} className={`cap show ${c.importante ? 'flash' : ''}`}>
+                <div key={c.id} className={`cap show pri-${p}`}>
                   <div className={`ci ${isFile ? 'ficheiro' : tp.ci}`}>{isFile ? '📧' : tp.icon}</div>
                   <div className="body">
                     <div className="a">{c.texto}</div>
                     <div className="tags">
-                      {c.importante && <span className="tg imp">importante</span>}
+                      <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
                       <span className={`tg ${TAGCLS[c.tipo] || 'src-ficheiro'}`}>{isFile ? 'email' : (TIPOS[c.tipo]?.tag || c.tipo)}</span>
-                      <span className="tg tm">~{c.min} min</span>
+                      <span className="tg tm edit">~<input type="number" min="5" step="5" value={c.min} onChange={(e) => atualizar(c.id, { min: Number(e.target.value) || 5 })} /> min</span>
                     </div>
                   </div>
                   <button className="cap-del" title="Apagar" onClick={() => apagar(c.id)}>✕</button>

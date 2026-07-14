@@ -74,7 +74,7 @@ const SUGESTOES = {
 }
 
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, agua, addAgua, removeAgua, intencao, media, setMediaUrl } = useRoe()
+  const { eleitas, concluir, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -102,7 +102,7 @@ export default function Foco({ onNavigate }) {
     const id = task.id
     setTimeout(() => {
       setCelebrate(false); concluir(id); setRunning(false); setSecs(0); setTotal(0)
-      if (onNavigate) onNavigate('cidade') // ver o edifício a erguer-se
+      if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
     }, 2600)
   }
 
@@ -152,6 +152,13 @@ export default function Foco({ onNavigate }) {
     setUrlErro('')
     setMediaUrl(fonte, u)
     setUrlInput('')
+    // título via oEmbed oficial (sem contas); se falhar, fica o nome da fonte
+    const sug = SUGESTOES[fonte].find((x) => x.u === u)
+    if (sug) { setMediaTitulo(fonte, sug.n); return }
+    const oe = fonte === 'yt'
+      ? `https://www.youtube.com/oembed?url=${encodeURIComponent(u)}&format=json`
+      : `https://open.spotify.com/oembed?url=${encodeURIComponent(u)}`
+    fetch(oe).then((r) => r.json()).then((j) => { if (j && j.title) setMediaTitulo(fonte, j.title) }).catch(() => {})
   }
   const limpar = () => { setMediaUrl(fonte, ''); setUrlErro('') }
 
@@ -262,11 +269,16 @@ export default function Foco({ onNavigate }) {
         </div>
 
         <div className="col mid">
-          <div className="ring-zone">
+          <div className="ring-zone" style={{ position: "relative" }}>
+          {task && [0,1,2,3,4,5].map((i) => (
+            <span key={i} className="fx-dot" style={{ background: col, left: `${18 + i * 13}%`, bottom: '18%', animationDelay: `${i * 0.9}s` }} />
+          ))}
+
             <div className="ring-wrap">
               <svg width="310" height="310" viewBox="0 0 310 310">
                 <g>{ticks}</g>
                 <circle cx="155" cy="155" r="132" fill="none" stroke="#E6DCC8" strokeWidth="17" />
+                {task && <circle className="ring-glow" cx="155" cy="155" r="132" fill="none" stroke={col} strokeWidth="30" strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} />}
                 {task && <circle className="ring-prog" cx="155" cy="155" r="132" fill="none" stroke={col} strokeWidth="17" strokeLinecap="round" strokeDasharray={CIRC} strokeDashoffset={CIRC * (1 - frac)} style={{ color: col }} />}
               </svg>
               {task && <div className="orbit" style={{ left: 'calc(50% - 6px)', top: 'calc(50% - 6px)', transform: `translate(${Math.cos(orbitAng) * R}px,${Math.sin(orbitAng) * R}px)`, background: col }} />}
@@ -276,6 +288,13 @@ export default function Foco({ onNavigate }) {
               </div>
             </div>
           </div>
+          {(mediaTitle.yt || mediaTitle.sp || media.yt || media.sp) && (
+            <div className="now-playing">
+              <span className="eq"><b /><b /><b /></span>
+              <span className="np-t">{mediaTitle.yt || mediaTitle.sp || 'A tua música'}</span>
+              <span className="np-s">· {media.yt ? 'YouTube' : 'Spotify'}</span>
+            </div>
+          )}
           {task && (
             <div className="mid-cta">
               <button className="cta ghost" onClick={() => setRunning((r) => !r)}>{running ? 'Pausar' : 'Retomar'}</button>

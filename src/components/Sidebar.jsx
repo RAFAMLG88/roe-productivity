@@ -2,9 +2,9 @@ import React from 'react'
 import { useRoe } from '../state/RoeContext.jsx'
 
 const NAV = [
+  { id: 'capturar', ic: '＋', label: 'Capturar' },
   { id: 'briefing', ic: '◎', label: 'Escritório' },
   { id: 'foco', ic: '◉', label: 'Foco' },
-  { id: 'capturar', ic: '＋', label: 'Capturar' },
   { id: 'cidade', ic: '▲', label: 'Cidade' },
   { id: 'analise', ic: '∿', label: 'Análise' },
 ]

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react'
 import './Briefing.css'
 import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
-import { useRoe } from '../state/RoeContext.jsx'
+import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
 
 const CAP = 420, SCALE = 480  // dia de trabalho: 7h; barra até 8h
 const TIPO_META = {
@@ -18,7 +18,7 @@ function fmt(min) {
 }
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, intencao, setIntencao } = useRoe()
+  const { fila, eleitas, eleger, paraFila } = useRoe()
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
   const [showSunrise, setShowSunrise] = useState(false)
@@ -33,6 +33,28 @@ export default function Briefing({ onNavigate }) {
     if (min <= CAP) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite das 7h.</b> Dá, mas sem margem para imprevistos.</> }
     return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Acima das 7h de trabalho.</b> Corta ou devolve à fila — o importante merece espaço.</>, warn: true }
   }, [min])
+
+  // ── SUGESTÃO ROE: organizar o dia nas 7h por prioridade ──
+  const sugestao = useMemo(() => {
+    const pool = [...eleitas, ...fila]
+    if (pool.length === 0) return null
+    const ord = [...pool].sort((a, b) => {
+      const pa = PRI_PESO[a.prioridade || 'normal'], pb = PRI_PESO[b.prioridade || 'normal']
+      if (pa !== pb) return pa - pb
+      return a.criadaEm - b.criadaEm
+    })
+    const dentro = [], fora = []
+    let acc = 0
+    ord.forEach((t) => { if (acc + t.min <= CAP) { dentro.push(t); acc += t.min } else fora.push(t) })
+    return { dentro, fora, total: acc }
+  }, [eleitas, fila])
+
+  const aplicarSugestao = () => {
+    if (!sugestao) return
+    const ids = new Set(sugestao.dentro.map((t) => t.id))
+    eleitas.forEach((t) => { if (!ids.has(t.id)) paraFila(t.id) })
+    sugestao.dentro.forEach((t) => { if (t.estado !== 'eleita') eleger(t.id) })
+  }
 
   const startDay = () => {
     if (n === 0) return
@@ -101,7 +123,7 @@ export default function Briefing({ onNavigate }) {
                       <div className="body">
                         <div className="a">{p.texto}</div>
                         <div className="b">
-                          {p.importante && <span className="badge-imp">importante</span>}
+                          <span className={`badge-pri ${p.prioridade || 'normal'}`}>{(p.prioridade || 'normal')}</span>
                           <span className="badge-tipo">{m.nome}</span>
                           <span className="badge-min">~{p.min} min</span>
                         </div>
@@ -133,7 +155,7 @@ export default function Briefing({ onNavigate }) {
                       <div className="wt-body">
                         <div className="wt-t">{q.texto}</div>
                         <div className="wt-meta">
-                          {q.importante && <span className="badge-imp">importante</span>}
+                          <span className={`badge-pri ${q.prioridade || 'normal'}`}>{(q.prioridade || 'normal')}</span>
                           <span className="badge-tipo">{m.nome}</span>
                           <span className="badge-min">~{q.min} min</span>
                         </div>
@@ -161,10 +183,27 @@ export default function Briefing({ onNavigate }) {
             <div className="verdict" style={{ color: verdict.color }}>{verdict.text}</div>
           </div>
 
-          <div className="panel intent enter" style={{ animationDelay: '.1s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>✍️</span>Intenção do dia</div>
-            <textarea value={intencao} onChange={(e) => setIntencao(e.target.value)} placeholder="Uma frase para ti. Ex: hoje fecho o orçamento sem interrupções." />
-            <div className="ihint">aparece-te no ecrã de Foco, como lembrete silencioso</div>
+          <div className="panel sugestao enter" style={{ animationDelay: '.1s' }}>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>✨</span>Sugestão ROE</div>
+            {!sugestao ? (
+              <div className="sug-empty">Captura tarefas e eu organizo-te o dia — urgentes primeiro, dentro das 7h.</div>
+            ) : (
+              <>
+                <div className="sug-head">Nas tuas 7h cabem <b>{sugestao.dentro.length}</b> de {sugestao.dentro.length + sugestao.fora.length} tarefas ({fmt(sugestao.total)}):</div>
+                <div className="sug-list">
+                  {sugestao.dentro.slice(0, 6).map((t, i) => (
+                    <div key={t.id} className={`sug-item pri-${t.prioridade || 'normal'}`}>
+                      <span className="sg-n">{i + 1}</span>
+                      <span className="sg-t">{t.texto}</span>
+                      <span className="sg-m">~{t.min}m</span>
+                    </div>
+                  ))}
+                  {sugestao.dentro.length > 6 && <div className="sug-mais">+ {sugestao.dentro.length - 6} mais</div>}
+                </div>
+                {sugestao.fora.length > 0 && <div className="sug-fora">{sugestao.fora.length} fica{sugestao.fora.length > 1 ? 'm' : ''} na fila para outro dia — o dia não estica.</div>}
+                <button className="sug-aplicar" onClick={aplicarSugestao}>Aplicar sugestão ✨</button>
+              </>
+            )}
           </div>
 
           <button className={`ricta ${verdict.warn ? 'warn' : ''}`} disabled={n === 0} onClick={startDay}>

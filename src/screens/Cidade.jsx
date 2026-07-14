@@ -15,11 +15,41 @@ function edParams(i) {
   return { x, w, h, cor: CORES_ED[i % 3] }
 }
 
+const CEUS = {
+  amanhecer: 'linear-gradient(180deg,#4a5a8a 0%,#c97a8a 45%,#F0B080 78%,#FFE1B5 100%)',
+  dia:       'linear-gradient(180deg,#5FB6DF 0%,#9AD4EC 55%,#D9EEF4 100%)',
+  entardecer:'linear-gradient(180deg,#241b3e 0%,#5a2a55 40%,#c85a6e 70%,#F0A868 100%)',
+  noite:     'linear-gradient(180deg,#0b0920 0%,#1a1440 55%,#241830 100%)',
+  chuva:     'linear-gradient(180deg,#3a4048 0%,#5a626b 55%,#7a838c 100%)',
+}
+function faseDoDia() {
+  const h = new Date().getHours()
+  if (h >= 6 && h < 9) return 'amanhecer'
+  if (h >= 9 && h < 18) return 'dia'
+  if (h >= 18 && h < 21) return 'entardecer'
+  return 'noite'
+}
+
 export default function Cidade({ onNavigate }) {
   const { feitas } = useRoe()
   const skyRef = useRef(null)
   const starsRef = useRef(null)
   const builtRef = useRef(0) // quantos edifícios já desenhados
+
+  const [ceu, setCeu] = React.useState(faseDoDia())
+  useEffect(() => {
+    setCeu(faseDoDia())
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=' + pos.coords.latitude.toFixed(3) + '&longitude=' + pos.coords.longitude.toFixed(3) + '&current=weather_code')
+          .then((r) => r.json())
+          .then((j) => { if (j && j.current && j.current.weather_code >= 51) setCeu('chuva') })
+          .catch(() => {})
+      }, () => {}, { timeout: 8000, maximumAge: 600000 })
+    }
+    const t = setInterval(() => setCeu((c) => c === 'chuva' ? c : faseDoDia()), 5 * 60 * 1000)
+    return () => clearInterval(t)
+  }, [])
 
   const nEd = feitas.length
   const nHab = nEd * 4
@@ -126,10 +156,11 @@ export default function Cidade({ onNavigate }) {
 
       <div className="canvas">
         <div className="diorama panel enter" style={{ padding: 0 }}>
-          <div className="sky-grad" />
-          <div className="stars" ref={starsRef} />
+          <div className="sky-grad" style={{ background: CEUS[ceu] }} />
+          <div className="stars" ref={starsRef} style={{ opacity: ceu === "noite" ? 1 : 0, transition: "opacity 1.5s" }} />
           <div className="roesign">ROE CITY</div>
-          <div className="sun" />
+          <div className="sun" style={{ opacity: (ceu === "amanhecer" || ceu === "entardecer") ? 1 : ceu === "dia" ? 0.9 : 0, transition: "opacity 1.5s" }} />
+          {ceu === "chuva" && <div className="rain-layer">{Array.from({ length: 34 }).map((_, i) => <i key={i} style={{ left: (i * 3.1 % 100) + "%", animationDelay: (i * 0.13 % 1.6) + "s", animationDuration: (0.8 + (i % 5) * 0.12) + "s" }} />)}</div>}
           <svg className="sky-svg" ref={skyRef} height="300" viewBox="0 0 900 300" preserveAspectRatio="none" />
           <div className="frame" />
           <div className="chron">

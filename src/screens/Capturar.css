@@ -120,3 +120,32 @@
 .capturar .painel-captura{flex:1;display:flex;flex-direction:column;min-height:0}
 .capturar .painel-captura .drop{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:220px}
 .capturar .col .fontes{flex:none}
+
+/* tipos maiores */
+.capturar .ttab{padding:14px 6px;gap:6px}
+.capturar .ttab .ti{font-size:22px}
+.capturar .ttab .tn{font-size:10px}
+/* prioridades */
+.capturar .pri-row{display:flex;gap:8px;margin-bottom:11px}
+.capturar .pri-chip{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 8px;border-radius:13px;border:2px solid var(--line);background:var(--card);cursor:pointer;transition:all .25s;font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--soft)}
+.capturar .pri-chip:hover{transform:translateY(-2px)}
+.capturar .pri-chip .pi{font-size:14px}
+.capturar .pri-chip.urgente.on{border-color:var(--red);background:var(--red-soft);color:var(--red-ink);box-shadow:0 6px 16px rgba(255,31,61,.18)}
+.capturar .pri-chip.importante.on{border-color:var(--mustard);background:var(--mustard-soft);color:var(--mustard-ink);box-shadow:0 6px 16px rgba(255,206,10,.2)}
+.capturar .pri-chip.normal.on{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-ink)}
+.capturar .tst.u .v{color:var(--red-ink)}
+/* borda esquerda por prioridade na lista */
+.capturar .cap{position:relative}
+.capturar .cap::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:4px 0 0 4px}
+.capturar .cap.pri-urgente::before{background:var(--red)}
+.capturar .cap.pri-importante::before{background:var(--mustard)}
+.capturar .cap.pri-normal::before{background:var(--cream-2)}
+/* badge prioridade clicável */
+.capturar .tg.pri{border:none;cursor:pointer;font-weight:700;transition:transform .15s}
+.capturar .tg.pri:hover{transform:scale(1.06)}
+.capturar .tg.pri.urgente{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,31,61,.3)}
+.capturar .tg.pri.importante{background:var(--mustard);color:var(--black)}
+.capturar .tg.pri.normal{background:var(--cream-2);color:var(--soft)}
+/* minutos editáveis inline */
+.capturar .tg.tm.edit{display:inline-flex;align-items:center;gap:2px}
+.capturar .tg.tm.edit input{width:34px;border:none;background:transparent;font-family:var(--font-mono);font-size:9px;color:var(--mustard-ink);font-weight:700;outline:none;text-align:center;border-bottom:1px dashed var(--mustard-ink)}

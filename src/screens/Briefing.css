@@ -125,3 +125,24 @@
 .briefing .empty.small{padding:18px;text-align:left;align-items:flex-start}
 .briefing .empty-t{font-family:var(--font-display);font-size:15px;font-weight:600;color:var(--soft);margin-top:6px}
 .briefing .empty-s{font-size:11px;font-family:var(--font-mono);color:var(--faint);line-height:1.6}
+
+/* Sugestão ROE */
+.briefing .sug-empty{font-size:11px;font-family:var(--font-mono);color:var(--faint);line-height:1.6;padding:6px 0}
+.briefing .sug-head{font-size:12px;color:var(--soft);line-height:1.5;margin-bottom:11px}
+.briefing .sug-head b{color:var(--mustard-ink);font-family:var(--font-display);font-size:14px}
+.briefing .sug-list{display:flex;flex-direction:column;gap:6px}
+.briefing .sug-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:11px;background:var(--cream);border-left:3px solid var(--cream-2)}
+.briefing .sug-item.pri-urgente{border-left-color:var(--red);background:var(--red-soft)}
+.briefing .sug-item.pri-importante{border-left-color:var(--mustard);background:var(--mustard-soft)}
+.briefing .sg-n{width:20px;height:20px;border-radius:7px;background:var(--black);color:var(--mustard);font-family:var(--font-display);font-size:11px;font-weight:700;display:grid;place-items:center;flex:none}
+.briefing .sg-t{flex:1;font-family:var(--font-display);font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.briefing .sg-m{font-size:9px;font-family:var(--font-mono);color:var(--faint)}
+.briefing .sug-mais{font-size:9px;font-family:var(--font-mono);color:var(--faint);text-align:center;padding:3px}
+.briefing .sug-fora{font-size:10px;font-family:var(--font-mono);color:var(--soft);margin-top:9px;line-height:1.5}
+.briefing .sug-aplicar{width:100%;margin-top:11px;border:none;border-radius:12px;padding:12px;font-family:var(--font-display);font-weight:700;font-size:13px;color:var(--black);background:var(--mustard);box-shadow:0 8px 18px rgba(255,206,10,.3);cursor:pointer;transition:transform .15s}
+.briefing .sug-aplicar:hover{transform:translateY(-2px)}
+/* badges de prioridade */
+.briefing .badge-pri{font-size:9px;font-family:var(--font-mono);padding:3px 10px;border-radius:9px;font-weight:700}
+.briefing .badge-pri.urgente{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,31,61,.3)}
+.briefing .badge-pri.importante{background:var(--mustard);color:var(--black)}
+.briefing .badge-pri.normal{background:var(--cream-2);color:var(--soft)}

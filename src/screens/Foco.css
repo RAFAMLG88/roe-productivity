@@ -57,9 +57,9 @@
 .foco .ring-wrap{display:grid;place-items:center;position:relative;animation:breath 4.5s ease-in-out infinite}
 @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
 .foco .ring-wrap svg{transform:rotate(-90deg)}
-.foco .ring-prog{transition:stroke .8s,stroke-dashoffset 1s linear;filter:drop-shadow(0 0 14px currentColor)}
+.foco .ring-prog{transition:stroke .8s,stroke-dashoffset 1s linear}
 .foco .tick{stroke:#DED4BE;stroke-width:2}
-.foco .ring-center{position:absolute;text-align:center}
+.foco .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .foco .ring-center .time{font-family:var(--font-display);font-size:72px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
 .foco .ring-center .est{font-size:12px;font-family:var(--font-mono);color:var(--soft);margin-top:8px}
 .foco .orbit{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--mustard);box-shadow:0 0 12px rgba(255,206,10,.6);opacity:.85}
@@ -266,3 +266,19 @@
 .foco .sys-note .sn-s b{color:var(--mustard-ink)}
 .foco .player .hint{font-size:9px;font-family:var(--font-mono);color:var(--faint);margin-top:12px;padding-top:11px;border-top:1px solid var(--line);line-height:1.6}
 .foco .player .hint b{color:var(--forest-ink)}
+
+/* glow do anel: círculo SVG nativo (sem filter → sem retângulo) */
+.foco .ring-glow{transition:stroke .8s;opacity:.28}
+/* partículas a subir enquanto há foco */
+.foco .fx-dot{position:absolute;width:7px;height:7px;border-radius:50%;opacity:0;pointer-events:none;animation:fxrise 5.5s ease-in-out infinite}
+@keyframes fxrise{0%{opacity:0;transform:translateY(30px) scale(.5)}25%{opacity:.55}55%{opacity:.3}100%{opacity:0;transform:translateY(-190px) scale(1.1)}}
+/* pílula "a tocar" por baixo do anel */
+.foco .now-playing{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:9px 16px;box-shadow:0 8px 20px rgba(60,50,30,.08);max-width:380px}
+.foco .now-playing .eq{display:flex;gap:2.5px;align-items:flex-end;height:14px;flex:none}
+.foco .now-playing .eq b{width:3px;background:var(--forest);border-radius:2px;animation:eqb 1s ease-in-out infinite}
+.foco .now-playing .eq b:nth-child(1){height:60%}
+.foco .now-playing .eq b:nth-child(2){height:100%;animation-delay:.15s}
+.foco .now-playing .eq b:nth-child(3){height:45%;animation-delay:.3s}
+@keyframes eqb{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
+.foco .now-playing .np-t{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foco .now-playing .np-s{font-size:9px;font-family:var(--font-mono);color:var(--faint);flex:none}
