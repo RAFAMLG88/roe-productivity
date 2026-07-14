@@ -15,6 +15,8 @@ export function RoeProvider({ children }) {
   const [intencao, setIntencao] = useState('')      // frase do dia
   const [agua, setAgua] = useState(0)               // copos de água hoje
   const [focoAtiva, setFocoAtiva] = useState(null)  // id da tarefa em foco
+  const [media, setMedia] = useState({ yt: '', sp: '' }) // URLs de música da sessão
+  const setMediaUrl = useCallback((fonte, url) => setMedia((m) => ({ ...m, [fonte]: url })), [])
 
   // ── CAPTURAR ──
   const capturar = useCallback((dados) => {
@@ -76,6 +78,7 @@ export function RoeProvider({ children }) {
     intencao, setIntencao,
     agua, addAgua, removeAgua,
     focoAtiva, setFocoAtiva,
+    media, setMediaUrl,
   }
   return <RoeContext.Provider value={value}>{children}</RoeContext.Provider>
 }

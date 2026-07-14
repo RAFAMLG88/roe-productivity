@@ -2,14 +2,14 @@ import React from 'react'
 import { useRoe } from '../state/RoeContext.jsx'
 
 const NAV = [
-  { id: 'briefing', ic: '◎', label: 'Briefing' },
+  { id: 'briefing', ic: '◎', label: 'Escritório' },
   { id: 'foco', ic: '◉', label: 'Foco' },
   { id: 'capturar', ic: '＋', label: 'Capturar' },
   { id: 'cidade', ic: '▲', label: 'Cidade' },
   { id: 'analise', ic: '∿', label: 'Análise' },
 ]
 const FOOT = {
-  briefing: 'o teu santuário', foco: 'em foco', capturar: 'entrada do dia',
+  briefing: 'o teu escritório', foco: 'em foco', capturar: 'entrada do dia',
   cidade: 'a tua recompensa', analise: 'a tua análise',
 }
 

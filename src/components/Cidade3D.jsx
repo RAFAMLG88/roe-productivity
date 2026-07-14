@@ -30,6 +30,7 @@ export default function Cidade3D({ onClose }) {
       <iframe
         src="./cidade-v41.html"
         title="ROE City 3D"
+        allow="geolocation; fullscreen"
         style={{ flex: 1, width: '100%', border: 'none' }}
       />
     </div>
