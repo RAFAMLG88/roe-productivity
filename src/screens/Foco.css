@@ -1,8 +1,8 @@
 .foco{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.foco .aurora{position:fixed;top:44%;left:53%;width:640px;height:640px;transform:translate(-50%,-50%);border-radius:50%;filter:blur(95px);opacity:.17;transition:background 1.2s,opacity .8s;pointer-events:none;z-index:0;animation:aur 8s ease-in-out infinite}
-@keyframes aur{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.13)}}
+.foco 
+50%{transform:translate(-50%,-50%) scale(1.13)}}
 .foco /* fundo em camadas: blobs suaves + aurora */
-  @keyframes aur{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.13)}}
+  50%{transform:translate(-50%,-50%) scale(1.13)}}
 .foco .topbar{display:flex;justify-content:space-between;align-items:center;padding:20px 30px 0;transition:opacity .8s}
 .foco .topbar .l1{font-size:10px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
 .foco .topbar .l2{font-family:var(--font-display);font-size:26px;font-weight:600;margin-top:2px}
@@ -54,7 +54,6 @@
 .foco .cpl.ping .big-i{animation:wiggle .8s ease}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
 .foco /* CENTRO */
-  .ring-zone{flex:1;display:grid;place-items:center;min-height:0}
 .foco .ring-wrap{display:grid;place-items:center;position:relative;animation:breath 4.5s ease-in-out infinite}
 @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
 .foco .ring-wrap svg{transform:rotate(-90deg)}
@@ -171,72 +170,99 @@
 .foco .breath-word{font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--cream);margin-top:38px}
 .foco .breath-hint{font-size:11px;font-family:var(--font-mono);color:#9a927e;margin-top:10px}
 .foco .breathe .skip{margin-top:24px;font-size:11px;font-family:var(--font-mono);color:#9a927e;background:none;border:1px solid #3a372a;padding:9px 20px;border-radius:16px;cursor:pointer}
-
 /* ── CUIDAR DE TI · redesign premium ── */
-.foco .care{flex:1;display:flex;flex-direction:column;min-height:0}
-.foco .care-grid{display:flex;flex-direction:column;gap:11px;flex:1}
-.foco .care-tile{display:flex;align-items:center;gap:15px;padding:15px 17px;border-radius:17px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;transition:all .32s cubic-bezier(.2,.8,.2,1);text-align:left;position:relative;overflow:hidden}
-.foco .care-tile::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .35s;pointer-events:none}
-.foco .care-tile:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(60,50,30,.12)}
-.foco .care-tile:active{transform:translateY(-1px) scale(.99)}
-.foco .care-svg{width:44px;height:44px;flex:none;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.foco .eye-lid{animation:blink 4.5s ease-in-out infinite;transform-origin:center}
+@keyframes blink{0%,44%,50%,100%{transform:scaleY(1)}47%{transform:scaleY(.08)}}
+.foco .eye-iris{animation:look 7s ease-in-out infinite}
+@keyframes look{0%,100%{transform:translateX(0)}25%{transform:translateX(3px)}65%{transform:translateX(-3px)}}
+.foco .br-ring{transform-origin:center;animation:brpulse 4s ease-in-out infinite}
+.foco .br-ring.r2{animation-delay:.35s}
+.foco .br-ring.r3{animation-delay:.7s}
+@keyframes brpulse{0%,100%{transform:scale(.88)}50%{transform:scale(1.06)}}
+.foco .spine{animation:straighten 5s ease-in-out infinite;transform-origin:24px 32px}
+@keyframes straighten{0%,100%{transform:rotate(0deg)}30%{transform:rotate(4deg)}60%{transform:rotate(0deg)}}
+.foco .water-fill{transition:y .6s cubic-bezier(.2,.8,.2,1)}
+/* ── MÚSICA PARA FOCAR (links reais) ── */
+/* ── estado vazio do seletor (sem círculo órfão) ── */
+.foco .foco-empty{text-align:center;padding:24px 16px}
+.foco .fe-t{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--soft)}
+.foco .fe-s{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:5px;line-height:1.5}
+
+/* ── AURORA sem blur (gradiente radial: nunca mostra arestas) ── */
+.foco .aurora{position:fixed;top:44%;left:53%;width:720px;height:720px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;z-index:0;transition:opacity .8s;animation:aurpulse 8s ease-in-out infinite}
+@keyframes aurpulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
+.foco .ring-zone{flex:1;display:grid;place-items:center;min-height:0}
+
+/* ── COLUNA ESQUERDA: seletor cresce, cuidar compacto ── */
+.foco .col.left{display:flex;flex-direction:column;min-height:0}
+.foco .start-card{flex:1;min-height:0;display:flex;flex-direction:column}
+.foco .foco-list{display:flex;flex-direction:column;gap:9px;overflow-y:auto;flex:1;min-height:0;padding-right:4px}
+.foco .care{flex:none}
+
+/* ── CUIDAR DE TI compacto 2×2 ── */
+.foco .care-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.foco .care-tile{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;transition:all .3s cubic-bezier(.2,.8,.2,1);text-align:left}
+.foco .care-tile:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(60,50,30,.11)}
+.foco .care-tile:active{transform:translateY(0) scale(.99)}
+.foco .care-svg{width:34px;height:34px;flex:none;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
 .foco .care-tile:hover .care-svg{transform:scale(1.12) rotate(-3deg)}
 .foco .ct-body{flex:1;min-width:0}
-.foco .ct-t{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--ink)}
-.foco .ct-s{font-size:9.5px;font-family:var(--font-mono);color:var(--faint);margin-top:3px;line-height:1.4;transition:color .3s}
-.foco .ct-go{flex:none;width:26px;height:26px;border-radius:50%;background:var(--cream-2);color:var(--soft);display:grid;place-items:center;font-size:11px;transition:all .3s;opacity:.6}
-.foco .care-tile:hover .ct-go{opacity:1;transform:translateX(3px)}
-
+.foco .ct-t{font-family:var(--font-display);font-size:12.5px;font-weight:600;color:var(--ink);line-height:1.2}
+.foco .ct-s{font-size:8.5px;font-family:var(--font-mono);color:var(--faint);margin-top:2px;line-height:1.35;transition:color .3s}
 .foco .care-tile.vista:hover{border-color:var(--red);background:linear-gradient(135deg,#FFF8F9,#fff)}
-.foco .care-tile.vista:hover .ct-go{background:var(--red);color:#fff}
 .foco .care-tile.vista.ok{border-color:var(--forest);background:var(--forest-soft)}
 .foco .care-tile.vista.ok .ct-s{color:var(--forest-ink);font-weight:600}
 .foco .eye-lid{animation:blink 4.5s ease-in-out infinite;transform-origin:center}
 @keyframes blink{0%,44%,50%,100%{transform:scaleY(1)}47%{transform:scaleY(.08)}}
 .foco .eye-iris{animation:look 7s ease-in-out infinite}
 @keyframes look{0%,100%{transform:translateX(0)}25%{transform:translateX(3px)}65%{transform:translateX(-3px)}}
-
 .foco .care-tile.breath:hover{border-color:var(--sky);background:linear-gradient(135deg,#F5FBFE,#fff)}
-.foco .care-tile.breath:hover .ct-go{background:var(--sky);color:#fff}
 .foco .br-ring{transform-origin:center;animation:brpulse 4s ease-in-out infinite}
 .foco .br-ring.r2{animation-delay:.35s}
 .foco .br-ring.r3{animation-delay:.7s}
 @keyframes brpulse{0%,100%{transform:scale(.88)}50%{transform:scale(1.06)}}
-
 .foco .care-tile.postura:hover{border-color:var(--mustard);background:linear-gradient(135deg,#FFFDF2,#fff)}
-.foco .care-tile.postura:hover .ct-go{background:var(--mustard);color:var(--black)}
 .foco .care-tile.postura.ok{border-color:var(--forest);background:var(--forest-soft)}
 .foco .care-tile.postura.ok .ct-s{color:var(--forest-ink);font-weight:600}
 .foco .spine{animation:straighten 5s ease-in-out infinite;transform-origin:24px 32px}
 @keyframes straighten{0%,100%{transform:rotate(0deg)}30%{transform:rotate(4deg)}60%{transform:rotate(0deg)}}
-
 .foco .care-tile.agua{cursor:default}
 .foco .care-tile.agua:hover{border-color:var(--forest)}
 .foco .water-fill{transition:y .6s cubic-bezier(.2,.8,.2,1)}
-.foco .ct-agua{display:flex;align-items:center;gap:11px;margin:4px 0 2px}
-.foco .agua-btn{width:30px;height:30px;border-radius:10px;border:1.5px solid var(--line);background:var(--cream);color:var(--soft);font-size:17px;font-weight:700;cursor:pointer;display:grid;place-items:center;transition:all .22s;flex:none;line-height:1}
+.foco .ct-agua{display:flex;align-items:center;gap:7px;margin-top:3px}
+.foco .agua-btn{width:24px;height:24px;border-radius:8px;border:1.5px solid var(--line);background:var(--cream);color:var(--soft);font-size:14px;font-weight:700;cursor:pointer;display:grid;place-items:center;transition:all .22s;flex:none;line-height:1}
 .foco .agua-btn:hover:not(:disabled){transform:scale(1.1)}
 .foco .agua-btn.mais:hover:not(:disabled){background:var(--forest);color:#fff;border-color:var(--forest)}
 .foco .agua-btn:not(.mais):hover:not(:disabled){background:var(--red-soft);color:var(--red-ink);border-color:var(--red)}
 .foco .agua-btn:disabled{opacity:.25;cursor:default}
-.foco .agua-n{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--forest-ink);min-width:44px;text-align:center}
-.foco .agua-n small{font-size:12px;color:var(--faint);font-weight:500}
+.foco .agua-n{font-family:var(--font-display);font-size:17px;font-weight:700;color:var(--forest-ink);min-width:34px;text-align:center}
+.foco .agua-n small{font-size:10px;color:var(--faint);font-weight:500}
 
-/* ── MÚSICA PARA FOCAR (links reais) ── */
-.foco .mus-list{display:flex;flex-direction:column;gap:9px}
-.foco .mus-item{display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:15px;border:1.5px solid var(--line);background:var(--card);text-decoration:none;transition:all .28s cubic-bezier(.2,.8,.2,1)}
-.foco .mus-item:hover{transform:translateX(4px);border-color:var(--mc);background:var(--ms);box-shadow:0 8px 20px rgba(60,50,30,.1)}
-.foco .mus-ic{width:40px;height:40px;border-radius:12px;background:var(--ms);display:grid;place-items:center;font-size:19px;flex:none;transition:transform .3s}
-.foco .mus-item:hover .mus-ic{transform:scale(1.1)}
-.foco .mus-body{flex:1;min-width:0}
-.foco .mus-t{font-family:var(--font-display);font-size:13.5px;font-weight:600;color:var(--ink)}
-.foco .mus-s{font-size:9.5px;font-family:var(--font-mono);color:var(--faint);margin-top:2px}
-.foco .mus-open{font-size:10px;font-family:var(--font-mono);color:var(--soft);opacity:0;transition:opacity .25s;flex:none;font-weight:600}
-.foco .mus-item:hover .mus-open{opacity:1;color:var(--mc)}
-.foco .musica .hint{font-size:9px;font-family:var(--font-mono);color:var(--faint);margin-top:13px;padding-top:12px;border-top:1px solid var(--line);line-height:1.6}
-.foco .musica .hint b{color:var(--mustard-ink)}
-
-/* ── estado vazio do seletor (sem círculo órfão) ── */
-.foco .foco-empty{text-align:center;padding:24px 16px}
-.foco .fe-t{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--soft)}
-.foco .fe-s{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:5px;line-height:1.5}
+/* ── PLAYER embebido real ── */
+.foco .src-tabs{display:flex;gap:6px;margin-bottom:12px}
+.foco .srct{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;transition:all .25s;font-family:var(--font-mono);font-size:10px;color:var(--soft)}
+.foco .srct:hover{transform:translateY(-2px)}
+.foco .srct.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest-ink);font-weight:600}
+.foco .srct .si{font-size:12px}
+.foco .srct.off{opacity:.75}
+.foco .player-setup{display:flex;flex-direction:column;gap:9px}
+.foco .pl-input{width:100%;background:var(--cream);border:1.5px solid var(--line);border-radius:12px;padding:11px 13px;font-family:var(--font-mono);font-size:11px;color:var(--ink);outline:none;transition:border-color .3s}
+.foco .pl-input:focus{border-color:var(--forest)}
+.foco .pl-btn{border:none;border-radius:12px;padding:11px;font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;background:var(--forest);box-shadow:0 6px 16px rgba(0,200,101,.25);cursor:pointer;transition:transform .15s}
+.foco .pl-btn:hover{transform:translateY(-2px)}
+.foco .pl-erro{font-size:10px;font-family:var(--font-mono);color:var(--red-ink);background:var(--red-soft);border-radius:9px;padding:7px 10px}
+.foco .pl-sug{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:9px;font-family:var(--font-mono);color:var(--faint)}
+.foco .pl-chip{border:1px solid var(--line);background:var(--cream);border-radius:9px;padding:5px 10px;font-family:var(--font-mono);font-size:9px;color:var(--soft);cursor:pointer;transition:all .2s}
+.foco .pl-chip:hover{background:var(--mustard-soft);color:var(--mustard-ink);border-color:var(--mustard)}
+.foco .player-live{display:flex;flex-direction:column;gap:8px}
+.foco .player-live iframe{width:100%;border-radius:14px;border:1px solid var(--line);background:#000}
+.foco .player-live iframe.pl-yt{aspect-ratio:16/9}
+.foco .player-live iframe.pl-sp{height:152px}
+.foco .pl-trocar{border:1px solid var(--line);background:var(--cream);border-radius:10px;padding:8px;font-family:var(--font-mono);font-size:10px;color:var(--soft);cursor:pointer;transition:all .2s}
+.foco .pl-trocar:hover{background:var(--cream-2)}
+.foco .sys-note{background:var(--cream);border:1.5px dashed var(--line);border-radius:13px;padding:14px}
+.foco .sys-note .sn-t{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--soft)}
+.foco .sys-note .sn-s{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:5px;line-height:1.6}
+.foco .sys-note .sn-s b{color:var(--mustard-ink)}
+.foco .player .hint{font-size:9px;font-family:var(--font-mono);color:var(--faint);margin-top:12px;padding-top:11px;border-top:1px solid var(--line);line-height:1.6}
+.foco .player .hint b{color:var(--forest-ink)}

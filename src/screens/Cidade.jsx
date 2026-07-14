@@ -2,12 +2,29 @@ import React, { useEffect, useRef } from 'react'
 import './Cidade.css'
 import { useRoe } from '../state/RoeContext.jsx'
 
+const NS = 'http://www.w3.org/2000/svg'
+const CORES_ED = ['#241830', '#2B1C38', '#1f1530']
+
+// posição/altura determinística por índice (para a cidade ficar estável)
+function edParams(i) {
+  const seed = (i * 2654435761) % 2 ** 32
+  const rnd = (n) => ((seed >> (n * 3)) % 1000) / 1000
+  const x = 70 + ((i * 173) % 760)
+  const w = 34 + rnd(1) * 30
+  const h = 60 + rnd(2) * 130
+  return { x, w, h, cor: CORES_ED[i % 3] }
+}
+
 export default function Cidade({ onNavigate }) {
   const { feitas } = useRoe()
   const skyRef = useRef(null)
   const starsRef = useRef(null)
-  const nEdificios = feitas.length
-  const nHabitantes = feitas.length * 4  // cada edifício ~4 habitantes
+  const builtRef = useRef(0) // quantos edifícios já desenhados
+
+  const nEd = feitas.length
+  const nHab = nEd * 4
+  const ultima = nEd > 0 ? feitas[feitas.length - 1] : null
+  const recente = ultima && ultima.feitaEm && (Date.now() - ultima.feitaEm < 15000)
 
   useEffect(() => {
     const stars = starsRef.current
@@ -21,39 +38,90 @@ export default function Cidade({ onNavigate }) {
         stars.appendChild(s)
       }
     }
-    // ponto zero: terreno vazio, sem edifícios (só o horizonte e o sol)
     const svg = skyRef.current
-    if (svg && svg.childNodes.length === 0) buildEmptyLand(svg)
-  }, [])
-
-  const buildEmptyLand = (svg) => {
-    const NS = 'http://www.w3.org/2000/svg'
-    const rect = (x, y, w, h, fill) => {
-      const r = document.createElementNS(NS, 'rect')
-      r.setAttribute('x', x); r.setAttribute('y', y); r.setAttribute('width', w); r.setAttribute('height', h); r.setAttribute('fill', fill)
-      return r
+    if (!svg) return
+    if (svg.childNodes.length === 0) baseLand(svg)
+    // desenhar edifícios em falta; animar o último se recém-concluído
+    while (builtRef.current < nEd) {
+      const i = builtRef.current
+      const animar = (i === nEd - 1) && recente
+      buildEdificio(svg, i, animar)
+      builtRef.current++
     }
-    // montanhas ao fundo (terreno por povoar)
+  }, [nEd, recente])
+
+  const baseLand = (svg) => {
     const back = document.createElementNS(NS, 'path')
     back.setAttribute('d', 'M0,215 L120,175 L260,205 L400,165 L560,200 L720,170 L900,205 L900,300 L0,300 Z')
     back.setAttribute('fill', 'rgba(60,40,64,.5)'); svg.appendChild(back)
-    // chão
-    svg.appendChild(rect(0, 265, 900, 60, '#1A1220'))
-    // alguns tufos de vegetação (terreno virgem)
-    const NS2 = 'http://www.w3.org/2000/svg'
+    const ground = document.createElementNS(NS, 'rect')
+    ground.setAttribute('x', 0); ground.setAttribute('y', 265); ground.setAttribute('width', 900); ground.setAttribute('height', 60); ground.setAttribute('fill', '#1A1220')
+    svg.appendChild(ground)
     for (let i = 0; i < 14; i++) {
-      const x = 30 + Math.random() * 840, y = 250 + Math.random() * 30
-      const g = document.createElementNS(NS2, 'circle')
-      g.setAttribute('cx', x); g.setAttribute('cy', y); g.setAttribute('r', 2 + Math.random() * 2)
-      g.setAttribute('fill', 'rgba(0,200,101,.35)')
+      const g = document.createElementNS(NS, 'circle')
+      g.setAttribute('cx', 30 + Math.random() * 840); g.setAttribute('cy', 250 + Math.random() * 30)
+      g.setAttribute('r', 2 + Math.random() * 2); g.setAttribute('fill', 'rgba(0,200,101,.35)')
       svg.appendChild(g)
     }
+  }
+
+  const buildEdificio = (svg, i, animar) => {
+    const { x, w, h, cor } = edParams(i)
+    const baseY = 268
+    const g = document.createElementNS(NS, 'g')
+    svg.appendChild(g)
+    const body = document.createElementNS(NS, 'rect')
+    body.setAttribute('x', x); body.setAttribute('width', w); body.setAttribute('fill', cor)
+    g.appendChild(body)
+    const top = document.createElementNS(NS, 'rect')
+    top.setAttribute('x', x); top.setAttribute('width', w); top.setAttribute('height', 6); top.setAttribute('fill', 'rgba(20,18,7,.4)')
+    g.appendChild(top)
+    const winCols = Math.max(1, Math.floor((w - 10) / 11))
+    const winRows = Math.max(1, Math.floor((h - 22) / 16))
+    const wins = []
+    for (let c = 0; c < winCols; c++) for (let r = 0; r < winRows; r++) {
+      if (Math.random() < 0.42) continue
+      const win = document.createElementNS(NS, 'rect')
+      win.setAttribute('x', x + 6 + c * 11); win.setAttribute('width', 4.5); win.setAttribute('height', 6)
+      win.setAttribute('fill', Math.random() < 0.12 ? '#FF1F3D' : '#FFD46A')
+      win.dataset.row = r
+      g.appendChild(win); wins.push(win)
+    }
+    const setH = (hh) => {
+      body.setAttribute('height', hh); body.setAttribute('y', baseY - hh)
+      top.setAttribute('y', baseY - hh)
+      wins.forEach((win) => {
+        const wy = baseY - hh + 12 + Number(win.dataset.row) * 16
+        if (wy < baseY - 8) { win.setAttribute('y', wy); win.setAttribute('opacity', 1) }
+        else win.setAttribute('opacity', 0)
+      })
+    }
+    if (!animar) { setH(h); return }
+    // animação de construção: sobe em ~1.6s com easing, gruazinha de brilho no topo
+    const t0 = performance.now()
+    const dur = 1600
+    const ease = (p) => 1 - Math.pow(1 - p, 3)
+    const step = (now) => {
+      const p = Math.min((now - t0) / dur, 1)
+      setH(h * ease(p))
+      if (p < 1) requestAnimationFrame(step)
+      else {
+        // brilho final
+        const glow = document.createElementNS(NS, 'circle')
+        glow.setAttribute('cx', x + w / 2); glow.setAttribute('cy', baseY - h - 8); glow.setAttribute('r', 3)
+        glow.setAttribute('fill', '#FFCE0A')
+        g.appendChild(glow)
+        glow.animate([{ opacity: 1, r: 3 }, { opacity: 0 }], { duration: 1400 })
+        setTimeout(() => glow.remove(), 1500)
+      }
+    }
+    requestAnimationFrame(step)
   }
 
   return (
     <div className="cidade">
       <div className="topbar">
-        <div><div className="l1">{nEdificios === 0 ? 'A tua cidade começa hoje' : `${nEdificios} edifício${nEdificios > 1 ? 's' : ''} · erguido${nEdificios > 1 ? 's' : ''} por ti`}</div><div className="l2">ROE City</div></div>
+        <div><div className="l1">{nEd === 0 ? 'A tua cidade começa hoje' : recente ? '🏗 obra nova em curso!' : `${nEd} edifício${nEd > 1 ? 's' : ''} · erguido${nEd > 1 ? 's' : ''} por ti`}</div><div className="l2">ROE City</div></div>
       </div>
 
       <div className="canvas">
@@ -65,17 +133,17 @@ export default function Cidade({ onNavigate }) {
           <svg className="sky-svg" ref={skyRef} height="300" viewBox="0 0 900 300" preserveAspectRatio="none" />
           <div className="frame" />
           <div className="chron">
-            {nEdificios === 0 ? (
+            {nEd === 0 ? (
               <>
                 <div className="cl">Terreno pronto · à espera da primeira obra</div>
-                <div className="ct">Conclui a tua primeira tarefa importante para erguer o primeiro edifício.</div>
+                <div className="ct">Conclui a tua primeira tarefa para erguer o primeiro edifício.</div>
                 <div className="cd">cada tarefa concluída constrói um pedaço da tua cidade</div>
               </>
             ) : (
               <>
-                <div className="cl">Último edifício · erguido agora</div>
-                <div className="ct">{feitas[feitas.length - 1].texto}</div>
-                <div className="cd">visita a cidade em 3D para veres a tua construção</div>
+                <div className="cl">{recente ? 'Edifício novo · erguido agora mesmo' : 'Último edifício'}</div>
+                <div className="ct">{ultima.texto}</div>
+                <div className="cd">visita a cidade em 3D para a explorares rua a rua</div>
               </>
             )}
           </div>
@@ -86,18 +154,18 @@ export default function Cidade({ onNavigate }) {
             <div className="pt">A tua cidade</div>
             <div className="ps">o que ergueste até hoje</div>
             <div className="stats3">
-              <div className="st h"><div className="si">🏙️</div><div><div className="sv">{nHabitantes}</div><div className="sl">habitantes</div></div></div>
-              <div className="st b"><div className="si">🏢</div><div><div className="sv">{nEdificios}</div><div className="sl">edifícios erguidos</div></div></div>
-              <div className="st d"><div className="si">📅</div><div><div className="sv">{nEdificios > 0 ? 1 : 0}</div><div className="sl">dias a construir</div></div></div>
+              <div className="st h"><div className="si">🏙️</div><div><div className="sv">{nHab}</div><div className="sl">habitantes</div></div></div>
+              <div className="st b"><div className="si">🏢</div><div><div className="sv">{nEd}</div><div className="sl">edifícios erguidos</div></div></div>
+              <div className="st d"><div className="si">📅</div><div><div className="sv">{nEd > 0 ? 1 : 0}</div><div className="sl">dias a construir</div></div></div>
             </div>
           </div>
           <div className="panel era enter" style={{ animationDelay: '.3s' }}>
-            <div className="et">🌱 Primeiro marco: a primeira casa</div>
-            <div className="ed">{nEdificios === 0 ? 'Conclui uma tarefa no Foco e vê nascer o primeiro edifício da tua cidade.' : 'A tua cidade está a crescer! Continua a concluir tarefas para a veres florescer.'}</div>
+            <div className="et">{nEd === 0 ? '🌱 Primeiro marco: a primeira casa' : '🌇 A cidade cresce contigo'}</div>
+            <div className="ed">{nEd === 0 ? 'Conclui uma tarefa no Foco e vê nascer o primeiro edifício.' : 'Cada tarefa concluída ergue mais um edifício. Continua.'}</div>
           </div>
           <div className="panel enter" style={{ animationDelay: '.45s', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div className="pt" style={{ marginBottom: 11 }}>Crónica recente</div>
-            {nEdificios === 0 ? (
+            {nEd === 0 ? (
               <div className="chr-empty">
                 <div className="chr-empty-ic">🏗</div>
                 <div className="chr-empty-t">A tua crónica ainda está por escrever.</div>
@@ -106,16 +174,16 @@ export default function Cidade({ onNavigate }) {
             ) : (
               <div className="chr-list">
                 {[...feitas].reverse().map((t, i) => (
-                  <div key={t.id} className={`chr ${['a','b','c'][i % 3]}`}>
+                  <div key={t.id} className={`chr ${['a','b','c'][i % 3]} ${i === 0 && recente ? 'nova' : ''}`}>
                     <div className="chi">{['🏢','🏠','🏛','🏪','🏗'][i % 5]}</div>
-                    <div><div className="cht">{t.texto}</div><div className="chs">concluída agora</div></div>
+                    <div><div className="cht">{t.texto}</div><div className="chs">{i === 0 && recente ? 'erguido agora ✨' : 'concluída'}</div></div>
                   </div>
                 ))}
               </div>
             )}
           </div>
           <button className="cta" onClick={() => onNavigate && onNavigate('cidade3d')}><span>🖥️</span> Visitar a ROE City em 3D</button>
-          <div className="cta-sub">a cidade completa vive no PC · voa, roda, explora rua a rua</div>
+          <div className="cta-sub">ambiente ao vivo · reage à hora e ao tempo onde estás</div>
         </div>
       </div>
     </div>

@@ -54,3 +54,5 @@
 .cidade .chr-empty-ic{font-size:30px;opacity:.5;margin-bottom:10px}
 .cidade .chr-empty-t{font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--soft)}
 .cidade .chr-empty-s{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:5px;line-height:1.5}
+.cidade .chr.nova{border-color:var(--mustard);background:var(--mustard-soft);animation:novapulse 2s ease-in-out 3}
+@keyframes novapulse{0%,100%{box-shadow:0 0 0 0 rgba(255,206,10,0)}50%{box-shadow:0 0 0 4px rgba(255,206,10,.25)}}

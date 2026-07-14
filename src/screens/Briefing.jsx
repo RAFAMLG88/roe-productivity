@@ -3,7 +3,7 @@ import './Briefing.css'
 import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe } from '../state/RoeContext.jsx'
 
-const CAP = 120, SCALE = 160
+const CAP = 420, SCALE = 480  // dia de trabalho: 7h; barra até 8h
 const TIPO_META = {
   interno:  { ic: '👤', cls: 'chefe',  nome: 'interno' },
   telefone: { ic: '✆',  cls: 'tel',    nome: 'telefone' },
@@ -28,16 +28,18 @@ export default function Briefing({ onNavigate }) {
   const min = eleitas.reduce((s, t) => s + t.min, 0)
 
   const verdict = useMemo(() => {
-    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: 'Elege tarefas da fila para veres se o dia cabe no teu tempo.' }
-    if (min <= 90) return { fill: 'var(--forest)', color: 'var(--forest-ink)', text: <><b>Vai dar.</b> Dia com espaço para respirar e absorver imprevistos.</> }
-    if (min <= CAP) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite.</b> Dá, mas sem margem para imprevistos.</> }
-    return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Sobrecarregado.</b> Corta uma — o importante merece espaço, não pressa.</>, warn: true }
+    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: 'Elege tarefas da fila para veres se cabem nas tuas 7h de trabalho.' }
+    if (min <= 300) return { fill: 'var(--forest)', color: 'var(--forest-ink)', text: <><b>Vai dar.</b> Dia com espaço para respirar e absorver imprevistos.</> }
+    if (min <= CAP) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite das 7h.</b> Dá, mas sem margem para imprevistos.</> }
+    return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Acima das 7h de trabalho.</b> Corta ou devolve à fila — o importante merece espaço.</>, warn: true }
   }, [min])
 
   const startDay = () => {
     if (n === 0) return
     setShowSunrise(true)
     setTimeout(() => spawnRays(), 50)
+    // depois do ritual, direto ao Foco
+    setTimeout(() => { setShowSunrise(false); if (onNavigate) onNavigate('foco') }, 2600)
   }
   const spawnRays = () => {
     const el = sunriseRef.current; if (!el) return
@@ -56,7 +58,7 @@ export default function Briefing({ onNavigate }) {
       <div className="topbar">
         <div>
           <div className="l1">{dataLonga(now)} · {saudacao(now)}</div>
-          <div className="l2">O que importa hoje?</div>
+          <div className="l2">Escritório</div>
         </div>
         <div className="week">
           {week.map((w, i) => (
@@ -150,7 +152,7 @@ export default function Briefing({ onNavigate }) {
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
             <div className="lt">
               <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{min}</span>
-              <span className="u">min eleitos · {fmt(min)}</span>
+              <span className="u">de 7h · {fmt(min)} eleitos</span>
             </div>
             <div className="track">
               <div className="inner"><div className="fill" style={{ width: Math.min(min / SCALE * 100, 100) + '%', background: verdict.fill }} /></div>
@@ -177,7 +179,7 @@ export default function Briefing({ onNavigate }) {
         <div className="sun" />
         <div className="ct">O teu dia está montado.</div>
         <div className="cs">{n} importante{n > 1 ? 's' : ''} · ~{fmt(min)}</div>
-        <button className="reset" onClick={() => setShowSunrise(false)}>↻ voltar</button>
+        <div className="cs" style={{marginTop:14,opacity:.7}}>a abrir o Foco…</div>
       </div>
     </div>
   )

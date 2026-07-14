@@ -24,14 +24,14 @@ export default function Analise({ onNavigate }) {
             <div className="ea-t">Ainda não há nada para analisar.</div>
             <div className="ea-s">
               A tua análise constrói-se sozinha à medida que concluis tarefas.<br />
-              Elege no Briefing, foca-te e conclui — e aqui vais ver os teus padrões.
+              Elege no Escritório, foca-te e conclui — e aqui vais ver os teus padrões.
             </div>
             <div className="ea-preview">
               <div className="eap"><span className="eap-ic">🎯</span><div><div className="eap-t">Foco no importante</div><div className="eap-s">quanto do teu tempo vai ao que interessa</div></div></div>
               <div className="eap"><span className="eap-ic">✓</span><div><div className="eap-t">Tarefas concluídas</div><div className="eap-s">o que fechaste hoje</div></div></div>
               <div className="eap"><span className="eap-ic">🏢</span><div><div className="eap-t">Cidade a crescer</div><div className="eap-s">edifícios erguidos pelo teu foco</div></div></div>
             </div>
-            <button className="ea-cta" onClick={() => onNavigate && onNavigate('briefing')}>Ir ao Briefing começar o dia →</button>
+            <button className="ea-cta" onClick={() => onNavigate && onNavigate('briefing')}>Ir ao Escritório organizar o dia →</button>
           </div>
         </div>
       </div>

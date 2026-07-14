@@ -5,7 +5,6 @@ import { useRoe } from '../state/RoeContext.jsx'
 const C = { much: '#00C865', half: '#FFCE0A', low: '#FF1F3D' }
 const CIRC = 829, R = 132
 
-// Ícones SVG desenhados — cuidar de ti
 const IcoOlho = () => (
   <svg viewBox="0 0 48 48" fill="none" className="care-svg">
     <path className="eye-lid" d="M6 24 C13 13, 35 13, 42 24 C35 35, 13 35, 6 24 Z" stroke="#FF1F3D" strokeWidth="3" fill="#FFF0F2"/>
@@ -31,22 +30,51 @@ const IcoPostura = () => (
 )
 const IcoGota = ({ nivel }) => (
   <svg viewBox="0 0 48 48" fill="none" className="care-svg">
-    <defs>
-      <clipPath id="gclip"><path d="M24 5 C24 5, 38 22, 38 31 A14 14 0 0 1 10 31 C10 22, 24 5, 24 5 Z"/></clipPath>
-    </defs>
+    <defs><clipPath id="gclip"><path d="M24 5 C24 5, 38 22, 38 31 A14 14 0 0 1 10 31 C10 22, 24 5, 24 5 Z"/></clipPath></defs>
     <path d="M24 5 C24 5, 38 22, 38 31 A14 14 0 0 1 10 31 C10 22, 24 5, 24 5 Z" stroke="#00C865" strokeWidth="3" fill="#EBFCF3"/>
     <rect className="water-fill" x="8" y={45 - nivel * 4.5} width="32" height="40" fill="#00C865" opacity=".75" clipPath="url(#gclip)"/>
   </svg>
 )
 
-const MUSICA = [
-  { id: 'lofi', nome: 'Lofi para focar', desc: 'YouTube · lofi girl radio', ic: '🎧', cor: 'var(--red)', corSoft: 'var(--red-soft)', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
-  { id: 'spotify', nome: 'Deep Focus', desc: 'Spotify · playlist oficial', ic: '🎵', cor: 'var(--forest)', corSoft: 'var(--forest-soft)', url: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ' },
-  { id: 'piano', nome: 'Piano calmo', desc: 'YouTube · peaceful piano', ic: '🎹', cor: 'var(--sky)', corSoft: 'var(--sky-soft)', url: 'https://www.youtube.com/watch?v=sAcj8me7wGI' },
-]
+// converter URL colada em URL de embed oficial
+function ytEmbed(url) {
+  try {
+    const u = new URL(url.trim())
+    let id = '', list = u.searchParams.get('list') || ''
+    if (u.hostname.includes('youtu.be')) id = u.pathname.slice(1)
+    else if (u.pathname.startsWith('/watch')) id = u.searchParams.get('v') || ''
+    else if (u.pathname.startsWith('/embed/')) id = u.pathname.split('/embed/')[1]
+    else if (u.pathname.startsWith('/playlist') && list) return `https://www.youtube-nocookie.com/embed/videoseries?list=${list}`
+    if (!id) return null
+    return `https://www.youtube-nocookie.com/embed/${id}${list ? `?list=${list}` : ''}`
+  } catch { return null }
+}
+function spEmbed(url) {
+  try {
+    const u = new URL(url.trim())
+    if (!u.hostname.includes('spotify.com')) return null
+    const parts = u.pathname.split('/').filter(Boolean) // [tipo, id]
+    const tipos = ['track', 'playlist', 'album', 'artist', 'show', 'episode']
+    let tipo = parts[0] === 'intl-pt' ? parts[1] : parts[0]
+    let id = parts[0] === 'intl-pt' ? parts[2] : parts[1]
+    if (!tipos.includes(tipo) || !id) return null
+    return `https://open.spotify.com/embed/${tipo}/${id}`
+  } catch { return null }
+}
 
-export default function Foco() {
-  const { eleitas, concluir, agua, addAgua, removeAgua, intencao } = useRoe()
+const SUGESTOES = {
+  yt: [
+    { n: 'Lofi radio', u: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
+    { n: 'Piano calmo', u: 'https://www.youtube.com/watch?v=sAcj8me7wGI' },
+  ],
+  sp: [
+    { n: 'Deep Focus', u: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ' },
+    { n: 'Peaceful Piano', u: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO' },
+  ],
+}
+
+export default function Foco({ onNavigate }) {
+  const { eleitas, concluir, agua, addAgua, removeAgua, intencao, media, setMediaUrl } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -72,7 +100,10 @@ export default function Foco() {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
     const id = task.id
-    setTimeout(() => { setCelebrate(false); concluir(id); setRunning(false); setSecs(0); setTotal(0) }, 3400)
+    setTimeout(() => {
+      setCelebrate(false); concluir(id); setRunning(false); setSecs(0); setTotal(0)
+      if (onNavigate) onNavigate('cidade') // ver o edifício a erguer-se
+    }, 2600)
   }
 
   const [dim, setDim] = useState(false)
@@ -108,6 +139,22 @@ export default function Foco() {
   const [postura, setPostura] = useState(false)
   const togglePostura = () => { setPostura(true); setTimeout(() => setPostura(false), 4000) }
 
+  // PLAYER DE MÚSICA (embed oficial dentro da app)
+  const [fonte, setFonte] = useState('yt')
+  const [urlInput, setUrlInput] = useState('')
+  const [urlErro, setUrlErro] = useState('')
+  const embedUrl = fonte === 'yt' ? (media.yt ? ytEmbed(media.yt) : null) : fonte === 'sp' ? (media.sp ? spEmbed(media.sp) : null) : null
+
+  const carregar = (url) => {
+    const u = url !== undefined ? url : urlInput
+    const emb = fonte === 'yt' ? ytEmbed(u) : spEmbed(u)
+    if (!emb) { setUrlErro(fonte === 'yt' ? 'Cola um link válido do YouTube.' : 'Cola um link válido do Spotify.'); return }
+    setUrlErro('')
+    setMediaUrl(fonte, u)
+    setUrlInput('')
+  }
+  const limpar = () => { setMediaUrl(fonte, ''); setUrlErro('') }
+
   // CELEBRAÇÃO
   const [celebrate, setCelebrate] = useState(false)
   const celRef = useRef(null)
@@ -135,10 +182,11 @@ export default function Foco() {
   const orbitAng = (1 - frac) * Math.PI * 2 - Math.PI / 2
   const timeStr = String(Math.floor(secs / 60)).padStart(2, '0') + ':' + String(secs % 60).padStart(2, '0')
   const porFocar = eleitas.filter((t) => t.id !== taskId)
+  const auraCol = task ? col : '#ADA590'
 
   return (
     <div className={`foco ${dim ? 'dim' : ''}`}>
-      <div className="aurora" style={{ background: task ? col : 'var(--faint)', opacity: dim ? 0.3 : (task ? undefined : 0.08) }} />
+      <div className="aurora" style={{ background: `radial-gradient(circle, ${auraCol} 0%, rgba(0,0,0,0) 62%)`, opacity: dim ? 0.22 : (task ? 0.15 : 0.05) }} />
       <div className="topbar">
         <div><div className="l1">{task ? 'Em foco · a decorrer' : 'Foco · pronto quando estiveres'}</div><div className="l2">{task ? 'Em foco' : 'Foco'}</div></div>
         <div className="now" style={{ color: task ? col : 'var(--soft)' }}><span className="pulse" style={{ background: task ? col : 'var(--faint)' }} /><span>{nowTxt}</span></div>
@@ -159,7 +207,7 @@ export default function Foco() {
               {porFocar.length === 0 ? (
                 <div className="foco-empty">
                   <div className="fe-t">Nada eleito para hoje.</div>
-                  <div className="fe-s">Vai ao Briefing eleger tarefas — aparecem aqui para focares.</div>
+                  <div className="fe-s">Vai ao Escritório eleger tarefas — aparecem aqui para focares.</div>
                 </div>
               ) : (
                 <div className="foco-list">
@@ -175,31 +223,28 @@ export default function Foco() {
           )}
 
           <div className="panel care enter" style={{ animationDelay: '.12s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>🌿</span>Cuidar de ti</div>
+            <div className="pt" style={{ marginBottom: 9 }}><span className="pico" style={{ background: 'var(--forest-soft)' }}>🌿</span>Cuidar de ti</div>
             <div className="care-grid">
               <button className={`care-tile vista ${vistaFeito ? 'ok' : ''}`} onClick={startEye}>
                 <IcoOlho />
                 <div className="ct-body">
                   <div className="ct-t">Descanso de vista</div>
-                  <div className="ct-s">{vistaFeito ? 'feito ✓ · olhos gratos' : 'regra 20-20-20 · 20 seg'}</div>
+                  <div className="ct-s">{vistaFeito ? 'feito ✓' : '20-20-20 · 20 seg'}</div>
                 </div>
-                <span className="ct-go">▸</span>
               </button>
               <button className="care-tile breath" onClick={startBreath}>
                 <IcoRespira />
                 <div className="ct-body">
                   <div className="ct-t">Respirar</div>
-                  <div className="ct-s">caixa 4-4-4 · acalma o ritmo</div>
+                  <div className="ct-s">caixa 4-4-4</div>
                 </div>
-                <span className="ct-go">▸</span>
               </button>
               <button className={`care-tile postura ${postura ? 'ok' : ''}`} onClick={togglePostura}>
                 <IcoPostura />
                 <div className="ct-body">
                   <div className="ct-t">Postura</div>
-                  <div className="ct-s">{postura ? 'endireitado ✓' : 'costas direitas · ombros soltos'}</div>
+                  <div className="ct-s">{postura ? 'endireitado ✓' : 'costas direitas'}</div>
                 </div>
-                <span className="ct-go">▸</span>
               </button>
               <div className="care-tile agua">
                 <IcoGota nivel={agua} />
@@ -210,7 +255,6 @@ export default function Foco() {
                     <span className="agua-n">{agua}<small>/8</small></span>
                     <button className="agua-btn mais" onClick={addAgua} disabled={agua === 8}>+</button>
                   </div>
-                  <div className="ct-s">copos hoje</div>
                 </div>
               </div>
             </div>
@@ -241,21 +285,51 @@ export default function Foco() {
         </div>
 
         <div className="col right">
-          <div className="panel musica enter">
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎵</span>Música para focar <span style={{ marginLeft: 'auto', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>ABRE NO TEU PC</span></div>
-            <div className="mus-list">
-              {MUSICA.map((m) => (
-                <a key={m.id} className="mus-item" href={m.url} target="_blank" rel="noreferrer" style={{ '--mc': m.cor, '--ms': m.corSoft }}>
-                  <div className="mus-ic">{m.ic}</div>
-                  <div className="mus-body">
-                    <div className="mus-t">{m.nome}</div>
-                    <div className="mus-s">{m.desc}</div>
-                  </div>
-                  <span className="mus-open">abrir ↗</span>
-                </a>
-              ))}
+          <div className="panel player enter">
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎵</span>A tocar agora <span style={{ marginLeft: 'auto', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>TOCA AQUI DENTRO</span></div>
+            <div className="src-tabs">
+              <button className={`srct ${fonte === 'yt' ? 'on' : ''}`} onClick={() => { setFonte('yt'); setUrlErro('') }}><span className="si">🔴</span>YouTube</button>
+              <button className={`srct ${fonte === 'sp' ? 'on' : ''}`} onClick={() => { setFonte('sp'); setUrlErro('') }}><span className="si">🟢</span>Spotify</button>
+              <button className={`srct off ${fonte === 'sys' ? 'on' : ''}`} onClick={() => { setFonte('sys'); setUrlErro('') }}><span className="si">🖥️</span>Sistema</button>
             </div>
-            <div className="hint">Abre a tua música num separador e volta cá — o foco fica contigo. <b>Controlo direto do Spotify chega na Fase 2.</b></div>
+
+            {fonte === 'sys' ? (
+              <div className="sys-note">
+                <div className="sn-t">Controlo do áudio do PC</div>
+                <div className="sn-s">Os browsers não deixam uma página web controlar o som do sistema — é uma proteção deles. Chega na <b>Fase 2</b>, com a app de desktop. Usa YouTube ou Spotify aqui dentro.</div>
+              </div>
+            ) : embedUrl ? (
+              <div className="player-live">
+                <iframe
+                  key={embedUrl}
+                  src={embedUrl}
+                  title="Player de música"
+                  className={fonte === 'yt' ? 'pl-yt' : 'pl-sp'}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowFullScreen
+                  frameBorder="0"
+                />
+                <button className="pl-trocar" onClick={limpar}>↻ trocar música</button>
+              </div>
+            ) : (
+              <div className="player-setup">
+                <input
+                  className="pl-input" type="text" value={urlInput}
+                  placeholder={fonte === 'yt' ? 'Cola um link do YouTube (vídeo ou playlist)' : 'Cola um link do Spotify (playlist, álbum…)'}
+                  onChange={(e) => { setUrlInput(e.target.value); setUrlErro('') }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') carregar() }}
+                />
+                <button className="pl-btn" onClick={() => carregar()}>Tocar ▶</button>
+                {urlErro && <div className="pl-erro">{urlErro}</div>}
+                <div className="pl-sug">
+                  <span>ou experimenta:</span>
+                  {SUGESTOES[fonte].map((s) => (
+                    <button key={s.n} className="pl-chip" onClick={() => carregar(s.u)}>{s.n}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="hint">A tua música, o teu gosto — cola o link e ela <b>toca dentro da app</b>, com os controlos oficiais do player.</div>
           </div>
 
           {eleitas.length > 0 && (
@@ -286,14 +360,8 @@ export default function Foco() {
 
       <div className={`celebrate ${celebrate ? 'show' : ''}`} ref={celRef}>
         <div className="bigcheck"><svg viewBox="0 0 50 50" fill="none"><path d="M14 25l7 7 15-15" stroke="#fff" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
-        <div className="bld"><svg width="150" height="90" viewBox="0 0 150 90">
-          <rect className="body-rect" x="58" y="6" width="34" height="84" rx="2" fill="#141207" />
-          <g fill="#FFCE0A">{[[64,16],[80,16],[64,34],[80,34],[64,52],[80,52]].map(([x,y],i)=>(<rect key={i} className="win" style={{transitionDelay:(1.15+i*0.15)+'s'}} x={x} y={y} width="7" height="8" />))}</g>
-          <rect className="body-rect" x="28" y="50" width="22" height="40" fill="#211E14" />
-          <rect className="body-rect" x="100" y="60" width="20" height="30" fill="#211E14" />
-        </svg></div>
         <div className="mt">Tarefa concluída!</div>
-        <div className="ms">+1 edifício na tua ROE City</div>
+        <div className="ms">a caminho da ROE City — vê o teu edifício a nascer</div>
       </div>
     </div>
   )
