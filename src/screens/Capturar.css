@@ -149,3 +149,28 @@
 /* minutos editáveis inline */
 .capturar .tg.tm.edit{display:inline-flex;align-items:center;gap:2px}
 .capturar .tg.tm.edit input{width:34px;border:none;background:transparent;font-family:var(--font-mono);font-size:9px;color:var(--mustard-ink);font-weight:700;outline:none;text-align:center;border-bottom:1px dashed var(--mustard-ink)}
+
+/* banner de email por catalogar */
+.capturar .email-pend{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#F0ECF9,#FBFAFE);border:1.5px solid #C9BEE8;border-radius:14px;padding:12px 14px;margin:14px 0 12px;animation:pendin .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes pendin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.capturar .email-pend .ep-ic{font-size:22px}
+.capturar .email-pend .ep-b{flex:1}
+.capturar .email-pend .ep-t{font-family:var(--font-display);font-size:13px;font-weight:700;color:#4D3F8A}
+.capturar .email-pend .ep-s{font-size:9.5px;font-family:var(--font-mono);color:#8a7bb8;margin-top:2px}
+.capturar .email-pend .ep-x{border:none;background:rgba(109,91,168,.12);color:#6D5BA8;width:26px;height:26px;border-radius:8px;cursor:pointer;font-size:12px;transition:all .2s}
+.capturar .email-pend .ep-x:hover{background:var(--red-soft);color:var(--red-ink)}
+
+/* seletor de duração premium */
+.capturar .dur-row{display:flex;gap:12px;align-items:center;margin-bottom:11px;flex-wrap:wrap}
+.capturar .dur-stepper{display:flex;align-items:center;gap:4px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:5px;box-shadow:0 4px 14px rgba(60,50,30,.06)}
+.capturar .dur-btn{width:36px;height:36px;border-radius:12px;border:none;background:var(--cream);color:var(--soft);font-size:18px;font-weight:700;cursor:pointer;display:grid;place-items:center;transition:all .2s;line-height:1}
+.capturar .dur-btn:hover{transform:scale(1.08);background:var(--red-soft);color:var(--red-ink)}
+.capturar .dur-btn.mais:hover{background:var(--forest-soft);color:var(--forest-ink)}
+.capturar .dur-val{min-width:64px;text-align:center;display:flex;align-items:baseline;justify-content:center;gap:3px}
+.capturar .dur-val .dv-n{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--ink)}
+.capturar .dur-val .dv-u{font-size:10px;font-family:var(--font-mono);color:var(--faint)}
+.capturar .dur-chips{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+.capturar .dur-chip{border:1.5px solid var(--line);background:var(--card);border-radius:11px;padding:9px 13px;font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--soft);cursor:pointer;transition:all .22s}
+.capturar .dur-chip:hover{transform:translateY(-2px)}
+.capturar .dur-chip.on{border-color:var(--mustard);background:var(--mustard);color:var(--black);box-shadow:0 5px 14px rgba(255,206,10,.3)}
+.capturar .cap-btn.full{width:100%}

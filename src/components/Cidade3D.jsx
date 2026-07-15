@@ -1,42 +1,70 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { useRoe } from '../state/RoeContext.jsx'
 
-export default function Cidade3D({ onClose }) {
+// Cidade 3D persistente: o iframe carrega UMA vez (em fundo, pouco após o arranque)
+// e mantém-se vivo entre aberturas — abrir passa a ser instantâneo e a grua
+// dispara logo. A sincronização é incremental: só as obras novas são enviadas.
+export default function Cidade3D({ visible, onClose }) {
   const { feitas } = useRoe()
   const iframeRef = useRef(null)
-  const feitasRef = useRef(feitas)
-  feitasRef.current = feitas
+  const enviadas = useRef(0)      // nº de obras já refletidas na cidade
+  const [src, setSrc] = useState(null)
 
+  // pré-carregar em fundo, sem atrasar o arranque da app
   useEffect(() => {
-    // espera a cidade carregar os modelos, restaura o progresso e,
-    // se houver conclusão recente, ergue o edifício com a grua (cinema)
-    let tries = 0
-    const timer = setInterval(() => {
-      tries++
+    const t = setTimeout(() => setSrc('./cidade-v41.html'), 2500)
+    return () => clearTimeout(t)
+  }, [])
+  // se o utilizador abrir antes do pré-carregamento, carrega já
+  useEffect(() => { if (visible && !src) setSrc('./cidade-v41.html') }, [visible, src])
+
+  // ao mostrar: recalcular tamanho do canvas; pausar o render 3D quando escondida (poupa CPU)
+  useEffect(() => {
+    const win = iframeRef.current && iframeRef.current.contentWindow
+    try {
+      if (win) {
+        win._roePaused = !visible
+        if (visible) setTimeout(() => win.dispatchEvent(new win.Event('resize')), 60)
+      }
+    } catch { /* */ }
+  }, [visible, src])
+
+  // sincronização incremental das obras
+  useEffect(() => {
+    if (!src) return
+    let stop = false
+    const sync = () => {
+      if (stop) return
       const win = iframeRef.current && iframeRef.current.contentWindow
-      if (!win) return
       let ready = false
-      try { ready = !!win._roeReady } catch { /* cross-origin não acontece: mesma origem */ }
-      if (!ready) { if (tries > 100) clearInterval(timer); return }
-      clearInterval(timer)
+      try { ready = !!(win && win._roeReady) } catch { ready = false }
+      if (!ready) { setTimeout(sync, 400); return }
       try {
-        const fs = feitasRef.current
-        const ultima = fs.length > 0 ? fs[fs.length - 1] : null
-        const recente = ultima && ultima.feitaEm && (Date.now() - ultima.feitaEm < 30000)
-        const anteriores = recente ? fs.length - 1 : fs.length
-        if (anteriores > 0 && typeof win.restoreProgress === 'function') win.restoreProgress(anteriores)
-        if (recente && typeof win.completeTask === 'function') {
-          setTimeout(() => win.completeTask(ultima.texto), 700) // deixa a cidade assentar → grua
+        const total = feitas.length
+        if (total > enviadas.current) {
+          const novas = total - enviadas.current
+          const ultima = feitas[feitas.length - 1]
+          const recente = ultima && ultima.feitaEm && (Date.now() - ultima.feitaEm < 30000)
+          if (recente && !visible) { setTimeout(sync, 400); return } // espera o overlay abrir p/ veres a grua
+          if (recente) {
+            // intermédias em silêncio; a última com grua (cinema)
+            if (novas > 1 && typeof win.restoreProgress === 'function') win.restoreProgress(enviadas.current + novas - 1)
+            if (typeof win.completeTask === 'function') setTimeout(() => { try { win.completeTask(ultima.texto) } catch { /* */ } }, visible ? 600 : 0)
+          } else if (typeof win.restoreProgress === 'function') {
+            win.restoreProgress(total)
+          }
+          enviadas.current = total
         }
       } catch { /* silencioso */ }
-    }, 300)
-    return () => clearInterval(timer)
-  }, [])
+    }
+    sync()
+    return () => { stop = true }
+  }, [feitas, src, visible])
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100, background: '#0a0812',
-      display: 'flex', flexDirection: 'column',
+      display: visible ? 'flex' : 'none', flexDirection: 'column',
     }}>
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -59,13 +87,15 @@ export default function Cidade3D({ onClose }) {
           cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
         }}>← voltar à app</button>
       </div>
-      <iframe
-        ref={iframeRef}
-        src="./cidade-v41.html"
-        title="ROE City 3D"
-        allow="geolocation; fullscreen; autoplay"
-        style={{ flex: 1, width: '100%', border: 'none' }}
-      />
+      {src ? (
+        <iframe
+          ref={iframeRef}
+          src={src}
+          title="ROE City 3D"
+          allow="geolocation; fullscreen; autoplay"
+          style={{ flex: 1, width: '100%', border: 'none' }}
+        />
+      ) : <div style={{ flex: 1 }} />}
     </div>
   )
 }

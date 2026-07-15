@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import './Capturar.css'
 import { useRoe } from '../state/RoeContext.jsx'
 
@@ -31,6 +31,8 @@ export default function Capturar() {
   const inputRef = useRef(null)
   const toastT = useRef(null)
   const dropRef = useRef(null)
+  const fileRef = useRef(null)
+  const [pendentes, setPendentes] = useState([])  // emails lidos, à espera de catalogação
 
   const lista = fila
   const showToast = (msg) => {
@@ -38,12 +40,26 @@ export default function Capturar() {
     toastT.current = setTimeout(() => setToast(''), 3000)
   }
 
+  // o primeiro pendente entra no formulário (texto editável) para catalogares
+  useEffect(() => {
+    if (pendentes.length > 0) {
+      setTexto(pendentes[0])
+      if (inputRef.current) inputRef.current.focus()
+    }
+  }, [pendentes])
+
   const fazerCaptura = () => {
     const txt = texto.trim()
     if (!txt) return
-    capturar({ texto: txt, tipo, min, prioridade: pri })
+    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri })
     setTexto(''); setPri('normal'); setMin(15)
-    showToast('Capturado ✓')
+    if (pendentes.length > 0) {
+      const resto = pendentes.slice(1)
+      setPendentes(resto)
+      showToast(resto.length > 0 ? `Capturado ✓ · falta${resto.length > 1 ? 'm' : ''} ${resto.length} email${resto.length > 1 ? 's' : ''}` : 'Capturado ✓')
+    } else {
+      showToast('Capturado ✓')
+    }
     if (inputRef.current) inputRef.current.focus()
   }
 
@@ -61,17 +77,23 @@ export default function Capturar() {
     }
   }
 
-  const onDrop = (e) => {
-    e.preventDefault(); setDragOver(false)
-    const files = Array.from(e.dataTransfer.files || [])
+  const lerFicheiros = (files) => {
     if (files.length === 0) return
     setReading(true)
     setTimeout(() => {
       setReading(false)
-      files.forEach((f) => capturar({ texto: nomeDeFicheiro(f.name), tipo: 'ficheiro', min: 15, prioridade: 'normal' }))
+      setPendentes((p) => [...p, ...files.map((f) => nomeDeFicheiro(f.name))])
       burst()
-      showToast(files.length > 1 ? `${files.length} emails capturados ✓` : 'Email capturado ✓')
-    }, 1400)
+      showToast(files.length > 1 ? `${files.length} emails lidos — cataloga um a um` : 'Email lido — cataloga e captura')
+    }, 1200)
+  }
+  const onDrop = (e) => {
+    e.preventDefault(); setDragOver(false)
+    lerFicheiros(Array.from(e.dataTransfer.files || []))
+  }
+  const onPick = (e) => {
+    lerFicheiros(Array.from(e.target.files || []))
+    e.target.value = ''
   }
 
   const ciclarPri = (t) => {
@@ -102,7 +124,11 @@ export default function Capturar() {
               onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
               onDragLeave={(e) => { e.preventDefault(); setDragOver(false) }}
               onDrop={onDrop}
+              onClick={() => fileRef.current && fileRef.current.click()}
+              role="button"
+              style={{ cursor: 'pointer' }}
             >
+              <input ref={fileRef} type="file" accept=".eml,.msg,.txt,.pdf" multiple style={{ display: 'none' }} onChange={onPick} />
               <svg className="edge" width="100%" height="100%"><rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="18" /></svg>
               <div className="scanline" />
               <div className="scene">
@@ -112,8 +138,8 @@ export default function Capturar() {
                 <span className="fl" style={{ left: '26%', bottom: '4%', animationDelay: '1.5s' }}>💡</span>
                 <div className="env">✉</div>
               </div>
-              <div className="dt">Arrasta um email para aqui</div>
-              <div className="ds">Larga aqui ficheiros de email do teu PC (.eml, .msg)<br />— a app capta e junta à tua fila.</div>
+              <div className="dt">Arrasta um email — ou clica para escolher</div>
+              <div className="ds">Larga aqui ficheiros do teu PC (.eml, .msg) ou clica e escolhe.<br />Depois catalogas: prioridade, tipo e minutos — como tudo o resto.</div>
               <div className="think">
                 <span className={`chip ${reading ? 'done c-imp' : ''}`}>a ler…</span>
                 <span className={`chip ${reading ? 'done c-tm' : ''}`}>assunto</span>
@@ -121,7 +147,18 @@ export default function Capturar() {
               </div>
             </div>
 
-            <div className="or-sep"><span>ou escreve à mão</span></div>
+            {pendentes.length > 0 ? (
+              <div className="email-pend">
+                <span className="ep-ic">📧</span>
+                <div className="ep-b">
+                  <div className="ep-t">Email lido — cataloga e captura</div>
+                  <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : 'ajusta o texto, prioridade e minutos'}</div>
+                </div>
+                <button className="ep-x" title="Descartar este email" onClick={() => setPendentes((p) => p.slice(1))}>✕</button>
+              </div>
+            ) : (
+              <div className="or-sep"><span>ou escreve à mão</span></div>
+            )}
 
             <div className="type-tabs">
               {Object.keys(TIPOS).map((k) => (
@@ -140,10 +177,24 @@ export default function Capturar() {
                 </button>
               ))}
             </div>
-            <div className="cap-row">
-              <div className="min-pick"><label>~</label><input type="number" min="5" step="5" value={min} onChange={(e) => setMin(e.target.value)} /><span>min</span></div>
-              <button className="cap-btn" onClick={fazerCaptura}>Capturar ↵</button>
+            <div className="dur-row">
+              <div className="dur-stepper">
+                <button className="dur-btn" onClick={() => setMin((m) => Math.max(5, Number(m) - 5))}>−</button>
+                <div className="dur-val">
+                  <span className="dv-n">{Number(min) >= 60 ? `${Math.floor(min / 60)}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : min}</span>
+                  <span className="dv-u">{Number(min) >= 60 ? '' : 'min'}</span>
+                </div>
+                <button className="dur-btn mais" onClick={() => setMin((m) => Math.min(480, Number(m) + 5))}>＋</button>
+              </div>
+              <div className="dur-chips">
+                {[15, 30, 45, 60, 90, 120].map((v) => (
+                  <button key={v} className={`dur-chip ${Number(min) === v ? 'on' : ''}`} onClick={() => setMin(v)}>
+                    {v >= 60 ? `${v / 60}h${v % 60 ? '30' : ''}` : v}
+                  </button>
+                ))}
+              </div>
             </div>
+            <button className="cap-btn full" onClick={fazerCaptura}>{pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 
           <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>

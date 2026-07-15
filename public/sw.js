@@ -1,8 +1,8 @@
 // ROE Productivity — service worker
-// Estratégia: network-first (busca sempre a versão nova; se falhar, usa a cache).
-// Assim nunca ficas preso a uma versão antiga depois de um deploy no Vercel.
+// index/app: network-first (nunca ficas preso a versão antiga após deploy)
+// cidade 3D (5MB): stale-while-revalidate (abre instantâneo da cache; atualiza em fundo)
 
-const CACHE = 'roe-productivity-v1'
+const CACHE = 'roe-productivity-v2'
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png']
 
 self.addEventListener('install', (e) => {
@@ -20,8 +20,23 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request
   if (req.method !== 'GET') return
-  // a cidade 3D é grande (~5MB): deixa o browser tratar dela normalmente
-  if (req.url.includes('cidade-v41.html')) return
+
+  // CIDADE 3D: stale-while-revalidate — instantânea a partir da 2ª visita
+  if (req.url.includes('cidade-v41.html')) {
+    e.respondWith(
+      caches.match(req).then((cached) => {
+        const refetch = fetch(req).then((res) => {
+          const copy = res.clone()
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {})
+          return res
+        }).catch(() => cached)
+        return cached || refetch
+      })
+    )
+    return
+  }
+
+  // resto: network-first
   e.respondWith(
     fetch(req)
       .then((res) => {

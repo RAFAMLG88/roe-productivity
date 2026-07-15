@@ -36,7 +36,7 @@ export default function App() {
         <div className="main">
           <Screen key={screen} onNavigate={navigate} />
         </div>
-        {show3D && <Cidade3D onClose={() => setShow3D(false)} />}
+        <Cidade3D visible={show3D} onClose={() => setShow3D(false)} />
       </div>
     </RoeProvider>
   )
