@@ -282,19 +282,6 @@
 .foco .now-playing .np-t{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foco .now-playing .np-s{font-size:9px;font-family:var(--font-mono);color:var(--faint);flex:none}
 
-/* ===== 4 · IMERSÃO ZEN: entrar no foco é entrar noutro estado ===== */
-.foco .zen-bg{position:fixed;inset:0;z-index:1;pointer-events:none;animation:zenin 1.6s ease}
-@keyframes zenin{from{opacity:0}to{opacity:1}}
-.foco .zen-vign{position:absolute;inset:0;background:radial-gradient(ellipse 62% 58% at 50% 44%,transparent 30%,rgba(20,18,7,.05) 62%,rgba(20,18,7,.16) 100%)}
-.foco .zen-halo{position:absolute;left:50%;top:42%;width:620px;height:620px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--zc) 16%,transparent) 0%,color-mix(in srgb,var(--zc) 7%,transparent) 42%,transparent 70%);animation:zbreath 7s ease-in-out infinite}
-@keyframes zbreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.8}50%{transform:translate(-50%,-50%) scale(1.12);opacity:1}}
-.foco .zen-ripple{position:absolute;left:50%;top:42%;width:340px;height:340px;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid color-mix(in srgb,var(--zc) 34%,transparent);animation:zrip 9s ease-out infinite}
-.foco .zen-ripple.r2{animation-delay:3s}
-.foco .zen-ripple.r3{animation-delay:6s}
-@keyframes zrip{0%{transform:translate(-50%,-50%) scale(.92);opacity:0}12%{opacity:.55}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
-.foco .zen-mote{position:absolute;bottom:-30px;width:var(--s);height:var(--s);border-radius:50%;background:var(--zc);opacity:var(--o);filter:blur(var(--b));animation:zmote linear infinite}
-@keyframes zmote{0%{transform:translateY(0) translateX(0)}25%{transform:translateY(-27vh) translateX(14px)}50%{transform:translateY(-54vh) translateX(-10px)}75%{transform:translateY(-81vh) translateX(10px)}100%{transform:translateY(-108vh) translateX(0)}}
-
 /* em zen: timer sobe de escala e centra o palco; música em destaque por baixo */
 .foco.dim .ring-zone{z-index:2}
 .foco.dim .ring-wrap{transform:scale(1.14);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
@@ -340,3 +327,93 @@
 .foco .col.mid{transition:justify-content 0s}
 /* halo e ondas acompanham o novo centro vertical do anel */
 .foco .zen-halo,.foco .zen-ripple{top:46%}
+
+/* ===== caixa "A tocar agora": estúdio ROE (única escura na app) ===== */
+.foco .panel.player{background:linear-gradient(165deg,#1d1a0e 0%,#141207 58%,#100e07 100%);
+  border:1px solid rgba(255,206,10,.4);border-radius:18px;
+  box-shadow:0 16px 40px rgba(20,18,7,.35),0 0 28px rgba(255,206,10,.1),inset 0 1px 0 rgba(255,220,80,.15);
+  position:relative;overflow:hidden}
+.foco .panel.player::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:conic-gradient(from 200deg at 22% -14%,rgba(255,220,90,.12),transparent 26%,transparent 72%,rgba(255,220,90,.05))}
+.foco .panel.player>*{position:relative;z-index:1}
+.foco .panel.player .pt{color:#F4EEE0}
+.foco .panel.player .pt span[style]{filter:saturate(1.2)}
+.foco .panel.player .src-tabs .srct{background:rgba(244,238,224,.06);border-color:rgba(255,206,10,.18);color:#c9c2ae}
+.foco .panel.player .src-tabs .srct.on{background:rgba(255,206,10,.16);border-color:var(--mustard);color:#FFCE0A}
+.foco .panel.player .pl-input{background:rgba(244,238,224,.07);border-color:rgba(255,206,10,.22);color:#F4EEE0}
+.foco .panel.player .pl-input::placeholder{color:#8a8272}
+.foco .panel.player .pl-input:focus{border-color:var(--mustard)}
+.foco .panel.player .pl-btn{background:var(--mustard);color:var(--black);box-shadow:0 8px 20px rgba(255,206,10,.3)}
+.foco .panel.player .pl-sug span{color:#8a8272}
+.foco .panel.player .pl-chip{background:rgba(244,238,224,.06);border-color:rgba(255,206,10,.2);color:#c9c2ae}
+.foco .panel.player .pl-chip:hover{background:rgba(255,206,10,.16);color:#FFCE0A;border-color:var(--mustard)}
+.foco .panel.player .hint{color:#8a8272}
+.foco .panel.player .hint b{color:#d9cfa8}
+.foco .panel.player .pl-erro{color:#ff8095}
+.foco .panel.player .sys-note .sn-t{color:#F4EEE0}
+.foco .panel.player .sys-note .sn-s{color:#a89f8a}
+.foco .panel.player .pl-trocar{background:rgba(244,238,224,.08);border:1px solid rgba(255,206,10,.22);color:#c9c2ae}
+.foco .panel.player .pl-trocar:hover{color:#FFCE0A;border-color:var(--mustard)}
+
+/* palco onde o reprodutor aterra: 16:9, moldura interior subtil */
+.foco .player-stage{width:100%;aspect-ratio:16/9;border-radius:14px;background:#0a0906;border:1px dashed rgba(255,206,10,.2);margin-bottom:9px}
+.foco .player-stage.sp{aspect-ratio:auto;height:152px}
+
+/* ===== SANTUÁRIO: a noite desce sobre a tua cidade ===== */
+.foco .zen-bg{position:fixed;inset:0;z-index:1;pointer-events:none;animation:zenin 2.2s ease}
+@keyframes zenin{from{opacity:0}to{opacity:1}}
+.foco .zen-night{position:absolute;inset:0;background:
+  radial-gradient(ellipse 90% 70% at 50% 30%,#171d2e 0%,#10131f 45%,#0a0c14 100%)}
+.foco .zen-aur{position:absolute;width:56vw;height:46vh;border-radius:50%;filter:blur(70px);mix-blend-mode:screen;opacity:.5;will-change:transform}
+.foco .zen-aur.a{left:-8vw;top:-6vh;background:radial-gradient(circle,color-mix(in srgb,var(--zc) 55%,transparent),transparent 70%);animation:aur1 34s ease-in-out infinite}
+.foco .zen-aur.b{right:-12vw;top:4vh;background:radial-gradient(circle,rgba(31,184,224,.34),transparent 70%);animation:aur2 42s ease-in-out infinite}
+.foco .zen-aur.c{left:24vw;top:-14vh;background:radial-gradient(circle,rgba(255,206,10,.2),transparent 70%);animation:aur3 50s ease-in-out infinite}
+@keyframes aur1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9vw,7vh) scale(1.18)}}
+@keyframes aur2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-11vw,5vh) scale(.95)}}
+@keyframes aur3{0%,100%{transform:translate(0,0)}50%{transform:translate(6vw,9vh) scale(1.14)}}
+.foco .zen-star{position:absolute;width:var(--ss);height:var(--ss);border-radius:50%;background:#F4EEE0;opacity:var(--so);animation:twk ease-in-out infinite;box-shadow:0 0 6px rgba(244,238,224,.8)}
+@keyframes twk{0%,100%{opacity:calc(var(--so)*.3);transform:scale(.8)}50%{opacity:var(--so);transform:scale(1.15)}}
+.foco .zen-ripple{position:absolute;left:50%;top:46%;width:360px;height:360px;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid color-mix(in srgb,var(--zc) 45%,transparent);animation:zrip 9s ease-out infinite;box-shadow:0 0 24px color-mix(in srgb,var(--zc) 18%,transparent)}
+.foco .zen-ripple.r2{animation-delay:3s}
+.foco .zen-ripple.r3{animation-delay:6s}
+@keyframes zrip{0%{transform:translate(-50%,-50%) scale(.9);opacity:0}12%{opacity:.6}100%{transform:translate(-50%,-50%) scale(2.7);opacity:0}}
+.foco .zen-mote{position:absolute;bottom:-30px;width:var(--s);height:var(--s);border-radius:50%;background:color-mix(in srgb,var(--zc) 80%,#fff);opacity:var(--o);filter:blur(var(--b));box-shadow:0 0 10px var(--zc);animation:zmote linear infinite}
+@keyframes zmote{0%{transform:translateY(0) translateX(0)}25%{transform:translateY(-27vh) translateX(16px)}50%{transform:translateY(-54vh) translateX(-12px)}75%{transform:translateY(-81vh) translateX(12px)}100%{transform:translateY(-108vh) translateX(0)}}
+/* a cidade no horizonte: o porquê de tudo isto */
+.foco .zen-city{position:absolute;left:0;right:0;bottom:0;width:100%;height:240px}
+.foco .zen-city .zc-far{fill:#0d101c;opacity:.85}
+.foco .zen-city .zc-near{fill:#070910}
+.foco .zen-city .zc-win{fill:#FFCE0A;opacity:0;animation:winlight ease-in-out infinite;filter:drop-shadow(0 0 5px rgba(255,206,10,.9))}
+@keyframes winlight{0%,18%{opacity:0}30%,68%{opacity:.9}82%,100%{opacity:0}}
+.foco .zen-line{position:absolute;left:50%;bottom:15%;transform:translateX(-50%);font-family:var(--font-mono);font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:rgba(244,238,224,.34);animation:zline 3s 1.4s ease backwards}
+@keyframes zline{from{opacity:0;letter-spacing:.6em}to{opacity:1}}
+
+/* sobre a noite, o timer é a lua */
+.foco.dim .ring-center .time{color:#F4EEE0!important;text-shadow:0 4px 30px rgba(0,0,0,.5)}
+.foco.dim .ring-center .est{color:#9aa3b8}
+.foco.dim .ring-wrap svg circle[stroke="#E6DCC8"]{stroke:rgba(244,238,224,.13)}
+.foco.dim .sanct-hint{color:rgba(244,238,224,.4);z-index:2}
+.foco.dim .topbar,.foco.dim .now-badge{opacity:0;transition:opacity 1s}
+
+/* ===== cuidar de ti com ênfase: ml, meta OMS, lembretes ===== */
+.foco .agua-track{margin-top:6px;height:4px;border-radius:99px;background:rgba(31,184,224,.16);overflow:hidden}
+.foco .agua-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sky),#6fd6f2);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.foco .care-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:9px;font-size:8.5px;font-family:var(--font-mono);color:var(--faint)}
+.foco .care-foot b{color:var(--sky-ink)}
+.foco .care-foot .cf-next{color:var(--soft)}
+
+/* toast de lembrete: chega com som, sai com ação */
+.foco .care-toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:70;display:flex;align-items:center;gap:12px;
+  background:#141207;border:1px solid rgba(255,206,10,.4);border-radius:16px;padding:13px 15px;max-width:520px;
+  box-shadow:0 20px 50px rgba(20,18,7,.45),0 0 26px rgba(255,206,10,.12);animation:ctoin .55s cubic-bezier(.2,1.1,.3,1.1)}
+@keyframes ctoin{from{opacity:0;transform:translateX(-50%) translateY(-22px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
+.foco .care-toast .cto-ic{font-size:24px;flex:none}
+.foco .care-toast .cto-b{min-width:0}
+.foco .care-toast .cto-t{font-family:var(--font-display);font-size:13.5px;font-weight:700;color:#F4EEE0}
+.foco .care-toast .cto-s{font-size:9.5px;font-family:var(--font-mono);color:#a89f8a;margin-top:2px}
+.foco .care-toast .cto-go{flex:none;border:none;border-radius:11px;padding:9px 14px;background:var(--mustard);color:var(--black);font-family:var(--font-display);font-size:11.5px;font-weight:700;cursor:pointer;transition:transform .18s}
+.foco .care-toast .cto-go:hover{transform:scale(1.06)}
+.foco .care-toast .cto-x{flex:none;width:24px;height:24px;border:none;border-radius:8px;background:rgba(244,238,224,.1);color:#c9c2ae;cursor:pointer;font-size:11px}
+.foco .care-toast .cto-x:hover{background:rgba(255,31,61,.25);color:#ff8095}
+.foco .care-toast.agua{border-color:rgba(31,184,224,.45);box-shadow:0 20px 50px rgba(20,18,7,.45),0 0 26px rgba(31,184,224,.14)}
+.foco .care-toast.agua .cto-go{background:var(--sky);color:#06222c}

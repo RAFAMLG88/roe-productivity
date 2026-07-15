@@ -24,7 +24,7 @@ function spEmbed(u) {
 // Dock de música global: vive fora dos ecrãs, por isso mudar de aba NUNCA pára a música.
 // Só pára se o utilizador pausar no player ou clicar ✕.
 export default function MediaDock() {
-  const { media, mediaTitle, setMediaUrl } = useRoe()
+  const { media, mediaTitle, setMediaUrl, playerAnchor } = useRoe()
   const [mini, setMini] = useState(false)
   const fonte = media.yt ? 'yt' : media.sp ? 'sp' : null
   if (!fonte) return null
@@ -32,8 +32,12 @@ export default function MediaDock() {
   if (!src) return null
   const titulo = mediaTitle[fonte] || (fonte === 'yt' ? 'YouTube' : 'Spotify')
 
+  const anch = playerAnchor
+  const style = anch
+    ? { left: anch.x, top: anch.y, width: anch.w, height: anch.h, right: 'auto', bottom: 'auto' }
+    : undefined
   return (
-    <div className={`media-dock ${mini ? 'mini' : ''}`}>
+    <div className={`media-dock ${mini ? 'mini' : ''} ${anch ? 'anchored' : ''}`} style={style}>
       <div className="md-bar">
         <span className="md-eq"><b /><b /><b /></span>
         <span className="md-t" title={titulo}>{titulo}</span>

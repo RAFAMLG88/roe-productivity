@@ -74,7 +74,7 @@ const SUGESTOES = {
 }
 
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo } = useRoe()
+  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -150,6 +150,62 @@ export default function Foco({ onNavigate }) {
   const [postura, setPostura] = useState(false)
   const togglePostura = () => { setPostura(true); setTimeout(() => setPostura(false), 4000) }
 
+  // ===== LEMBRETES DE CUIDADO (com som) =====
+  // intervalos racionais durante foco ATIVO: vista 20 min (regra 20-20-20),
+  // água 45 min (rumo aos ~2 L/dia da OMS), postura 60 min.
+  const CARE_IV = { vista: 1200, agua: 2700, postura: 3600 }
+  const focoSecs = useRef(0)
+  const careNext = useRef({ vista: CARE_IV.vista, agua: CARE_IV.agua, postura: CARE_IV.postura })
+  const [lembrete, setLembrete] = useState(null)
+  const [, setCareTick] = useState(0)
+
+  const playChime = () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext
+      const ctx = playChime._ctx || (playChime._ctx = new AC())
+      if (ctx.state === 'suspended') ctx.resume()
+      const t0 = ctx.currentTime
+      ;[[880, 0.16], [1318.5, 0.1]].forEach(([f, g], i) => {
+        const o = ctx.createOscillator(); const gn = ctx.createGain()
+        o.type = 'sine'; o.frequency.value = f
+        gn.gain.setValueAtTime(0, t0)
+        gn.gain.linearRampToValueAtTime(g, t0 + 0.02 + i * 0.06)
+        gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.4)
+        o.connect(gn); gn.connect(ctx.destination)
+        o.start(t0 + i * 0.06); o.stop(t0 + 1.5)
+      })
+      window._chimeOk = true
+    } catch { /* sem áudio, sem drama */ }
+  }
+
+  const disparaLembrete = (tipo) => {
+    setLembrete({ tipo, em: Date.now() })
+    playChime()
+  }
+  useEffect(() => { window._careTrigger = disparaLembrete; return () => { delete window._careTrigger } }, [])
+
+  useEffect(() => {
+    if (!running) return
+    const t = setInterval(() => {
+      focoSecs.current += 1
+      setCareTick((x) => x + 1)
+      if (lembrete) return // um de cada vez; os próximos esperam a vez
+      const fs = focoSecs.current
+      if (fs >= careNext.current.vista) { careNext.current.vista = fs + CARE_IV.vista; disparaLembrete('vista'); return }
+      if (fs >= careNext.current.agua && agua * 250 < 2000) { careNext.current.agua = fs + CARE_IV.agua; disparaLembrete('agua'); return }
+      if (fs >= careNext.current.postura) { careNext.current.postura = fs + CARE_IV.postura; disparaLembrete('postura') }
+    }, 1000)
+    return () => clearInterval(t)
+  }, [running, lembrete, agua])
+
+  useEffect(() => {
+    if (!lembrete) return
+    const t = setTimeout(() => setLembrete(null), 16000)
+    return () => clearTimeout(t)
+  }, [lembrete])
+
+  const minAte = (tipo) => Math.max(0, Math.ceil((careNext.current[tipo] - focoSecs.current) / 60))
+
   // PLAYER DE MÚSICA (embed oficial dentro da app)
   const [fonte, setFonte] = useState('yt')
   const [urlInput, setUrlInput] = useState('')
@@ -172,6 +228,24 @@ export default function Foco({ onNavigate }) {
     fetch(oe).then((r) => r.json()).then((j) => { if (j && j.title) setMediaTitulo(fonte, j.title) }).catch(() => {})
   }
   const limpar = () => { setMediaUrl(fonte, ''); setUrlErro('') }
+
+  // palco do player: publica a posição da caixa para o iframe global aterrar nela
+  const stageRef = useRef(null)
+  const temEmbed = !!embedUrl
+  useEffect(() => {
+    if (!temEmbed || dim) { setPlayerAnchor(null); return }
+    const pub = () => {
+      const el = stageRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      if (r.width > 40) setPlayerAnchor({ x: r.left, y: r.top, w: r.width, h: r.height })
+    }
+    pub()
+    const t1 = setTimeout(pub, 350); const t2 = setTimeout(pub, 900); const t3 = setTimeout(pub, 1400)
+    const ro = new ResizeObserver(pub); if (stageRef.current) ro.observe(stageRef.current)
+    window.addEventListener('resize', pub)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); ro.disconnect(); window.removeEventListener('resize', pub); setPlayerAnchor(null) }
+  }, [temEmbed, dim, fonte])
 
   // CELEBRAÇÃO
   const [celebrate, setCelebrate] = useState(false)
@@ -270,11 +344,16 @@ export default function Foco({ onNavigate }) {
                   <div className="ct-t">Hidratação</div>
                   <div className="ct-agua">
                     <button className="agua-btn" onClick={removeAgua} disabled={agua === 0}>−</button>
-                    <span className="agua-n">{agua}<small>/8</small></span>
+                    <span className="agua-n">{agua * 250}<small> ml</small></span>
                     <button className="agua-btn mais" onClick={addAgua} disabled={agua === 8}>+</button>
                   </div>
+                  <div className="agua-track"><i style={{ width: `${Math.min(100, agua * 250 / 2000 * 100)}%` }} /></div>
                 </div>
               </div>
+            </div>
+            <div className="care-foot">
+              <span>meta ~<b>2 L/dia</b> (OMS) · +250 ml por copo</span>
+              {running && <span className="cf-next">🔔 vista {minAte('vista')}m · água {minAte('agua')}m</span>}
             </div>
           </div>
         </div>
@@ -334,14 +413,8 @@ export default function Foco({ onNavigate }) {
                 <div className="sn-s">Os browsers não deixam uma página web controlar o som do sistema — é uma proteção deles. Chega na <b>Fase 2</b>, com a app de desktop. Usa YouTube ou Spotify aqui dentro.</div>
               </div>
             ) : embedUrl ? (
-              <div className="player-live docked">
-                <div className="pl-dock-note">
-                  <span className="eq"><b /><b /><b /></span>
-                  <div className="pdn-b">
-                    <div className="pdn-t">{mediaTitle[fonte] || 'A tua música'}</div>
-                    <div className="pdn-s">a tocar no leitor fixo ↘ — segue-te por toda a app</div>
-                  </div>
-                </div>
+              <div className="player-live">
+                <div ref={stageRef} className={`player-stage ${fonte === 'sp' ? 'sp' : ''}`} />
                 <button className="pl-trocar" onClick={limpar}>↻ trocar música</button>
               </div>
             ) : (
@@ -362,7 +435,7 @@ export default function Foco({ onNavigate }) {
                 </div>
               </div>
             )}
-            <div className="hint">A tua música, o teu gosto — cola o link e ela toca num <b>leitor fixo no canto</b> — muda de aba à vontade, a música não pára.</div>
+            <div className="hint">A tua música, o teu gosto — toca <b>aqui dentro</b> — e quando mudas de aba, segue contigo num leitor de bolso. Nunca pára.</div>
           </div>
 
           {eleitas.length > 0 && (
@@ -376,21 +449,55 @@ export default function Foco({ onNavigate }) {
 
       {dim && task && (
         <div className="zen-bg" style={{ '--zc': col }}>
-          <div className="zen-vign" />
-          <div className="zen-halo" />
-          <span className="zen-ripple" />
-          <span className="zen-ripple r2" />
-          <span className="zen-ripple r3" />
-          {Array.from({ length: 16 }).map((_, i) => (
-            <i key={i} className="zen-mote" style={{
-              left: `${(i * 6.3 + 4) % 96}%`,
-              '--s': `${3 + (i % 4) * 2.2}px`,
-              '--b': `${(i % 3) * 1.1}px`,
-              '--o': `${0.18 + (i % 4) * 0.1}`,
-              animationDuration: `${16 + (i % 5) * 6}s`,
-              animationDelay: `${-(i * 2.7) % 20}s`,
+          <div className="zen-night" />
+          <div className="zen-aur a" /><div className="zen-aur b" /><div className="zen-aur c" />
+          {Array.from({ length: 70 }).map((_, i) => (
+            <i key={`s${i}`} className="zen-star" style={{
+              left: `${(i * 13.7 + 3) % 100}%`,
+              top: `${(i * 7.9 + 2) % 62}%`,
+              '--ss': `${1 + (i % 3)}px`,
+              '--so': `${0.25 + (i % 5) * 0.14}`,
+              animationDuration: `${2.6 + (i % 7) * 0.9}s`,
+              animationDelay: `${-(i * 1.3) % 6}s`,
             }} />
           ))}
+          <span className="zen-ripple" /><span className="zen-ripple r2" /><span className="zen-ripple r3" />
+          {Array.from({ length: 14 }).map((_, i) => (
+            <i key={`m${i}`} className="zen-mote" style={{
+              left: `${(i * 7.1 + 5) % 94}%`,
+              '--s': `${3 + (i % 4) * 2}px`,
+              '--b': `${(i % 3) * 1.2}px`,
+              '--o': `${0.2 + (i % 4) * 0.12}`,
+              animationDuration: `${18 + (i % 5) * 7}s`,
+              animationDelay: `${-(i * 3.1) % 22}s`,
+            }} />
+          ))}
+          <svg className="zen-city" viewBox="0 0 1920 240" preserveAspectRatio="xMidYMax slice">
+            <path className="zc-far" d="M0 240V150h60v-24h44v40h70V128h52v22h64v-46h18v-14h16v14h20v46h58v34h72V138h50v-30h46v30h50v42h66v-58h56v20h60v-40h14v-12h14v12h18v40h54v56h78V132h48v26h58v-34h62v52h70v-30h52v-40h16v-14h14v14h20v40h56v30h64v-48h50v20h58v46h74V142h52v28h64v-38h48v38h60v70z"/>
+            <path className="zc-near" d="M0 240V186h88v-30h64v30h94v-52h20v-16h18v16h24v52h84v-24h72v24h96v-44h58v44h90v-64h22v-18h20v18h26v64h92v-28h76v28h98v-48h62v48h94v-58h24v-14h20v14h26v58h96v-26h78v26h100v-40h72v40h92v-30h60v30h74v54z"/>
+            {[
+              [120,196],[340,208],[560,178],[790,192],[930,166],[1150,200],[1290,182],[1490,210],[1660,190],[1830,204],
+              [230,214],[680,216],[1050,212],[1390,216],[1760,214],
+            ].map(([x, y], i) => (
+              <rect key={i} className="zc-win" x={x} y={y} width="10" height="12" rx="1.5"
+                style={{ animationDelay: `${(i * 1.7) % 12}s`, animationDuration: `${8 + (i % 4) * 3}s` }} />
+            ))}
+          </svg>
+          <div className="zen-line">só tu e isto</div>
+        </div>
+      )}
+
+      {lembrete && (
+        <div className={`care-toast ${lembrete.tipo}`}>
+          <span className="cto-ic">{lembrete.tipo === 'vista' ? '👁' : lembrete.tipo === 'agua' ? '💧' : '🧍'}</span>
+          <div className="cto-b">
+            <div className="cto-t">{lembrete.tipo === 'vista' ? 'Descansa a vista' : lembrete.tipo === 'agua' ? 'Bebe um copo de água' : 'Endireita as costas'}</div>
+            <div className="cto-s">{lembrete.tipo === 'vista' ? '20 segundos a olhar para longe — os teus olhos agradecem' : lembrete.tipo === 'agua' ? `vais em ${agua * 250} ml — a OMS sugere ~2 L/dia` : 'ombros para trás, queixo paralelo ao chão'}</div>
+          </div>
+          <button className="cto-go" onClick={() => { const tp = lembrete.tipo; setLembrete(null); if (tp === 'vista') startEye(); else if (tp === 'agua') addAgua(); else togglePostura() }}>
+            {lembrete.tipo === 'vista' ? 'iniciar 20s' : lembrete.tipo === 'agua' ? '+250 ml ✓' : 'feito ✓'}
+          </button>
+          <button className="cto-x" onClick={() => setLembrete(null)}>✕</button>
         </div>
       )}
       {dim && <div className="sanct-hint">modo santuário · move o rato para voltar</div>}
