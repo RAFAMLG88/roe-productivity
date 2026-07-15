@@ -12,10 +12,7 @@ const TIPO_META = {
   ficheiro: { ic: '📧', cls: 'email',  nome: 'email' },
 }
 
-function fmt(min) {
-  const h = Math.floor(min / 60), m = min % 60
-  return (h > 0 ? h + 'h' : '') + (m > 0 ? (h > 0 ? String(m).padStart(2, '0') : m) + 'min' : (h > 0 ? '' : '0 min'))
-}
+import { fmtMin as fmt } from '../utils/formato.js'
 
 export default function Briefing({ onNavigate }) {
   const { fila, eleitas, eleger, paraFila } = useRoe()
@@ -173,8 +170,8 @@ export default function Briefing({ onNavigate }) {
           <div className="panel load enter">
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
             <div className="lt">
-              <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{min}</span>
-              <span className="u">de 7h · {fmt(min)} eleitos</span>
+              <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{fmt(min)}</span>
+              <span className="u">de 7h eleitos</span>
             </div>
             <div className="track">
               <div className="inner"><div className="fill" style={{ width: Math.min(min / SCALE * 100, 100) + '%', background: verdict.fill }} /></div>

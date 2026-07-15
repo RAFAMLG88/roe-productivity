@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './Capturar.css'
 import { useRoe } from '../state/RoeContext.jsx'
+import { fmtMin, desvioMedio } from '../utils/formato.js'
 
 const TIPOS = {
   interno: { ci: 'chefe', icon: '👤', tag: 'interno', ph: 'De quem? (ex: pedido da Ana)' },
@@ -194,6 +195,12 @@ export default function Capturar() {
                 ))}
               </div>
             </div>
+            {(() => { const d = desvioMedio(feitas); return d.n >= 3 && d.avg !== 0 ? (
+              <div className="desvio-hint">
+                <span className="dh-ic">◎</span>
+                no teu histórico costumas {d.avg > 0 ? 'demorar mais' : 'despachar'} ~{Math.abs(d.avg)} min — isto deve virar <b>{fmtMin(Math.max(5, Number(min) + d.avg))}</b>
+              </div>
+            ) : null })()}
             <button className="cap-btn full" onClick={fazerCaptura}>{pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 

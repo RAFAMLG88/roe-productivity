@@ -146,3 +146,6 @@
 .briefing .badge-pri.urgente{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,31,61,.3)}
 .briefing .badge-pri.importante{background:var(--mustard);color:var(--black)}
 .briefing .badge-pri.normal{background:var(--cream-2);color:var(--soft)}
+
+@media (max-width:1600px){.briefing .canvas{grid-template-columns:1fr 320px;gap:16px;padding:14px 22px 20px}}
+@media (max-width:1340px){.briefing .canvas{grid-template-columns:1fr 288px;gap:12px;padding:12px 16px 16px}.briefing .picks{grid-template-columns:1fr}}

@@ -39,8 +39,8 @@ export function RoeProvider({ children }) {
 
   const eleger = useCallback((id) => setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, estado: 'eleita' } : t)), [])
   const paraFila = useCallback((id) => setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, estado: 'fila' } : t)), [])
-  const concluir = useCallback((id) => {
-    setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, estado: 'feita', feitaEm: Date.now() } : t))
+  const concluir = useCallback((id, realMin) => {
+    setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, estado: 'feita', feitaEm: Date.now(), realMin: realMin || null } : t))
     setFocoAtiva((f) => f === id ? null : f)
   }, [])
   const apagar = useCallback((id) => {

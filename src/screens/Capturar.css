@@ -63,7 +63,7 @@
 .capturar .min-pick span{font-family:var(--font-mono);font-size:10px;color:var(--faint)}
 .capturar .imp-toggle{border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:9px 13px;font-family:var(--font-mono);font-size:10px;color:var(--soft);cursor:pointer;transition:all .25s}
 .capturar .imp-toggle.on{border-color:var(--red);background:var(--red-soft);color:var(--red-ink);font-weight:600}
-.capturar .cap-btn{flex:1;border:none;border-radius:12px;padding:11px 16px;font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;background:var(--forest);box-shadow:0 6px 16px rgba(0,200,101,.25);cursor:pointer;transition:transform .15s}
+.capturar .cap-btn{flex:0 0 auto;border:none;border-radius:12px;padding:11px 16px;font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;background:var(--forest);box-shadow:0 6px 16px rgba(0,200,101,.25);cursor:pointer;transition:transform .15s}
 .capturar .cap-btn:hover{transform:translateY(-2px)}
 
 .capturar .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(60,50,30,.05);transition:transform .3s,box-shadow .3s}
@@ -173,4 +173,39 @@
 .capturar .dur-chip{border:1.5px solid var(--line);background:var(--card);border-radius:11px;padding:9px 13px;font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--soft);cursor:pointer;transition:all .22s}
 .capturar .dur-chip:hover{transform:translateY(-2px)}
 .capturar .dur-chip.on{border-color:var(--mustard);background:var(--mustard);color:var(--black);box-shadow:0 5px 14px rgba(255,206,10,.3)}
-.capturar .cap-btn.full{width:100%}
+.capturar .cap-btn.full{width:100%;padding:15px 16px;font-size:14px;margin-top:auto}
+
+/* dica do desvio histórico */
+.capturar .desvio-hint{display:flex;align-items:center;gap:8px;font-size:10.5px;font-family:var(--font-mono);color:var(--soft);background:var(--mustard-soft);border:1px dashed rgba(200,160,0,.4);border-radius:11px;padding:9px 12px;margin-bottom:11px;line-height:1.5}
+.capturar .desvio-hint .dh-ic{color:var(--mustard-ink);font-size:13px}
+.capturar .desvio-hint b{color:var(--mustard-ink)}
+
+/* ===== 3 · a mesma app em qualquer ecrã ===== */
+@media (max-width:1600px){
+  .capturar .canvas{gap:16px;padding:14px 22px 20px}
+  .capturar .drop{padding:22px 18px}
+  .capturar .drop .scene{height:60px}
+  .capturar .ttab{padding:11px 5px;gap:5px}
+  .capturar .ttab .ti{font-size:19px}
+  .capturar .pri-chip{padding:10px 6px;font-size:11px}
+  .capturar .dur-chip{padding:8px 10px;font-size:11px}
+  .capturar .dur-btn{width:32px;height:32px}
+  .capturar .dur-val .dv-n{font-size:19px}
+  .capturar .cap-btn.full{padding:13px 16px}
+}
+@media (max-width:1340px){
+  .capturar .canvas{grid-template-columns:1fr .9fr;gap:13px;padding:12px 16px 16px}
+  .capturar .dur-row{flex-direction:column;align-items:stretch;gap:9px}
+  .capturar .dur-stepper{justify-content:center}
+  .capturar .dur-chips{display:grid;grid-template-columns:repeat(6,1fr)}
+  .capturar .dur-chip{padding:8px 4px;text-align:center}
+  .capturar .drop{padding:16px 14px}
+  .capturar .drop .dt{font-size:14px}
+  .capturar .drop .ds{font-size:10px}
+  .capturar .ttab .tn{font-size:9px}
+  .capturar .dur-row{gap:8px}
+  .capturar .dur-chips{gap:5px}
+  .capturar .dur-chip{padding:7px 8px;font-size:10.5px}
+}
+/* a coluna do formulário nunca rebenta: ganha scroll elegante */
+.capturar .cap-col{overflow-y:auto;scrollbar-width:thin;padding-right:2px}

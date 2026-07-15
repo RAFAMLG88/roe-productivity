@@ -270,7 +270,6 @@
 /* glow do anel: círculo SVG nativo (sem filter → sem retângulo) */
 .foco .ring-glow{transition:stroke .8s;opacity:.28}
 /* partículas a subir enquanto há foco */
-.foco .fx-dot{position:absolute;width:7px;height:7px;border-radius:50%;opacity:0;pointer-events:none;animation:fxrise 5.5s ease-in-out infinite}
 @keyframes fxrise{0%{opacity:0;transform:translateY(30px) scale(.5)}25%{opacity:.55}55%{opacity:.3}100%{opacity:0;transform:translateY(-190px) scale(1.1)}}
 /* pílula "a tocar" por baixo do anel */
 .foco .now-playing{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:9px 16px;box-shadow:0 8px 20px rgba(60,50,30,.08);max-width:380px}
@@ -282,3 +281,62 @@
 @keyframes eqb{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1)}}
 .foco .now-playing .np-t{font-family:var(--font-display);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .foco .now-playing .np-s{font-size:9px;font-family:var(--font-mono);color:var(--faint);flex:none}
+
+/* ===== 4 · IMERSÃO ZEN: entrar no foco é entrar noutro estado ===== */
+.foco .zen-bg{position:fixed;inset:0;z-index:1;pointer-events:none;animation:zenin 1.6s ease}
+@keyframes zenin{from{opacity:0}to{opacity:1}}
+.foco .zen-vign{position:absolute;inset:0;background:radial-gradient(ellipse 62% 58% at 50% 44%,transparent 30%,rgba(20,18,7,.05) 62%,rgba(20,18,7,.16) 100%)}
+.foco .zen-halo{position:absolute;left:50%;top:42%;width:620px;height:620px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--zc) 16%,transparent) 0%,color-mix(in srgb,var(--zc) 7%,transparent) 42%,transparent 70%);animation:zbreath 7s ease-in-out infinite}
+@keyframes zbreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.8}50%{transform:translate(-50%,-50%) scale(1.12);opacity:1}}
+.foco .zen-ripple{position:absolute;left:50%;top:42%;width:340px;height:340px;transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid color-mix(in srgb,var(--zc) 34%,transparent);animation:zrip 9s ease-out infinite}
+.foco .zen-ripple.r2{animation-delay:3s}
+.foco .zen-ripple.r3{animation-delay:6s}
+@keyframes zrip{0%{transform:translate(-50%,-50%) scale(.92);opacity:0}12%{opacity:.55}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
+.foco .zen-mote{position:absolute;bottom:-30px;width:var(--s);height:var(--s);border-radius:50%;background:var(--zc);opacity:var(--o);filter:blur(var(--b));animation:zmote linear infinite}
+@keyframes zmote{0%{transform:translateY(0) translateX(0)}25%{transform:translateY(-27vh) translateX(14px)}50%{transform:translateY(-54vh) translateX(-10px)}75%{transform:translateY(-81vh) translateX(10px)}100%{transform:translateY(-108vh) translateX(0)}}
+
+/* em zen: timer sobe de escala e centra o palco; música em destaque por baixo */
+.foco.dim .ring-zone{z-index:2}
+.foco.dim .ring-wrap{transform:scale(1.14);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.foco .ring-wrap{transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.foco.dim .now-playing{position:relative;z-index:2;transform:translateY(10px) scale(1.28);background:rgba(20,18,7,.82);color:#F4EEE0;box-shadow:0 14px 34px rgba(20,18,7,.3);transition:all 1.1s cubic-bezier(.2,.8,.2,1)}
+.foco.dim .now-playing .np-t{color:#F4EEE0;max-width:280px}
+.foco.dim .now-playing .np-s{color:#9a927e}
+.foco .now-playing{transition:all 1.1s cubic-bezier(.2,.8,.2,1)}
+.foco .np-zen-label{display:none;font-family:var(--font-mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mustard);margin-right:2px}
+.foco.dim .np-zen-label{display:inline}
+.foco.dim .mais-tempo,.foco.dim .mid-cta{opacity:.14;transition:opacity 1s}
+.foco.dim .mais-tempo:hover,.foco.dim .mid-cta:hover{opacity:1}
+
+/* ===== 5 · CELEBRAÇÃO limpa: o anel recolhe, o momento é do check ===== */
+.foco.celebrating .ring-wrap,.foco.celebrating .now-playing,.foco.celebrating .mais-tempo,.foco.celebrating .mid-cta{opacity:0;filter:blur(4px);transition:all .5s}
+.foco .celebrate{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(ellipse at 50% 45%,rgba(244,238,224,.94),rgba(232,244,232,.97));opacity:0;pointer-events:none;transition:opacity .4s}
+.foco .celebrate.show{opacity:1}
+.foco .celebrate .bigcheck{width:110px;height:110px;border-radius:50%;background:var(--forest);display:grid;place-items:center;box-shadow:0 20px 50px rgba(0,200,101,.4),0 0 0 14px rgba(0,200,101,.13),0 0 0 30px rgba(0,200,101,.06)}
+.foco .celebrate.show .bigcheck{animation:ckpop .7s cubic-bezier(.2,1.4,.35,1)}
+@keyframes ckpop{0%{transform:scale(.2);opacity:0}55%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.foco .celebrate .bigcheck svg{width:56px;height:56px}
+.foco .celebrate .mt{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--ink)}
+.foco .celebrate.show .mt{animation:mtup .6s .25s cubic-bezier(.2,.9,.3,1.2) backwards}
+@keyframes mtup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.foco .celebrate .ms{font-family:var(--font-mono);font-size:11px;color:var(--forest-ink)}
+.foco .celebrate.show .ms{animation:mtup .6s .4s cubic-bezier(.2,.9,.3,1.2) backwards}
+
+/* ===== 6 · mais tempo, sem culpa ===== */
+.foco .mais-tempo{display:flex;align-items:center;gap:8px;margin-top:13px}
+.foco .mais-tempo .mt-l{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.foco .mt-btn{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-family:var(--font-display);font-size:11.5px;font-weight:700;color:var(--soft);cursor:pointer;transition:all .22s}
+.foco .mt-btn:hover{border-color:var(--mustard);background:var(--mustard-soft);color:var(--mustard-ink);transform:translateY(-2px)}
+
+@media (max-width:1600px){.foco .canvas{grid-template-columns:305px 1fr 305px;gap:16px;padding:14px 22px 20px}}
+@media (max-width:1340px){.foco .canvas{grid-template-columns:272px 1fr 280px;gap:12px;padding:12px 14px 16px}.foco .ring-wrap svg{width:270px;height:270px}}
+
+/* zen: colunas laterais colapsam — o timer assume o centro geométrico do ecrã */
+.foco .canvas{transition:grid-template-columns 1.1s cubic-bezier(.2,.8,.2,1),gap 1.1s}
+.foco .col.left,.foco .col.right{transition:opacity .7s}
+.foco.dim .canvas{grid-template-columns:0px 1fr 0px;gap:0}
+.foco.dim .col.left,.foco.dim .col.right{opacity:0;overflow:hidden;pointer-events:none}
+.foco.dim .col.mid{justify-content:center}
+.foco .col.mid{transition:justify-content 0s}
+/* halo e ondas acompanham o novo centro vertical do anel */
+.foco .zen-halo,.foco .zen-ripple{top:46%}

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { RoeProvider } from './state/RoeContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Cidade3D from './components/Cidade3D.jsx'
+import MediaDock from './components/MediaDock.jsx'
 import Briefing from './screens/Briefing.jsx'
 import Foco from './screens/Foco.jsx'
 import Capturar from './screens/Capturar.jsx'
@@ -37,6 +38,7 @@ export default function App() {
           <Screen key={screen} onNavigate={navigate} />
         </div>
         <Cidade3D visible={show3D} onClose={() => setShow3D(false)} />
+        <MediaDock />
       </div>
     </RoeProvider>
   )

@@ -128,3 +128,8 @@
 .analise .estado-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--soft);padding:9px 0;border-bottom:1px solid var(--line)}
 .analise .estado-row b{font-family:var(--font-display);font-size:16px;color:var(--ink)}
 .analise .ana-nota{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:12px;line-height:1.6;background:var(--cream);border-radius:10px;padding:11px}
+
+.analise .sgrid{flex-wrap:wrap}
+.analise .sg{min-width:150px}
+@media (max-width:1600px){.analise .canvas{padding:14px 22px 20px}}
+@media (max-width:1340px){.analise .canvas{padding:12px 16px 16px}.analise .lower{grid-template-columns:1fr}}

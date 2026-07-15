@@ -1,6 +1,7 @@
 import React from 'react'
 import './Analise.css'
 import { useRoe } from '../state/RoeContext.jsx'
+import { fmtMin, desvioMedio } from '../utils/formato.js'
 
 export default function Analise({ onNavigate }) {
   const { feitas, eleitas, fila } = useRoe()
@@ -39,9 +40,10 @@ export default function Analise({ onNavigate }) {
   }
 
   // com dados reais desta sessão
-  const totalMin = feitas.reduce((s, t) => s + t.min, 0)
-  const importantes = feitas.filter((t) => t.importante).length
+  const totalMin = feitas.reduce((s, t) => s + (t.realMin || t.min), 0)
+  const importantes = feitas.filter((t) => t.prioridade === 'urgente' || t.prioridade === 'importante').length
   const pctImp = feitas.length > 0 ? Math.round(importantes / feitas.length * 100) : 0
+  const desvio = desvioMedio(feitas)
 
   return (
     <div className="analise">
@@ -52,7 +54,8 @@ export default function Analise({ onNavigate }) {
         <div className="sgrid">
           <div className="sg b enter"><div className="v">{feitas.length}</div><div className="l">tarefas concluídas</div></div>
           <div className="sg a enter" style={{ animationDelay: '.1s' }}><div className="v">{pctImp}%</div><div className="l">eram importantes</div></div>
-          <div className="sg c enter" style={{ animationDelay: '.2s' }}><div className="v">{totalMin}</div><div className="l">minutos focados</div></div>
+          <div className="sg c enter" style={{ animationDelay: '.2s' }}><div className="v">{fmtMin(totalMin)}</div><div className="l">de foco real</div></div>
+          <div className="sg d enter" style={{ animationDelay: '.3s' }}><div className="v">{desvio.n > 0 ? (desvio.avg > 0 ? `+${desvio.avg}m` : desvio.avg < 0 ? `−${Math.abs(desvio.avg)}m` : '±0m') : '—'}</div><div className="l">desvio ao previsto</div></div>
         </div>
 
         <div className="painel-simples panel enter" style={{ animationDelay: '.3s' }}>
@@ -62,8 +65,8 @@ export default function Analise({ onNavigate }) {
               <div key={t.id} className="feita-row">
                 <span className="fr-check">✓</span>
                 <span className="fr-txt">{t.texto}</span>
-                {t.importante && <span className="fr-imp">importante</span>}
-                <span className="fr-min">~{t.min} min</span>
+                {(t.prioridade === 'urgente' || t.prioridade === 'importante') && <span className="fr-imp">{t.prioridade}</span>}
+                <span className="fr-min">{t.realMin ? `${fmtMin(t.realMin)} · previa ${fmtMin(t.min)}` : `~${fmtMin(t.min)}`}</span>
               </div>
             ))}
           </div>

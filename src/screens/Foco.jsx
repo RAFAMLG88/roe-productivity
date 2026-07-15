@@ -74,7 +74,7 @@ const SUGESTOES = {
 }
 
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo } = useRoe()
+  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -100,13 +100,24 @@ export default function Foco({ onNavigate }) {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
     const id = task.id
+    const realMin = Math.max(1, Math.round((total - secs) / 60)) // tempo efetivamente focado
     setTimeout(() => {
-      setCelebrate(false); concluir(id); setRunning(false); setSecs(0); setTotal(0)
+      setCelebrate(false); concluir(id, realMin); setRunning(false); setSecs(0); setTotal(0)
       if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
     }, 2600)
   }
+  // 6) o previsto é uma estimativa — dá para esticar sem sair do foco
+  const maisTempo = (m) => {
+    if (!task) return
+    setSecs((x) => x + m * 60); setTotal((x) => x + m * 60)
+    atualizar(task.id, { min: task.min + m })
+  }
 
   const [dim, setDim] = useState(false)
+  useEffect(() => {
+    document.body.classList.toggle('zen-mode', dim)
+    return () => document.body.classList.remove('zen-mode')
+  }, [dim])
   useEffect(() => {
     if (!task) { setDim(false); return }
     let t
@@ -192,7 +203,7 @@ export default function Foco({ onNavigate }) {
   const auraCol = task ? col : '#ADA590'
 
   return (
-    <div className={`foco ${dim ? 'dim' : ''}`}>
+    <div className={`foco ${dim ? 'dim' : ''} ${celebrate ? 'celebrating' : ''}`}>
       <div className="aurora" style={{ background: `radial-gradient(circle, ${auraCol} 0%, rgba(0,0,0,0) 62%)`, opacity: dim ? 0.22 : (task ? 0.15 : 0.05) }} />
       <div className="topbar">
         <div><div className="l1">{task ? 'Em foco · a decorrer' : 'Foco · pronto quando estiveres'}</div><div className="l2">{task ? 'Em foco' : 'Foco'}</div></div>
@@ -270,9 +281,6 @@ export default function Foco({ onNavigate }) {
 
         <div className="col mid">
           <div className="ring-zone" style={{ position: "relative" }}>
-          {task && [0,1,2,3,4,5].map((i) => (
-            <span key={i} className="fx-dot" style={{ background: col, left: `${18 + i * 13}%`, bottom: '18%', animationDelay: `${i * 0.9}s` }} />
-          ))}
 
             <div className="ring-wrap">
               <svg width="310" height="310" viewBox="0 0 310 310">
@@ -290,9 +298,17 @@ export default function Foco({ onNavigate }) {
           </div>
           {(mediaTitle.yt || mediaTitle.sp || media.yt || media.sp) && (
             <div className="now-playing">
+              <span className="np-zen-label">a tocar</span>
               <span className="eq"><b /><b /><b /></span>
               <span className="np-t">{mediaTitle.yt || mediaTitle.sp || 'A tua música'}</span>
               <span className="np-s">· {media.yt ? 'YouTube' : 'Spotify'}</span>
+            </div>
+          )}
+          {task && (
+            <div className="mais-tempo">
+              <span className="mt-l">a precisar de mais?</span>
+              <button className="mt-btn" onClick={() => maisTempo(5)}>＋5 min</button>
+              <button className="mt-btn" onClick={() => maisTempo(15)}>＋15 min</button>
             </div>
           )}
           {task && (
@@ -318,16 +334,14 @@ export default function Foco({ onNavigate }) {
                 <div className="sn-s">Os browsers não deixam uma página web controlar o som do sistema — é uma proteção deles. Chega na <b>Fase 2</b>, com a app de desktop. Usa YouTube ou Spotify aqui dentro.</div>
               </div>
             ) : embedUrl ? (
-              <div className="player-live">
-                <iframe
-                  key={embedUrl}
-                  src={embedUrl}
-                  title="Player de música"
-                  className={fonte === 'yt' ? 'pl-yt' : 'pl-sp'}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                  frameBorder="0"
-                />
+              <div className="player-live docked">
+                <div className="pl-dock-note">
+                  <span className="eq"><b /><b /><b /></span>
+                  <div className="pdn-b">
+                    <div className="pdn-t">{mediaTitle[fonte] || 'A tua música'}</div>
+                    <div className="pdn-s">a tocar no leitor fixo ↘ — segue-te por toda a app</div>
+                  </div>
+                </div>
                 <button className="pl-trocar" onClick={limpar}>↻ trocar música</button>
               </div>
             ) : (
@@ -348,7 +362,7 @@ export default function Foco({ onNavigate }) {
                 </div>
               </div>
             )}
-            <div className="hint">A tua música, o teu gosto — cola o link e ela <b>toca dentro da app</b>, com os controlos oficiais do player.</div>
+            <div className="hint">A tua música, o teu gosto — cola o link e ela toca num <b>leitor fixo no canto</b> — muda de aba à vontade, a música não pára.</div>
           </div>
 
           {eleitas.length > 0 && (
@@ -360,6 +374,25 @@ export default function Foco({ onNavigate }) {
         </div>
       </div>
 
+      {dim && task && (
+        <div className="zen-bg" style={{ '--zc': col }}>
+          <div className="zen-vign" />
+          <div className="zen-halo" />
+          <span className="zen-ripple" />
+          <span className="zen-ripple r2" />
+          <span className="zen-ripple r3" />
+          {Array.from({ length: 16 }).map((_, i) => (
+            <i key={i} className="zen-mote" style={{
+              left: `${(i * 6.3 + 4) % 96}%`,
+              '--s': `${3 + (i % 4) * 2.2}px`,
+              '--b': `${(i % 3) * 1.1}px`,
+              '--o': `${0.18 + (i % 4) * 0.1}`,
+              animationDuration: `${16 + (i % 5) * 6}s`,
+              animationDelay: `${-(i * 2.7) % 20}s`,
+            }} />
+          ))}
+        </div>
+      )}
       {dim && <div className="sanct-hint">modo santuário · move o rato para voltar</div>}
 
       <div className={`eyerest ${eyeShow ? 'show' : ''}`}>
