@@ -209,3 +209,5 @@
 }
 /* a coluna do formulário nunca rebenta: ganha scroll elegante */
 .capturar .cap-col{overflow-y:auto;scrollbar-width:thin;padding-right:2px}
+
+.capturar .cap-col,.capturar .cap-col>*,.capturar .canvas>*{min-width:0}

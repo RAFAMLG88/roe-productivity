@@ -149,3 +149,13 @@
 
 @media (max-width:1600px){.briefing .canvas{grid-template-columns:1fr 320px;gap:16px;padding:14px 22px 20px}}
 @media (max-width:1340px){.briefing .canvas{grid-template-columns:1fr 288px;gap:12px;padding:12px 16px 16px}.briefing .picks{grid-template-columns:1fr}}
+
+.briefing .col,.briefing .panel,.briefing .col>*{min-width:0}
+.briefing .ricta.topo{margin-bottom:14px}
+.briefing .fase2-badge{margin-left:auto;font-family:var(--font-mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--mustard-soft);color:var(--mustard-ink);border:1px dashed rgba(200,160,0,.45);border-radius:999px;padding:3px 8px}
+.briefing .dg-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.briefing .dg-slot{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--cream);border:1.5px dashed var(--line);border-radius:13px;padding:10px 4px;transition:all .25s;cursor:default}
+.briefing .dg-slot:hover{border-color:var(--mustard);background:var(--mustard-soft);transform:translateY(-2px)}
+.briefing .dg-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:700;font-size:13px}
+.briefing .dg-n{font-family:var(--font-display);font-size:9.5px;font-weight:600;color:var(--soft)}
+.briefing .dg-note{margin-top:9px;font-size:8.5px;font-family:var(--font-mono);color:var(--faint);line-height:1.5}

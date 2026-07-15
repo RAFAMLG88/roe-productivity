@@ -60,3 +60,5 @@
 .cidade .rain-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
 .cidade .rain-layer i{position:absolute;top:-12%;width:1.5px;height:12%;background:linear-gradient(rgba(220,230,240,0),rgba(220,230,240,.55));animation:raindrop 1s linear infinite}
 @keyframes raindrop{to{transform:translateY(950%)}}
+
+.cidade .canvas>*{min-width:0}

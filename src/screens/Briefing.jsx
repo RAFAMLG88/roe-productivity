@@ -15,7 +15,7 @@ const TIPO_META = {
 import { fmtMin as fmt } from '../utils/formato.js'
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila } = useRoe()
+  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou } = useRoe()
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
   const [showSunrise, setShowSunrise] = useState(false)
@@ -54,6 +54,8 @@ export default function Briefing({ onNavigate }) {
   }
 
   const startDay = () => {
+    if (diaComecou) { if (onNavigate) onNavigate('foco'); return }
+    setDiaComecou(true)
     if (n === 0) return
     setShowSunrise(true)
     setTimeout(() => spawnRays(), 50)
@@ -167,6 +169,12 @@ export default function Briefing({ onNavigate }) {
         </div>
 
         <div className="col">
+
+          <button className={`ricta topo ${verdict.warn ? 'warn' : ''}`} disabled={n === 0 && !diaComecou} onClick={startDay}>
+            {diaComecou ? 'Continuar dia →' : 'Começar o dia'}
+            <span className="s">{diaComecou ? 'de volta ao foco' : n === 0 ? 'elege ao menos uma' : `${n} importante${n > 1 ? 's' : ''} · ~${fmt(min)}${min > CAP ? ' · demasiado' : ''}`}</span>
+          </button>
+
           <div className="panel load enter">
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
             <div className="lt">
@@ -203,10 +211,18 @@ export default function Briefing({ onNavigate }) {
             )}
           </div>
 
-          <button className={`ricta ${verdict.warn ? 'warn' : ''}`} disabled={n === 0} onClick={startDay}>
-            Começar o dia
-            <span className="s">{n === 0 ? 'elege ao menos uma' : `${n} importante${n > 1 ? 's' : ''} · ~${fmt(min)}${min > CAP ? ' · demasiado' : ''}`}</span>
-          </button>
+          <div className="panel delega enter" style={{ animationDelay: '.22s' }}>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🤝</span>Delegar na equipa<span className="fase2-badge">esboço · Fase 2</span></div>
+            <div className="dg-grid">
+              {[['Ana','#FF1F3D'],['Bruno','#1FB8E0'],['Carla','#00C865'],['Diogo','#FFCE0A'],['Eva','#b07de8'],['Filipe','#FF7846'],['Inês','#2dd4a7'],['JP','#e85d8a']].map(([n2, c]) => (
+                <div key={n2} className="dg-slot" title="na Fase 2: larga aqui uma tarefa para delegar">
+                  <span className="dg-av" style={{ background: c }}>{n2[0]}</span>
+                  <span className="dg-n">{n2}</span>
+                </div>
+              ))}
+            </div>
+            <div className="dg-note">na Fase 2 arrastas tarefas para cima de um colega — e ela aparece na fila dele</div>
+          </div>
         </div>
       </div>
 

@@ -79,6 +79,7 @@ export default function Foco({ onNavigate }) {
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
   const [secs, setSecs] = useState(0)
+  const [esgotado, setEsgotado] = useState(false)
   const [total, setTotal] = useState(0)
   const [running, setRunning] = useState(false)
 
@@ -91,18 +92,21 @@ export default function Foco({ onNavigate }) {
 
   useEffect(() => {
     if (!running) return
-    const t = setInterval(() => setSecs((s) => (s > 0 ? s - 1 : s)), 1000)
+    const t = setInterval(() => setSecs((s) => {
+      if (s === 1) { setEsgotado(true); setTimeout(() => playChime(), 50) }
+      return s > 0 ? s - 1 : s
+    }), 1000)
     return () => clearInterval(t)
   }, [running])
 
-  const iniciar = (t) => { const m = t.min * 60; setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true) }
+  const iniciar = (t) => { const m = t.min * 60; setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true); setEsgotado(false) }
   const concluirTask = () => {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
     const id = task.id
     const realMin = Math.max(1, Math.round((total - secs) / 60)) // tempo efetivamente focado
     setTimeout(() => {
-      setCelebrate(false); concluir(id, realMin); setRunning(false); setSecs(0); setTotal(0)
+      setCelebrate(false); concluir(id, realMin); setRunning(false); setSecs(0); setTotal(0); setEsgotado(false)
       if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
     }, 2600)
   }
@@ -111,6 +115,7 @@ export default function Foco({ onNavigate }) {
     if (!task) return
     setSecs((x) => x + m * 60); setTotal((x) => x + m * 60)
     atualizar(task.id, { min: task.min + m })
+    setEsgotado(false)
   }
 
   const [dim, setDim] = useState(false)
@@ -118,14 +123,6 @@ export default function Foco({ onNavigate }) {
     document.body.classList.toggle('zen-mode', dim)
     return () => document.body.classList.remove('zen-mode')
   }, [dim])
-  useEffect(() => {
-    if (!task) { setDim(false); return }
-    let t
-    const arm = () => { clearTimeout(t); setDim(false); t = setTimeout(() => setDim(true), 12000) }
-    const evs = ['pointermove', 'keydown', 'click']
-    evs.forEach((e) => window.addEventListener(e, arm)); arm()
-    return () => { clearTimeout(t); evs.forEach((e) => window.removeEventListener(e, arm)) }
-  }, [task])
 
   // CUIDAR DE TI
   const [eyeShow, setEyeShow] = useState(false)
@@ -148,7 +145,13 @@ export default function Foco({ onNavigate }) {
   const endBreath = () => { clearInterval(breathTimer.current); setBreathShow(false) }
 
   const [postura, setPostura] = useState(false)
-  const togglePostura = () => { setPostura(true); setTimeout(() => setPostura(false), 4000) }
+  const [carePlay, setCarePlay] = useState(null) // animação do ato: 'postura' | 'agua'
+  const togglePostura = () => {
+    setPostura(true); setCarePlay('postura')
+    setTimeout(() => setCarePlay(null), 2600)
+    setTimeout(() => setPostura(false), 4000)
+  }
+  const beberAgua = () => { addAgua(); setCarePlay('agua'); setTimeout(() => setCarePlay(null), 2400) }
 
   // ===== LEMBRETES DE CUIDADO (com som) =====
   // intervalos racionais durante foco ATIVO: vista 20 min (regra 20-20-20),
@@ -249,6 +252,8 @@ export default function Foco({ onNavigate }) {
 
   // CELEBRAÇÃO
   const [celebrate, setCelebrate] = useState(false)
+  // o santuário É o modo de trabalho: entra ao iniciar, sai ao pausar ou concluir
+  useEffect(() => { setDim(!!task && running && !celebrate) }, [task, running, celebrate])
   const celRef = useRef(null)
   const spawnSparks = () => {
     const el = celRef.current; if (!el) return
@@ -345,7 +350,7 @@ export default function Foco({ onNavigate }) {
                   <div className="ct-agua">
                     <button className="agua-btn" onClick={removeAgua} disabled={agua === 0}>−</button>
                     <span className="agua-n">{agua * 250}<small> ml</small></span>
-                    <button className="agua-btn mais" onClick={addAgua} disabled={agua === 8}>+</button>
+                    <button className="agua-btn mais" onClick={beberAgua} disabled={agua === 8}>+</button>
                   </div>
                   <div className="agua-track"><i style={{ width: `${Math.min(100, agua * 250 / 2000 * 100)}%` }} /></div>
                 </div>
@@ -438,12 +443,36 @@ export default function Foco({ onNavigate }) {
             <div className="hint">A tua música, o teu gosto — toca <b>aqui dentro</b> — e quando mudas de aba, segue contigo num leitor de bolso. Nunca pára.</div>
           </div>
 
-          {eleitas.length > 0 && (
-            <div className="panel enter" style={{ animationDelay: '.1s' }}>
-              <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>📋</span>Eleitas para hoje</div>
-              <div className="sess-count">{eleitas.length} tarefa{eleitas.length > 1 ? 's' : ''} · {eleitas.reduce((s,t)=>s+t.min,0)} min no total</div>
+          <div className="panel equipa enter" style={{ animationDelay: '.1s' }}>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>A tua equipa agora<span className="fase2-badge">esboço · Fase 2</span></div>
+            <div className="eq-list">
+              {[
+                { n: 'Ana', c: '#FF1F3D', t: 'Orçamento fachada RX-12', m: '12:40', p: 62, s: 'foco' },
+                { n: 'Bruno', c: '#1FB8E0', t: 'Medições obra Matosinhos', m: '31:05', p: 28, s: 'foco' },
+                { n: 'Carla', c: '#00C865', t: null, m: null, p: 0, s: 'livre' },
+                { n: 'Diogo', c: '#FFCE0A', t: 'Relatório térmico bloco B', m: '04:12', p: 88, s: 'foco' },
+                { n: 'Eva', c: '#b07de8', t: null, m: null, p: 0, s: 'pausa' },
+                { n: 'Filipe', c: '#FF7846', t: 'Revisão estrutural pilar P3', m: '22:58', p: 45, s: 'foco' },
+                { n: 'Inês', c: '#2dd4a7', t: null, m: null, p: 0, s: 'livre' },
+                { n: 'JP', c: '#e85d8a', t: 'Email cliente TorreSul', m: '08:31', p: 71, s: 'foco' },
+              ].map((u) => (
+                <div key={u.n} className={`eq-row ${u.s}`}>
+                  <span className="eq-av" style={{ background: u.c }}>{u.n[0]}</span>
+                  <div className="eq-b">
+                    <div className="eq-n">{u.n}</div>
+                    <div className="eq-t">{u.t || (u.s === 'pausa' ? 'em pausa ☕' : 'disponível')}</div>
+                  </div>
+                  {u.t ? (
+                    <div className="eq-timer">
+                      <svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" className="eqt-bg" /><circle cx="15" cy="15" r="12" className="eqt-fg" style={{ strokeDashoffset: 75.4 - 75.4 * u.p / 100 }} /></svg>
+                      <span>{u.m}</span>
+                    </div>
+                  ) : <span className={`eq-dot ${u.s}`} />}
+                </div>
+              ))}
             </div>
-          )}
+            <div className="eq-note">pré-visualização com dados de exemplo — na Fase 2 é a tua equipa real, em tempo real</div>
+          </div>
         </div>
       </div>
 
@@ -487,6 +516,47 @@ export default function Foco({ onNavigate }) {
         </div>
       )}
 
+      {carePlay && (
+        <div className={`care-play ${carePlay}`}>
+          {carePlay === 'postura' ? (
+            <svg viewBox="0 0 120 120" className="cp-svg">
+              <circle cx="60" cy="60" r="54" className="cp-halo" />
+              <g className="cp-fig">
+                <circle cx="60" cy="30" r="9" className="cp-head" />
+                <path d="M60 39 Q56 58 60 78" className="cp-spine" />
+                <path d="M60 48 Q47 55 42 64" className="cp-arm l" />
+                <path d="M60 48 Q73 55 78 64" className="cp-arm r" />
+                <path d="M60 78 L50 102" className="cp-leg" />
+                <path d="M60 78 L70 102" className="cp-leg" />
+              </g>
+              <path d="M36 62 L52 78 L86 40" className="cp-check" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 120 120" className="cp-svg">
+              <circle cx="60" cy="60" r="54" className="cp-halo agua" />
+              <path d="M42 34 h36 l-5 56 a8 8 0 0 1 -8 7 h-10 a8 8 0 0 1 -8 -7 z" className="cp-copo" />
+              <clipPath id="cpc"><path d="M42 34 h36 l-5 56 a8 8 0 0 1 -8 7 h-10 a8 8 0 0 1 -8 -7 z" /></clipPath>
+              <g clipPath="url(#cpc)"><rect x="38" y="34" width="44" height="66" className="cp-agua" /></g>
+              <circle cx="60" cy="22" r="4" className="cp-gota" />
+            </svg>
+          )}
+          <div className="cp-msg">{carePlay === 'postura' ? 'costas direitas · ombros para trás' : '+250 ml — bom trabalho'}</div>
+        </div>
+      )}
+      {esgotado && task && (
+        <div className="tempo-fim">
+          <div className="tf-card">
+            <div className="tf-ring">⏱</div>
+            <div className="tf-t">O tempo previsto chegou ao fim</div>
+            <div className="tf-s">«{task.texto}» — continuas ou dás por concluída?</div>
+            <div className="tf-acts">
+              <button className="tf-mais" onClick={() => maisTempo(5)}>＋5 min</button>
+              <button className="tf-mais" onClick={() => maisTempo(15)}>＋15 min</button>
+              <button className="tf-ok" onClick={() => { setEsgotado(false); concluirTask() }}>Concluir ✓</button>
+            </div>
+          </div>
+        </div>
+      )}
       {lembrete && (
         <div className={`care-toast ${lembrete.tipo}`}>
           <span className="cto-ic">{lembrete.tipo === 'vista' ? '👁' : lembrete.tipo === 'agua' ? '💧' : '🧍'}</span>
@@ -494,13 +564,20 @@ export default function Foco({ onNavigate }) {
             <div className="cto-t">{lembrete.tipo === 'vista' ? 'Descansa a vista' : lembrete.tipo === 'agua' ? 'Bebe um copo de água' : 'Endireita as costas'}</div>
             <div className="cto-s">{lembrete.tipo === 'vista' ? '20 segundos a olhar para longe — os teus olhos agradecem' : lembrete.tipo === 'agua' ? `vais em ${agua * 250} ml — a OMS sugere ~2 L/dia` : 'ombros para trás, queixo paralelo ao chão'}</div>
           </div>
-          <button className="cto-go" onClick={() => { const tp = lembrete.tipo; setLembrete(null); if (tp === 'vista') startEye(); else if (tp === 'agua') addAgua(); else togglePostura() }}>
+          <button className="cto-go" onClick={() => { const tp = lembrete.tipo; setLembrete(null); if (tp === 'vista') startEye(); else if (tp === 'agua') beberAgua(); else togglePostura() }}>
             {lembrete.tipo === 'vista' ? 'iniciar 20s' : lembrete.tipo === 'agua' ? '+250 ml ✓' : 'feito ✓'}
           </button>
           <button className="cto-x" onClick={() => setLembrete(null)}>✕</button>
         </div>
       )}
-      {dim && <div className="sanct-hint">modo santuário · move o rato para voltar</div>}
+      {dim && (
+        <div className="zen-actions">
+          <button className="za-btn" onClick={() => setRunning(false)}>⏸ pausar tarefa</button>
+          <button className="za-btn" onClick={() => maisTempo(5)}>＋5 min</button>
+          <button className="za-btn ok" onClick={concluirTask}>✓ concluir</button>
+        </div>
+      )}
+      {dim && <div className="sanct-hint">santuário · pausa para voltar à app</div>}
 
       <div className={`eyerest ${eyeShow ? 'show' : ''}`}>
         <div className="circ" />

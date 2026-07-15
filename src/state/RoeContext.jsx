@@ -13,7 +13,8 @@ export const PRI_PESO = { urgente: 0, importante: 1, normal: 2 }
 export function RoeProvider({ children }) {
   const [tarefas, setTarefas] = useState([])
   const [agua, setAgua] = useState(0)
-  const [playerAnchor, setPlayerAnchor] = useState(null) // rect da caixa do player no Foco
+  const [playerAnchor, setPlayerAnchor] = useState(null)
+  const [diaComecou, setDiaComecou] = useState(false) // rect da caixa do player no Foco
   const [focoAtiva, setFocoAtiva] = useState(null)
   const [media, setMedia] = useState({ yt: '', sp: '' })
   const [mediaTitle, setMediaTitle] = useState({ yt: '', sp: '' })
@@ -61,6 +62,7 @@ export function RoeProvider({ children }) {
     capturar, atualizar, eleger, paraFila, concluir, apagar,
     agua, addAgua, removeAgua,
     playerAnchor, setPlayerAnchor,
+    diaComecou, setDiaComecou,
     focoAtiva, setFocoAtiva,
     media, setMediaUrl, mediaTitle, setMediaTitulo,
   }

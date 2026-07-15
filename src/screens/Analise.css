@@ -133,3 +133,5 @@
 .analise .sg{min-width:150px}
 @media (max-width:1600px){.analise .canvas{padding:14px 22px 20px}}
 @media (max-width:1340px){.analise .canvas{padding:12px 16px 16px}.analise .lower{grid-template-columns:1fr}}
+
+.analise .canvas>*,.analise .sg,.analise .lower>*{min-width:0}
