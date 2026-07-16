@@ -23,23 +23,26 @@ function spEmbed(u) {
 
 // Dock de música global: vive fora dos ecrãs, por isso mudar de aba NUNCA pára a música.
 // Só pára se o utilizador pausar no player ou clicar ✕.
-export default function MediaDock() {
+export default function MediaDock({ cityOpen }) {
   const { media, mediaTitle, setMediaUrl, playerAnchor } = useRoe()
   const [mini, setMini] = useState(false)
   const [pos, setPos] = useState(null) // posição escolhida pelo utilizador (arrasto)
+  const [dragging, setDragging] = useState(false)
+  React.useEffect(() => { if (cityOpen) setMini(true) }, [cityOpen])
   const drag = useRef(null)
   const onGrab = (e) => {
     if (e.target.closest('.md-btn')) return
     const dk = e.currentTarget.closest('.media-dock')
     const r = dk.getBoundingClientRect()
     drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height }
+    setDragging(true)
     const move = (ev) => {
       const d = drag.current; if (!d) return
       const x = Math.min(Math.max(6, ev.clientX - d.dx), window.innerWidth - d.w - 6)
       const y = Math.min(Math.max(6, ev.clientY - d.dy), window.innerHeight - d.h - 6)
       setPos({ x, y })
     }
-    const up = () => { drag.current = null; window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
+    const up = () => { drag.current = null; setDragging(false); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
     e.preventDefault()
   }
@@ -54,7 +57,7 @@ export default function MediaDock() {
     ? { left: anch.x, top: anch.y, width: anch.w, height: anch.h, right: 'auto', bottom: 'auto' }
     : pos ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : undefined
   return (
-    <div className={`media-dock ${mini ? 'mini' : ''} ${anch ? 'anchored' : ''}`} style={style}>
+    <div className={`media-dock ${mini ? 'mini' : ''} ${anch ? 'anchored' : ''} ${dragging ? 'dragging' : ''}`} style={style}>
       <div className="md-bar" onPointerDown={anch ? undefined : onGrab} style={{ cursor: anch ? 'default' : 'grab' }} title={anch ? undefined : 'arrasta-me para onde quiseres'}>
         <span className="md-eq"><b /><b /><b /></span>
         <span className="md-t" title={titulo}>{titulo}</span>

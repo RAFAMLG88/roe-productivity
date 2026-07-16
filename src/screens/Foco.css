@@ -364,10 +364,10 @@
 @keyframes zenin{from{opacity:0}to{opacity:1}}
 .foco .zen-night{position:absolute;inset:0;background:
   radial-gradient(ellipse 90% 70% at 50% 30%,#171d2e 0%,#10131f 45%,#0a0c14 100%)}
-.foco .zen-aur{position:absolute;width:56vw;height:46vh;border-radius:50%;filter:blur(70px);mix-blend-mode:screen;opacity:.5;will-change:transform}
-.foco .zen-aur.a{left:-8vw;top:-6vh;background:radial-gradient(circle,color-mix(in srgb,var(--zc) 55%,transparent),transparent 70%);animation:aur1 34s ease-in-out infinite}
-.foco .zen-aur.b{right:-12vw;top:4vh;background:radial-gradient(circle,rgba(31,184,224,.34),transparent 70%);animation:aur2 42s ease-in-out infinite}
-.foco .zen-aur.c{left:24vw;top:-14vh;background:radial-gradient(circle,rgba(255,206,10,.2),transparent 70%);animation:aur3 50s ease-in-out infinite}
+.foco .zen-aur{position:absolute;width:64vw;height:54vh;border-radius:50%;mix-blend-mode:screen;opacity:.55;will-change:transform;transform:translateZ(0)}
+.foco .zen-aur.a{left:-10vw;top:-8vh;background:radial-gradient(circle,color-mix(in srgb,var(--zc) 34%,transparent) 0%,color-mix(in srgb,var(--zc) 14%,transparent) 38%,transparent 66%);animation:aur1 34s ease-in-out infinite}
+.foco .zen-aur.b{right:-14vw;top:2vh;background:radial-gradient(circle,rgba(31,184,224,.22) 0%,rgba(31,184,224,.09) 40%,transparent 66%);animation:aur2 42s ease-in-out infinite}
+.foco .zen-aur.c{left:22vw;top:-16vh;background:radial-gradient(circle,rgba(255,206,10,.13) 0%,rgba(255,206,10,.05) 42%,transparent 66%);animation:aur3 50s ease-in-out infinite}
 @keyframes aur1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(9vw,7vh) scale(1.18)}}
 @keyframes aur2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-11vw,5vh) scale(.95)}}
 @keyframes aur3{0%,100%{transform:translate(0,0)}50%{transform:translate(6vw,9vh) scale(1.14)}}

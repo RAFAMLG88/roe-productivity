@@ -89,3 +89,8 @@ nav.side{transition:width 1.1s cubic-bezier(.2,.8,.2,1),min-width 1.1s cubic-bez
 
 /* em santuário, o reprodutor recolhe (a música continua) */
 body.zen-mode .media-dock{opacity:0;pointer-events:none}
+
+/* durante o arrasto: resposta imediata, e o vídeo não rouba o rato */
+.media-dock.dragging{transition:none}
+.media-dock.dragging iframe{pointer-events:none}
+.media-dock .md-bar:active{cursor:grabbing}

@@ -38,7 +38,7 @@ export default function App() {
           <Screen key={screen} onNavigate={navigate} />
         </div>
         <Cidade3D visible={show3D} onClose={() => setShow3D(false)} />
-        <MediaDock />
+        <MediaDock cityOpen={show3D} />
       </div>
     </RoeProvider>
   )
