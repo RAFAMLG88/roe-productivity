@@ -10,7 +10,7 @@ const nextId = () => 'i' + (Date.now() + (_id++))
 export const PRI_PESO = { urgente: 0, importante: 1, normal: 2 }
 
 // Estados de uma tarefa: 'fila' | 'eleita' | 'feita'
-export function RoeProvider({ children }) {
+export function RoeProvider({ children, perfil = null, sair = null }) {
   const [tarefas, setTarefas] = useState([])
   const [agua, setAgua] = useState(0)
   const [playerAnchor, setPlayerAnchor] = useState(null)
@@ -65,6 +65,7 @@ export function RoeProvider({ children }) {
     diaComecou, setDiaComecou,
     focoAtiva, setFocoAtiva,
     media, setMediaUrl, mediaTitle, setMediaTitulo,
+    perfil, sair,
   }
   return <RoeContext.Provider value={value}>{children}</RoeContext.Provider>
 }

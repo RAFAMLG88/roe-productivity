@@ -26,7 +26,7 @@ function AnelLogo({ size = 40 }) {
 }
 
 export default function Sidebar({ current, onNavigate }) {
-  const { fila } = useRoe()
+  const { fila, perfil, sair } = useRoe()
   const porTriar = fila.length
 
   return (
@@ -44,8 +44,14 @@ export default function Sidebar({ current, onNavigate }) {
         ))}
       </div>
       <div className="foot">
-        <div className="av">R</div>
-        <div><div className="fn">Rafael</div><div className="fs">{FOOT[current]}</div></div>
+        <div className="av" style={perfil?.cor ? { background: perfil.cor } : undefined}>
+          {(perfil?.nome || '·').trim().charAt(0).toUpperCase()}
+        </div>
+        <div className="fmeta">
+          <div className="fn">{perfil?.nome || 'a carregar…'}</div>
+          <div className="fs">{FOOT[current]}</div>
+        </div>
+        <button className="out" title="Sair da conta" onClick={sair}>⏻</button>
       </div>
     </nav>
   )
