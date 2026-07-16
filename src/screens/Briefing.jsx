@@ -15,7 +15,8 @@ const TIPO_META = {
 import { fmtMin as fmt } from '../utils/formato.js'
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou } = useRoe()
+  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId } = useRoe()
+  const [selColega, setSelColega] = useState(null)
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
   const [showSunrise, setShowSunrise] = useState(false)
@@ -212,16 +213,56 @@ export default function Briefing({ onNavigate }) {
           </div>
 
           <div className="panel delega enter" style={{ animationDelay: '.22s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🤝</span>Delegar na equipa<span className="fase2-badge">esboço · Fase 2</span></div>
-            <div className="dg-grid">
-              {[['Ana','#FF1F3D'],['Bruno','#1FB8E0'],['Carla','#00C865'],['Diogo','#FFCE0A'],['Eva','#b07de8'],['Filipe','#FF7846'],['Inês','#2dd4a7'],['JP','#e85d8a']].map(([n2, c]) => (
-                <div key={n2} className="dg-slot" title="na Fase 2: larga aqui uma tarefa para delegar">
-                  <span className="dg-av" style={{ background: c }}>{n2[0]}</span>
-                  <span className="dg-n">{n2}</span>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🤝</span>Delegar na equipa</div>
+            {colegas.length === 0 ? (
+              <div className="dg-vazio">
+                <div className="dg-vazio-t">Ainda estás sozinho na ROE.</div>
+                <div className="dg-vazio-s">Partilha o link da app e o código de convite — mal alguém se registe, aparece aqui.</div>
+              </div>
+            ) : (
+              <>
+                <div className="dg-grid">
+                  {colegas.map((c) => (
+                    <button key={c.id} className={'dg-slot ' + (selColega === c.id ? 'on' : '')}
+                      title={'delegar uma tarefa a ' + c.nome}
+                      onClick={() => setSelColega(selColega === c.id ? null : c.id)}>
+                      <span className="dg-av" style={{ background: c.cor }}>{c.nome.trim().charAt(0).toUpperCase()}</span>
+                      <span className="dg-n">{c.nome.split(' ')[0]}</span>
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="dg-note">na Fase 2 arrastas tarefas para cima de um colega — e ela aparece na fila dele</div>
+                {selColega && equipaPorId[selColega] && (
+                  <div className="dg-pick">
+                    <div className="dgp-t">O que entregas a <b>{equipaPorId[selColega].nome.split(' ')[0]}</b>?</div>
+                    {fila.length === 0 ? (
+                      <div className="dg-note">a tua fila está vazia — captura primeiro, delega depois</div>
+                    ) : fila.slice(0, 8).map((t) => (
+                      <button key={t.id} className="dgp-item" onClick={() => { delegar(t.id, selColega); setSelColega(null) }}>
+                        <span className="dgp-tx">{t.texto}</span>
+                        <span className="dgp-m">~{t.min}m →</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {delegadas.length > 0 && (
+                  <div className="dl-list">
+                    <div className="dl-lab">o que delegaste · {delegadas.filter((t) => t.estado === 'feita').length}/{delegadas.length} feito</div>
+                    {delegadas.slice(0, 6).map((t) => {
+                      const dono = equipaPorId[t.ownerId] || {}
+                      return (
+                        <div key={t.id} className="dl-item">
+                          <span className="dl-av" style={{ background: dono.cor || 'var(--faint)' }}>{(dono.nome || '?').trim().charAt(0).toUpperCase()}</span>
+                          <span className="dl-tx">{t.texto}</span>
+                          <span className={'dl-est ' + t.estado}>{t.estado === 'feita' ? 'feita ✓' : t.estado === 'eleita' ? 'no dia' : 'na fila'}</span>
+                        </div>
+                      )
+                    })}
+                    {delegadas.length > 6 && <div className="dg-note">+ {delegadas.length - 6} mais</div>}
+                  </div>
+                )}
+                {!selColega && <div className="dg-note">toca num colega e escolhe a tarefa — cai na fila dele ao segundo</div>}
+              </>
+            )}
           </div>
         </div>
       </div>

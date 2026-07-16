@@ -8,6 +8,7 @@ export default function Cidade3D({ visible, onClose }) {
   const { feitas } = useRoe()
   const iframeRef = useRef(null)
   const enviadas = useRef(0)      // nº de obras já refletidas na cidade
+  const aquecida = useRef(false)  // shaders compilados em fundo (1x por carregamento)
   const [src, setSrc] = useState(null)
 
   // pré-carregar em fundo, sem atrasar o arranque da app
@@ -54,6 +55,11 @@ export default function Cidade3D({ visible, onClose }) {
             win.restoreProgress(total)
           }
           enviadas.current = total
+        }
+        // aquecer a GPU em fundo (escondida) — a 1ª abertura deixa de ter solavanco
+        if (!visible && !aquecida.current && typeof win.roeWarmup === 'function') {
+          win.roeWarmup()
+          aquecida.current = true
         }
       } catch { /* silencioso */ }
     }

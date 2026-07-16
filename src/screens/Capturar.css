@@ -211,3 +211,14 @@
 .capturar .cap-col{overflow-y:auto;scrollbar-width:thin;padding-right:2px}
 
 .capturar .cap-col,.capturar .cap-col>*,.capturar .canvas>*{min-width:0}
+
+/* ── PARA QUEM — delegacao na captura ── */
+.capturar .para-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 12px}
+.capturar .para-lab{font-size:9.5px;font-family:var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-right:2px}
+.capturar .para-chip{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;border-radius:20px;
+  padding:5px 12px 5px 5px;font-family:var(--font-body);font-weight:700;font-size:11.5px;color:var(--soft);cursor:pointer;transition:all .2s}
+.capturar .para-chip .pa-av{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:#fff;
+  font-family:var(--font-display);font-weight:600;font-size:10px}
+.capturar .para-chip:hover{border-color:var(--faint);color:var(--ink)}
+.capturar .para-chip.on{border-color:var(--black);background:var(--black);color:var(--cream)}
+.capturar .tg.deleg{color:#fff;border:none}

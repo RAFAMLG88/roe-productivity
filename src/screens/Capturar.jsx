@@ -21,11 +21,12 @@ function nomeDeFicheiro(fname) {
 }
 
 export default function Capturar() {
-  const { capturar, fila, feitas, apagar, atualizar } = useRoe()
+  const { capturar, fila, feitas, apagar, atualizar, perfil, colegas, equipaPorId } = useRoe()
   const [tipo, setTipo] = useState('outros')
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
   const [pri, setPri] = useState('normal')
+  const [para, setPara] = useState('eu') // 'eu' ou id do colega
   const [toast, setToast] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [reading, setReading] = useState(false)
@@ -52,8 +53,10 @@ export default function Capturar() {
   const fazerCaptura = () => {
     const txt = texto.trim()
     if (!txt) return
-    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri })
-    setTexto(''); setPri('normal'); setMin(15)
+    const destino = para !== 'eu' ? equipaPorId[para] : null
+    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri, para: destino ? destino.id : undefined })
+    if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
+    setTexto(''); setPri('normal'); setMin(15); setPara('eu')
     if (pendentes.length > 0) {
       const resto = pendentes.slice(1)
       setPendentes(resto)
@@ -178,6 +181,19 @@ export default function Capturar() {
                 </button>
               ))}
             </div>
+            {colegas.length > 0 && (
+              <div className="para-row">
+                <span className="para-lab">para</span>
+                <button className={'para-chip ' + (para === 'eu' ? 'on' : '')} onClick={() => setPara('eu')}>
+                  <span className="pa-av" style={{ background: (perfil && perfil.cor) || 'var(--mustard)' }}>{((perfil && perfil.nome) || 'E').trim().charAt(0).toUpperCase()}</span>mim
+                </button>
+                {colegas.map((c) => (
+                  <button key={c.id} className={'para-chip ' + (para === c.id ? 'on' : '')} onClick={() => setPara(para === c.id ? 'eu' : c.id)}>
+                    <span className="pa-av" style={{ background: c.cor }}>{c.nome.trim().charAt(0).toUpperCase()}</span>{c.nome.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="dur-row">
               <div className="dur-stepper">
                 <button className="dur-btn" onClick={() => setMin((m) => Math.max(5, Number(m) - 5))}>−</button>
@@ -201,7 +217,7 @@ export default function Capturar() {
                 no teu histórico costumas {d.avg > 0 ? 'demorar mais' : 'despachar'} ~{Math.abs(d.avg)} min — isto deve virar <b>{fmtMin(Math.max(5, Number(min) + d.avg))}</b>
               </div>
             ) : null })()}
-            <button className="cap-btn full" onClick={fazerCaptura}>{pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
+            <button className="cap-btn full" onClick={fazerCaptura}>{para !== 'eu' && equipaPorId[para] ? 'Delegar a ' + equipaPorId[para].nome.split(' ')[0] + ' ↵' : pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 
           <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>
@@ -233,6 +249,9 @@ export default function Capturar() {
                     <div className="tags">
                       <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
                       <span className={`tg ${TAGCLS[c.tipo] || 'src-ficheiro'}`}>{isFile ? 'email' : (TIPOS[c.tipo]?.tag || c.tipo)}</span>
+                      {c.criadaPor && perfil && c.criadaPor !== perfil.id && (
+                        <span className="tg deleg" style={{ background: (equipaPorId[c.criadaPor] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[c.criadaPor] || {}).nome || 'colega').split(' ')[0]}</span>
+                      )}
                       <span className="tg tm edit">~<input type="number" min="5" step="5" value={c.min} onChange={(e) => atualizar(c.id, { min: Number(e.target.value) || 5 })} /> min</span>
                     </div>
                   </div>
