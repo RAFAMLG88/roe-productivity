@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { supabase, SUPABASE_URL, SUPABASE_ANON } from '../lib/supabase.js'
 
 const RoeContext = createContext(null)
 export const useRoe = () => useContext(RoeContext)
@@ -181,7 +181,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'presenca' }, (payload) => {
         const r = payload.new
         if (!r || r.user_id === uid) return
-        setPresencas((m) => ({ ...m, [r.user_id]: linhaPres(r) }))
+        setPresencas((m) => ({ ...m, [r.user_id]: linhaPres(r, true) }))
       })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
@@ -194,13 +194,25 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   // batimento de 20s) e todos recebem pelo canal que está provado funcionar.
   const [presencas, setPresencas] = useState({})
   const ultimaPres = useRef(null)
+  const tokenRef = useRef(null) // access token vivo, para o sinal de fecho
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => { tokenRef.current = data.session?.access_token || null })
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, sess) => { tokenRef.current = sess?.access_token || null })
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
-  const linhaPres = (r) => ({
-    nome: r.nome, cor: r.cor, estado: r.estado, tarefa: r.tarefa,
-    min: r.min, restante: r.restante == null ? null : Number(r.restante),
-    em: r.em ? Date.parse(r.em) : Date.now(),
-    rx: Date.now(), // frescura pelo MEU relógio, no momento da receção
-  })
+  const linhaPres = (r, aoVivo) => {
+    const em = r.em ? Date.parse(r.em) : Date.now()
+    return {
+      nome: r.nome, cor: r.cor, estado: r.estado, tarefa: r.tarefa,
+      min: r.min, restante: r.restante == null ? null : Number(r.restante),
+      em,
+      // eventos ao vivo chegam AGORA (frescura pelo meu relógio); na fotografia
+      // inicial a frescura NÃO renasce — senão cada refresh ressuscitava
+      // presenças antigas como "livre" durante mais 95s
+      rx: aoVivo ? Date.now() : Math.min(Date.now(), em),
+    }
+  }
 
   const gravaPresenca = useCallback((payload) => {
     if (!uid || !perfil?.nome) return
@@ -225,7 +237,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     supabase.from('presenca').select('*').then(({ data, error }) => {
       if (!vivo || error) return
       const m = {}
-      for (const r of data || []) { if (r.user_id !== uid) m[r.user_id] = linhaPres(r) }
+      for (const r of data || []) { if (r.user_id !== uid) m[r.user_id] = linhaPres(r, false) }
       setPresencas(m)
     })
     // apresentar-me como livre ao entrar (se o Foco ainda não disse nada)
@@ -246,14 +258,36 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       gravaPresenca(q)
     }
     const kaTimer = setInterval(bater, 20000)
+    // sinal de despedida: ao fechar a página, anuncia "fora" no próprio ato —
+    // os colegas veem "externo"/"fora" em ~1s, sem esperar a janela de frescura
+    const aoFechar = () => {
+      const tk = tokenRef.current
+      if (!uid || !tk || !perfil?.nome) return
+      try {
+        fetch(SUPABASE_URL + '/rest/v1/presenca?on_conflict=user_id', {
+          method: 'POST',
+          keepalive: true,
+          headers: {
+            apikey: SUPABASE_ANON,
+            Authorization: 'Bearer ' + tk,
+            'Content-Type': 'application/json',
+            Prefer: 'resolution=merge-duplicates',
+          },
+          body: JSON.stringify([{ user_id: uid, nome: perfil.nome, cor: perfil.cor, estado: 'fora', tarefa: null, min: null, restante: null, em: new Date().toISOString() }]),
+        })
+      } catch { /* melhor esforço — se falhar, a janela de frescura cobre */ }
+    }
+    window.addEventListener('pagehide', aoFechar)
     const aoVoltar = () => { if (document.visibilityState === 'visible') bater() }
     document.addEventListener('visibilitychange', aoVoltar)
     window.addEventListener('online', bater)
     return () => {
       vivo = false
       clearInterval(kaTimer)
+      window.removeEventListener('pagehide', aoFechar)
       document.removeEventListener('visibilitychange', aoVoltar)
       window.removeEventListener('online', bater)
+      aoFechar() // sair/logout também anuncia "fora"
     }
   }, [uid, perfil?.nome, gravaPresenca])
 

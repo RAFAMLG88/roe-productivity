@@ -190,8 +190,8 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
 
   const linhas = colegas.map((c) => {
     const q0 = presencas[c.id] || null
-    // frescura pelo relógio de QUEM VÊ (rx): imune a PCs com a hora errada
-    const q = q0 && (AGORA - (q0.rx || q0.em || 0) < 95000) ? q0 : null
+    // frescura pelo relógio de QUEM VÊ (rx); "fora" explícito = offline imediato
+    const q = q0 && q0.estado !== 'fora' && (AGORA - (q0.rx || q0.em || 0) < 95000) ? q0 : null
     const estado = q ? q.estado : 'off'
     let restante = null, prog = 0
     if (q && q.restante != null) {
