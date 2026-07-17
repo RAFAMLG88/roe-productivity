@@ -131,13 +131,13 @@ export default function Entrada() {
         <label className="ent-field">
           <span>Email</span>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={onKey}
-            placeholder="o teu email" autoComplete="email" />
+            placeholder="o teu email" autoComplete="off" name="roe-email" />
         </label>
         <label className="ent-field">
           <span>Password</span>
           <input type="password" value={pass} onChange={(e) => setPass(e.target.value)} onKeyDown={onKey}
             placeholder={modo === 'registar' ? 'mínimo 6 caracteres' : 'a tua password'}
-            autoComplete={modo === 'registar' ? 'new-password' : 'current-password'} />
+            autoComplete="new-password" name="roe-pass" />
         </label>
         {modo === 'registar' && (
           <label className="ent-field">

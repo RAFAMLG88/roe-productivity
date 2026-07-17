@@ -146,7 +146,9 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       // impede presenças "penduradas" durante minutos
       if (status === 'SUBSCRIBED') {
         const base = ultimaPres.current || { estado: 'livre', tarefa: null, min: null, restante: null }
-        ch.track({ nome: perfil.nome, cor: perfil.cor, ...base, em: Date.now() })
+        const payload = { ...base, em: Date.now() }
+        ultimaPres.current = payload // CRÍTICO: sem isto o keepalive não bate até o Foco publicar algo
+        ch.track({ nome: perfil.nome, cor: perfil.cor, ...payload })
       }
     })
     presCh.current = ch
@@ -163,7 +165,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       ultimaPres.current = q
       presCh.current.track({ nome: perfil.nome, cor: perfil.cor, ...q })
     }
-    const kaTimer = setInterval(bater, 30000)
+    const kaTimer = setInterval(bater, 20000)
     const aoVoltar = () => { if (document.visibilityState === 'visible') bater() }
     document.addEventListener('visibilitychange', aoVoltar)
     window.addEventListener('online', bater)

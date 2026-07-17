@@ -62,22 +62,86 @@ function spEmbed(url) {
   } catch { return null }
 }
 
-const SUGESTOES = {
-  yt: [
-    { n: 'Lofi radio', u: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' },
-    { n: 'Piano calmo', u: 'https://www.youtube.com/watch?v=sAcj8me7wGI' },
-  ],
-  sp: [
-    { n: 'Deep Focus', u: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ' },
-    { n: 'Peaceful Piano', u: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO' },
-  ],
+// ═══ A TUA EQUIPA AGORA — presença real ═══
+const TIPO_META_EQ = {
+  interno:  { ic: '👤', nome: 'interno' },
+  telefone: { ic: '✆',  nome: 'telefone' },
+  obra:     { ic: '🏗', nome: 'obra' },
+  outros:   { ic: '📌', nome: 'outros' },
+  ficheiro: { ic: '📧', nome: 'email' },
 }
 
-// ═══ A TUA EQUIPA AGORA — presença real, cartões premium (retificados) ═══
+// página-sobreposição com a ordem de trabalhos de um colega, catalogada como no Escritório
+function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
+  const [carregando, setCarregando] = useState(true)
+  const [lista, setLista] = useState([])
+  useEffect(() => {
+    let vivo = true
+    setCarregando(true)
+    tarefasDe(colega.id).then((l) => { if (vivo) { setLista(l || []); setCarregando(false) } })
+    return () => { vivo = false }
+  }, [colega.id, tarefasDe])
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', esc)
+    return () => window.removeEventListener('keydown', esc)
+  }, [onClose])
+
+  const eleitasDe = lista.filter((t) => t.estado === 'eleita')
+  const filaDe = lista.filter((t) => t.estado === 'fila')
+  const estado = presenca ? presenca.estado : 'off'
+  const ETIQ = { foco: 'em foco agora', pausa: 'em pausa', livre: 'disponível', off: 'fora da app' }
+
+  const Linha = ({ t }) => {
+    const m = TIPO_META_EQ[t.tipo] || TIPO_META_EQ.outros
+    return (
+      <div className="eqm-wt">
+        <div className="eqm-ic">{m.ic}</div>
+        <div className="eqm-body">
+          <div className="eqm-t">{t.texto}</div>
+          <div className="eqm-meta">
+            <span className={'badge-pri ' + (t.prioridade || 'normal')}>{t.prioridade || 'normal'}</span>
+            <span className="badge-tipo">{m.nome}</span>
+            <span className="badge-min">~{t.min} min</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="eqm-scrim" onClick={onClose}>
+      <div className="eqm" onClick={(e) => e.stopPropagation()}>
+        <div className="eqm-head">
+          <span className="eqm-av" style={{ background: colega.cor }}>{colega.nome.trim().charAt(0).toUpperCase()}</span>
+          <div className="eqm-quem">
+            <div className="eqm-nome">{colega.nome}</div>
+            <div className={'eqm-est ' + estado}>{ETIQ[estado]}{estado === 'foco' && presenca.tarefa ? ' · ' + presenca.tarefa : ''}</div>
+          </div>
+          <button className="eqm-x" onClick={onClose} title="fechar (Esc)">✕</button>
+        </div>
+        <div className="eqm-corpo">
+          {carregando ? (
+            <div className="eqm-load">a espreitar a ordem de trabalhos…</div>
+          ) : lista.length === 0 ? (
+            <div className="eqm-load">sem tarefas ativas neste momento</div>
+          ) : (
+            <>
+              <div className="eqm-sec">Eleitas para hoje <span className="eqm-n">{eleitasDe.length}</span></div>
+              {eleitasDe.length === 0 ? <div className="eqm-load">nada eleito</div> : eleitasDe.map((t) => <Linha key={t.id} t={t} />)}
+              <div className="eqm-sec">Na fila <span className="eqm-n">{filaDe.length}</span></div>
+              {filaDe.length === 0 ? <div className="eqm-load">fila vazia</div> : filaDe.map((t) => <Linha key={t.id} t={t} />)}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EquipaAgora({ colegas, presencas, tarefasDe }) {
   const [, setTick] = useState(0)
-  const [aberto, setAberto] = useState(null)   // colega expandido (ordem de trabalhos)
-  const [detalhe, setDetalhe] = useState({})   // id → { carregando, lista }
+  const [aberto, setAberto] = useState(null) // colega da página de detalhe
   const alguemEmFoco = Object.values(presencas).some((q) => q && q.estado === 'foco')
   useEffect(() => {
     if (!alguemEmFoco) return
@@ -85,23 +149,14 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
     return () => clearInterval(t)
   }, [alguemEmFoco])
 
-  const abrir = async (id) => {
-    if (aberto === id) { setAberto(null); return }
-    setAberto(id)
-    setDetalhe((d) => ({ ...d, [id]: { carregando: true, lista: (d[id] && d[id].lista) || [] } }))
-    const lista = await tarefasDe(id)
-    setDetalhe((d) => ({ ...d, [id]: { carregando: false, lista: lista || [] } }))
-  }
-
   const AGORA = Date.now()
   const ORD = { foco: 0, pausa: 1, livre: 2, off: 3 }
   const ETIQ = { foco: 'em foco', pausa: 'pausa', livre: 'livre', off: 'fora' }
-  const PRI_IC = { urgente: '🔥', importante: '⭐', normal: '○' }
   const fmtT = (sg) => Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0')
 
   const linhas = colegas.map((c) => {
     const q0 = presencas[c.id] || null
-    const q = q0 && (AGORA - (q0.em || 0) < 95000) ? q0 : null // sem sinal há >95s = fora
+    const q = q0 && (AGORA - (q0.em || 0) < 95000) ? q0 : null
     const estado = q ? q.estado : 'off'
     let restante = null, prog = 0
     if (q && q.restante != null) {
@@ -116,6 +171,7 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
 
   const nFoco = linhas.filter((l) => l.estado === 'foco').length
   const nOn = linhas.filter((l) => l.estado !== 'off').length
+  const sel = aberto ? linhas.find((l) => l.id === aberto) : null
 
   if (colegas.length === 0) return (
     <div className="eq-vazio">Ainda estás sozinho na ROE — partilha o link e o código de convite, e a tua equipa aparece aqui, ao vivo.</div>
@@ -123,68 +179,41 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
   return (
     <>
       <div className="eq-list">
-        {linhas.map((u) => {
-          const det = detalhe[u.id] || {}
-          const eleitasDe = (det.lista || []).filter((t) => t.estado === 'eleita')
-          const filaDe = (det.lista || []).filter((t) => t.estado === 'fila')
-          return (
-            <div key={u.id} className={'eqc ' + u.estado + (aberto === u.id ? ' expandido' : '')}
-              role="button" tabIndex={0} title={'ver a ordem de trabalhos de ' + u.nome.split(' ')[0]}
-              onClick={() => abrir(u.id)}
-              onKeyDown={(e) => { if (e.key === 'Enter') abrir(u.id) }}>
-              <div className="eqc-top">
-                <span className="eqc-av" style={{ background: u.cor }}>
-                  {u.nome.trim().charAt(0).toUpperCase()}
-                  {u.estado === 'foco' && <span className="eqc-pulse" />}
-                </span>
-                <span className="eqc-nome">{u.nome.split(' ')[0]}</span>
-                <span className={'eqc-pill ' + u.estado}>{ETIQ[u.estado]}</span>
-              </div>
-              {(u.estado === 'foco' || u.estado === 'pausa') && u.q.tarefa && (
-                <div className="eqc-tarefa">{u.q.tarefa}</div>
-              )}
-              {u.estado === 'foco' && u.restante != null && (
-                <div className="eqc-prog">
-                  <span className="eqc-tempo">{fmtT(u.restante)}</span>
-                  <span className="eqc-bar"><span className="eqc-fill" style={{ width: (u.prog * 100) + '%' }} /></span>
-                  <span className="eqc-de">de {u.q.min}m</span>
-                </div>
-              )}
-              {u.estado === 'pausa' && u.restante != null && (
-                <div className="eqc-prog pausa">
-                  <span className="eqc-tempo">{fmtT(u.restante)}</span>
-                  <span className="eqc-bar"><span className="eqc-fill" style={{ width: (u.prog * 100) + '%' }} /></span>
-                  <span className="eqc-de">☕ parado</span>
-                </div>
-              )}
-              {aberto === u.id && (
-                <div className="eqc-det" onClick={(e) => e.stopPropagation()}>
-                  <div className="eqc-det-t">ordem de trabalhos</div>
-                  {det.carregando ? (
-                    <div className="eqc-det-load">a espreitar…</div>
-                  ) : (det.lista || []).length === 0 ? (
-                    <div className="eqc-det-load">sem tarefas ativas neste momento</div>
-                  ) : (
-                    <>
-                      {eleitasDe.slice(0, 5).map((t) => (
-                        <div key={t.id} className="eqc-dt">
-                          <span className="eqc-dt-pri">{PRI_IC[t.prioridade] || '○'}</span>
-                          <span className="eqc-dt-tx">{t.texto}</span>
-                          <span className="eqc-dt-m">~{t.min}m</span>
-                        </div>
-                      ))}
-                      {eleitasDe.length > 5 && <div className="eqc-fila-n">+ {eleitasDe.length - 5} eleitas</div>}
-                      {eleitasDe.length === 0 && <div className="eqc-det-load">nada eleito para hoje</div>}
-                      {filaDe.length > 0 && <div className="eqc-fila-n">na fila: {filaDe.length} à espera</div>}
-                    </>
-                  )}
-                </div>
-              )}
+        {linhas.map((u) => (
+          <div key={u.id} className={'eqc ' + u.estado}
+            role="button" tabIndex={0} title={'abrir a ordem de trabalhos de ' + u.nome.split(' ')[0]}
+            onClick={() => setAberto(u.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter') setAberto(u.id) }}>
+            <div className="eqc-top">
+              <span className="eqc-av" style={{ background: u.cor }}>
+                {u.nome.trim().charAt(0).toUpperCase()}
+                {u.estado === 'foco' && <span className="eqc-pulse" />}
+              </span>
+              <span className="eqc-nome">{u.nome.split(' ')[0]}</span>
+              <span className={'eqc-pill ' + u.estado}>{ETIQ[u.estado]}</span>
             </div>
-          )
-        })}
+            {(u.estado === 'foco' || u.estado === 'pausa') && u.q.tarefa && (
+              <div className="eqc-tarefa">{u.q.tarefa}</div>
+            )}
+            {u.estado === 'foco' && u.restante != null && (
+              <div className="eqc-prog">
+                <span className="eqc-tempo">{fmtT(u.restante)}</span>
+                <span className="eqc-bar"><span className="eqc-fill" style={{ width: (u.prog * 100) + '%' }} /></span>
+                <span className="eqc-de">de {u.q.min}m</span>
+              </div>
+            )}
+            {u.estado === 'pausa' && u.restante != null && (
+              <div className="eqc-prog pausa">
+                <span className="eqc-tempo">{fmtT(u.restante)}</span>
+                <span className="eqc-bar"><span className="eqc-fill" style={{ width: (u.prog * 100) + '%' }} /></span>
+                <span className="eqc-de">☕ parado</span>
+              </div>
+            )}
+          </div>
+        ))}
       </div>
       <div className="eq-note">{nOn === 0 ? 'ninguém online agora' : nFoco > 0 ? nFoco + ' em foco · ' + nOn + ' online — em tempo real' : nOn + ' online — em tempo real'}</div>
+      {sel && <EquipaModal colega={sel} presenca={sel.q} tarefasDe={tarefasDe} onClose={() => setAberto(null)} />}
     </>
   )
 }
@@ -350,8 +379,6 @@ export default function Foco({ onNavigate }) {
     setMediaUrl(fonte, u)
     setUrlInput('')
     // título via oEmbed oficial (sem contas); se falhar, fica o nome da fonte
-    const sug = SUGESTOES[fonte].find((x) => x.u === u)
-    if (sug) { setMediaTitulo(fonte, sug.n); return }
     const oe = fonte === 'yt'
       ? `https://www.youtube.com/oembed?url=${encodeURIComponent(u)}&format=json`
       : `https://open.spotify.com/oembed?url=${encodeURIComponent(u)}`
@@ -559,12 +586,6 @@ export default function Foco({ onNavigate }) {
                 />
                 <button className="pl-btn" onClick={() => carregar()}>Tocar ▶</button>
                 {urlErro && <div className="pl-erro">{urlErro}</div>}
-                <div className="pl-sug">
-                  <span>ou experimenta:</span>
-                  {SUGESTOES[fonte].map((s) => (
-                    <button key={s.n} className="pl-chip" onClick={() => carregar(s.u)}>{s.n}</button>
-                  ))}
-                </div>
               </div>
             )}
             <div className="hint">A tua música, o teu gosto — toca <b>aqui dentro</b> — e quando mudas de aba, segue contigo num leitor de bolso. Nunca pára.</div>
