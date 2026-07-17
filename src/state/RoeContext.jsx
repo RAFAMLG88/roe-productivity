@@ -159,110 +159,84 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'owner_id=eq.' + uid }, aplica)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'criada_por=eq.' + uid }, aplica)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, novoPerfil)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'presenca' }, (payload) => {
+        const r = payload.new
+        if (!r || r.user_id === uid) return
+        setPresencas((m) => ({ ...m, [r.user_id]: linhaPres(r) }))
+      })
       .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [uid])
 
-  // ── presença em tempo real: quem está em foco, em pausa ou livre ──
-  // Robustez: o estado é republicado a cada 30s (keepalive) e reenviado após
-  // qualquer reconexão (rede a piscar, separador em fundo, portátil a dormir).
-  // Quem vê considera "fora" uma presença sem sinal há >95s.
+  // ── presença em tempo real VIA BASE DE DADOS ──
+  // O canal efémero de presença mostrou-se surdo a atualizações no ambiente da
+  // equipa; as alterações de BD (postgres_changes) nunca falharam. Por isso a
+  // presença agora é uma tabela: cada um grava o seu estado (transições +
+  // batimento de 20s) e todos recebem pelo canal que está provado funcionar.
   const [presencas, setPresencas] = useState({})
-  const [presRetry, setPresRetry] = useState(0) // watchdog: força recriar o canal se ele morrer
-  const presCh = useRef(null)
-  const ultimaPres = useRef(null) // último payload publicado (para reenvio/keepalive)
-  const presAntes = useRef({})    // para carimbar rx (hora local de RECEÇÃO) — imune a relógios errados
+  const ultimaPres = useRef(null)
+
+  const linhaPres = (r) => ({
+    nome: r.nome, cor: r.cor, estado: r.estado, tarefa: r.tarefa,
+    min: r.min, restante: r.restante == null ? null : Number(r.restante),
+    em: r.em ? Date.parse(r.em) : Date.now(),
+    rx: Date.now(), // frescura pelo MEU relógio, no momento da receção
+  })
+
+  const gravaPresenca = useCallback((payload) => {
+    if (!uid || !perfil?.nome) return
+    supabase.from('presenca').upsert({
+      user_id: uid, nome: perfil.nome, cor: perfil.cor,
+      estado: payload.estado, tarefa: payload.tarefa ?? null,
+      min: payload.min ?? null, restante: payload.restante ?? null,
+      em: new Date().toISOString(),
+    }).then(({ error }) => { if (error) console.warn('[ROE presença] gravação:', error.message) })
+  }, [uid, perfil?.nome, perfil?.cor])
+
+  const setPresenca = useCallback((p) => {
+    const payload = { ...p, em: Date.now() }
+    ultimaPres.current = payload
+    gravaPresenca(payload)
+  }, [gravaPresenca])
 
   useEffect(() => {
     if (!uid || !perfil?.nome) return
-    // NUNCA deixar dois canais com o mesmo topico no mesmo socket: um duplicado
-    // (de uma reconexao/retry) deixa de receber atualizacoes ate ao refresh
-    supabase.getChannels()
-      .filter((c) => c.topic === 'realtime:roe-presenca')
-      .forEach((c) => { try { supabase.removeChannel(c) } catch { /* já removido */ } })
-    const ch = supabase.channel('roe-presenca', { config: { presence: { key: uid } } })
-    const reconstruir = () => {
-      const st = ch.presenceState()
+    let vivo = true
+    // fotografia inicial da equipa (entradas velhas envelhecem para "fora" em <95s)
+    supabase.from('presenca').select('*').then(({ data, error }) => {
+      if (!vivo || error) return
       const m = {}
-      const antes = presAntes.current
-      for (const k of Object.keys(st)) {
-        if (st[k] && st[k][0]) {
-          const nv = st[k][0]
-          const ant = antes[k]
-          // rx: se o payload mudou (em diferente), chegou AGORA; senão mantém o carimbo
-          m[k] = { ...nv, rx: ant && ant.em === nv.em ? ant.rx : Date.now() }
-        }
-      }
-      presAntes.current = m
+      for (const r of data || []) { if (r.user_id !== uid) m[r.user_id] = linhaPres(r) }
       setPresencas(m)
-    }
-    ch.on('presence', { event: 'sync' }, reconstruir)
-    ch.on('presence', { event: 'join' }, reconstruir)
-    ch.on('presence', { event: 'leave' }, reconstruir)
-    ch.subscribe((status) => {
-      // SUBSCRIBED dispara também nas RE-conexões — reenviar o estado é o que
-      // impede presenças "penduradas" durante minutos
-      if (status === 'SUBSCRIBED') {
-        const base = ultimaPres.current || { estado: 'livre', tarefa: null, min: null, restante: null }
-        const payload = { ...base, em: Date.now() }
-        ultimaPres.current = payload // CRÍTICO: sem isto o keepalive não bate até o Foco publicar algo
-        const t = ch.track({ nome: perfil.nome, cor: perfil.cor, ...payload })
-        if (t && t.then) t.then((r) => { if (r !== 'ok') console.warn('[ROE presença] track:', r) })
-      }
     })
-    presCh.current = ch
-
-    // keepalive: refresca o "em" (e o restante, se em foco) sem mudar o estado
+    // apresentar-me como livre ao entrar (se o Foco ainda não disse nada)
+    if (!ultimaPres.current) {
+      ultimaPres.current = { estado: 'livre', tarefa: null, min: null, restante: null, em: Date.now() }
+    }
+    gravaPresenca(ultimaPres.current)
+    // batimento: refresca o em (e o restante, se em foco) a cada 20s
     const bater = () => {
       const u = ultimaPres.current
-      if (!u || !presCh.current) return
+      if (!u) return
       const q = { ...u }
       if (q.estado === 'foco' && q.restante != null && q.em) {
         q.restante = Math.max(0, q.restante - (Date.now() - q.em) / 1000)
       }
       q.em = Date.now()
       ultimaPres.current = q
-      const t = presCh.current.track({ nome: perfil.nome, cor: perfil.cor, ...q })
-      if (t && t.then) t.then((r) => { if (r !== 'ok') console.warn('[ROE presença] track:', r) })
+      gravaPresenca(q)
     }
     const kaTimer = setInterval(bater, 20000)
-    const rpTimer = setInterval(reconstruir, 10000) // repintura de seguranca do espelho local
-    // watchdog: se o canal cair e não se levantar sozinho, recria-o do zero
-    let wdFalhas = 0
-    const wdTimer = setInterval(() => {
-      const st = presCh.current && presCh.current.state
-      if (st === 'closed' || st === 'errored') {
-        wdFalhas += 1
-        if (wdFalhas >= 2) { // 2 verificações seguidas mortas (~50s): recriar do zero
-          console.warn('[ROE presença] canal em estado', st, '— a recriar')
-          wdFalhas = 0
-          setPresRetry((n) => n + 1)
-        }
-      } else { wdFalhas = 0 }
-    }, 25000)
-    const aoVoltar = () => { if (document.visibilityState === 'visible') { bater(); reconstruir() } }
+    const aoVoltar = () => { if (document.visibilityState === 'visible') bater() }
     document.addEventListener('visibilitychange', aoVoltar)
     window.addEventListener('online', bater)
-
     return () => {
+      vivo = false
       clearInterval(kaTimer)
-      clearInterval(rpTimer)
-      clearInterval(wdTimer)
       document.removeEventListener('visibilitychange', aoVoltar)
       window.removeEventListener('online', bater)
-      presCh.current = null
-      supabase.removeChannel(ch)
     }
-  }, [uid, perfil?.nome, perfil?.cor, presRetry])
-
-  // publicar o MEU estado (chamado pelo Foco ao iniciar/pausar/estender/concluir)
-  const setPresenca = useCallback((p) => {
-    const payload = { ...p, em: Date.now() }
-    ultimaPres.current = payload
-    const ch = presCh.current
-    if (!ch || !perfil?.nome) return
-    ch.track({ nome: perfil.nome, cor: perfil.cor, ...payload })
-  }, [perfil?.nome, perfil?.cor])
+  }, [uid, perfil?.nome, gravaPresenca])
 
   // ── escritas otimistas ──
   const capturar = useCallback((dados) => {
