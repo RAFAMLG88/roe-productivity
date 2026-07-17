@@ -1,5 +1,6 @@
 import React from 'react'
 import { useRoe } from '../state/RoeContext.jsx'
+import { ROE_VER } from '../lib/versao.js'
 
 const NAV = [
   { id: 'capturar', ic: '＋', label: 'Capturar' },
@@ -49,7 +50,7 @@ export default function Sidebar({ current, onNavigate }) {
         </div>
         <div className="fmeta">
           <div className="fn">{perfil?.nome || 'a carregar…'}</div>
-          <div className="fs">{FOOT[current]}</div>
+          <div className="fs">{FOOT[current]} · {ROE_VER}</div>
         </div>
         <button className="out" title="Sair da conta" onClick={sair}>⏻</button>
       </div>

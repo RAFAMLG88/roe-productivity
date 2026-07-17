@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { ROE_VER } from '../lib/versao.js'
 import './Entrada.css'
 
 // ── tradução honesta dos erros do Supabase para pt-PT ──
@@ -154,7 +155,7 @@ export default function Entrada() {
           {busy ? 'a abrir a porta…' : modo === 'entrar' ? 'Entrar no escritório' : 'Criar a minha conta'}
         </button>
 
-        <div className="ent-foot">10 lugares · uma cidade para construir</div>
+        <div className="ent-foot">10 lugares · uma cidade para construir · {ROE_VER}</div>
       </div>
     </div>
   )

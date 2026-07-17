@@ -56,9 +56,15 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const setMediaTitulo = useCallback((fonte, t) => setMediaTitle((m) => ({ ...m, [fonte]: t })), [])
   const erroTimer = useRef(null)
 
+  const recarregarRef = useRef(null) // preenchido pelo efeito de carga: repõe a verdade do servidor
   const avisaErro = useCallback((e) => {
     console.error('[ROE sync]', e)
-    setSyncErro('sem ligação ao servidor — a última alteração pode não ter ficado guardada')
+    const msg = String((e && e.message) || e || '')
+    const ehPermissao = msg.includes('row-level security') || msg.includes('violates') || (e && e.code === '42501')
+    setSyncErro(ehPermissao
+      ? 'o servidor recusou a operação (permissões) — a app foi reposta como está no servidor'
+      : 'sem ligação ao servidor — a última alteração pode não ter ficado guardada')
+    if (ehPermissao && recarregarRef.current) recarregarRef.current() // desfaz o otimismo errado no ecrã
     clearTimeout(erroTimer.current)
     erroTimer.current = setTimeout(() => setSyncErro(''), 6000)
   }, [])
@@ -67,7 +73,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   useEffect(() => {
     if (!uid) return
     let vivo = true
-    Promise.all([
+    const carregar = () => Promise.all([
       supabase.from('tarefas').select('*')
         .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid)
         .order('criada_em', { ascending: false }),
@@ -81,7 +87,14 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       if (!a.error && a.data) setAgua(Math.min(8, Math.round((a.data.ml || 0) / 250)))
       setPronto(true)
     })
-    return () => { vivo = false }
+    recarregarRef.current = () => {
+      supabase.from('tarefas').select('*')
+        .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid)
+        .order('criada_em', { ascending: false })
+        .then(({ data, error }) => { if (vivo && !error) setTarefas((data || []).map(daBD)) })
+    }
+    carregar()
+    return () => { vivo = false; recarregarRef.current = null }
   }, [uid, avisaErro])
 
   // ── tempo real: tarefas delegadas a mim aparecem ao segundo; o estado
@@ -139,6 +152,9 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       if (!r) return
       setEquipa((eq) => eq.some((p) => p.id === r.id) ? eq.map((p) => p.id === r.id ? r : p) : [...eq, r])
     }
+    supabase.getChannels()
+      .filter((c) => c.topic === 'realtime:roe-dados-' + uid)
+      .forEach((c) => { try { supabase.removeChannel(c) } catch { /* já removido */ } })
     const ch = supabase.channel('roe-dados-' + uid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'owner_id=eq.' + uid }, aplica)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'criada_por=eq.' + uid }, aplica)
@@ -159,6 +175,11 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
 
   useEffect(() => {
     if (!uid || !perfil?.nome) return
+    // NUNCA deixar dois canais com o mesmo topico no mesmo socket: um duplicado
+    // (de uma reconexao/retry) deixa de receber atualizacoes ate ao refresh
+    supabase.getChannels()
+      .filter((c) => c.topic === 'realtime:roe-presenca')
+      .forEach((c) => { try { supabase.removeChannel(c) } catch { /* já removido */ } })
     const ch = supabase.channel('roe-presenca', { config: { presence: { key: uid } } })
     const reconstruir = () => {
       const st = ch.presenceState()
@@ -205,13 +226,19 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       if (t && t.then) t.then((r) => { if (r !== 'ok') console.warn('[ROE presença] track:', r) })
     }
     const kaTimer = setInterval(bater, 20000)
+    const rpTimer = setInterval(reconstruir, 10000) // repintura de seguranca do espelho local
     // watchdog: se o canal cair e não se levantar sozinho, recria-o do zero
+    let wdFalhas = 0
     const wdTimer = setInterval(() => {
       const st = presCh.current && presCh.current.state
-      if (st !== 'joined' && st !== 'joining') {
-        console.warn('[ROE presença] canal em estado', st, '— a recriar')
-        setPresRetry((n) => n + 1)
-      }
+      if (st === 'closed' || st === 'errored') {
+        wdFalhas += 1
+        if (wdFalhas >= 2) { // 2 verificações seguidas mortas (~50s): recriar do zero
+          console.warn('[ROE presença] canal em estado', st, '— a recriar')
+          wdFalhas = 0
+          setPresRetry((n) => n + 1)
+        }
+      } else { wdFalhas = 0 }
     }, 25000)
     const aoVoltar = () => { if (document.visibilityState === 'visible') { bater(); reconstruir() } }
     document.addEventListener('visibilitychange', aoVoltar)
@@ -219,6 +246,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
 
     return () => {
       clearInterval(kaTimer)
+      clearInterval(rpTimer)
       clearInterval(wdTimer)
       document.removeEventListener('visibilitychange', aoVoltar)
       window.removeEventListener('online', bater)
