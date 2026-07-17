@@ -581,6 +581,6 @@
 .eqm-meta .badge-pri.normal{background:var(--cream-2);color:var(--soft)}
 
 /* estado EXTERNO — offline mas com paradeiro marcado */
-.foco .eqc.externo{border-left:3px solid var(--sky,#1FB8E0);opacity:1}
-.foco .eqc-pill.externo{background:var(--sky-soft);color:#0D7FA6}
+.foco .eqc.est-externo{border-left:3px solid var(--sky,#1FB8E0);opacity:1}
+.foco .eqc-pill.est-externo{background:var(--sky-soft);color:#0D7FA6}
 .foco .eqc-ext{font-family:var(--font-mono);font-size:10.5px;font-weight:700;color:#0D7FA6}

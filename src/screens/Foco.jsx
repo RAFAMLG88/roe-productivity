@@ -186,6 +186,8 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
   const AGORA = Date.now()
   const ORD = { foco: 0, pausa: 1, externo: 2, livre: 3, off: 4 }
   const ETIQ = { foco: 'em foco', pausa: 'pausa', externo: 'externo', livre: 'livre', off: 'fora' }
+  // 'externo' é a classe-raiz do ecrã Externo — nos cartões usa-se 'est-externo'
+  const CLS = (e) => (e === 'externo' ? 'est-externo' : e)
   const fmtT = (sg) => Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0')
 
   const linhas = colegas.map((c) => {
@@ -223,7 +225,7 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
     <>
       <div className="eq-list">
         {linhas.map((u) => (
-          <div key={u.id} className={'eqc ' + u.estado}
+          <div key={u.id} className={'eqc ' + CLS(u.estado)}
             role="button" tabIndex={0} title={'abrir a ordem de trabalhos de ' + u.nome.split(' ')[0]}
             onClick={() => setAberto(u.id)}
             onKeyDown={(e) => { if (e.key === 'Enter') setAberto(u.id) }}>
@@ -233,7 +235,7 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
                 {u.estado === 'foco' && <span className="eqc-pulse" />}
               </span>
               <span className="eqc-nome">{u.nome.split(' ')[0]}</span>
-              <span className={'eqc-pill ' + u.estado}>{ETIQ[u.estado]}</span>
+              <span className={'eqc-pill ' + CLS(u.estado)}>{ETIQ[u.estado]}</span>
             </div>
             {(u.estado === 'foco' || u.estado === 'pausa') && u.q.tarefa && (
               <div className="eqc-tarefa">{u.q.tarefa}</div>
