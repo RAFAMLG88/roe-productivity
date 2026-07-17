@@ -121,6 +121,34 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     return () => { supabase.removeChannel(ch) }
   }, [uid])
 
+  // ── presença em tempo real: quem está em foco, em pausa ou livre ──
+  const [presencas, setPresencas] = useState({}) // id do colega → {nome,cor,estado,tarefa,min,restante,em}
+  const presCh = useRef(null)
+  useEffect(() => {
+    if (!uid || !perfil?.nome) return
+    const ch = supabase.channel('roe-presenca', { config: { presence: { key: uid } } })
+    ch.on('presence', { event: 'sync' }, () => {
+      const st = ch.presenceState()
+      const m = {}
+      for (const k of Object.keys(st)) { if (st[k] && st[k][0]) m[k] = st[k][0] }
+      setPresencas(m)
+    })
+    ch.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        ch.track({ nome: perfil.nome, cor: perfil.cor, estado: 'livre', tarefa: null, min: null, restante: null, em: Date.now() })
+      }
+    })
+    presCh.current = ch
+    return () => { presCh.current = null; supabase.removeChannel(ch) }
+  }, [uid, perfil?.nome, perfil?.cor])
+
+  // publicar o MEU estado (chamado pelo Foco ao iniciar/pausar/estender/concluir)
+  const setPresenca = useCallback((p) => {
+    const ch = presCh.current
+    if (!ch || !perfil?.nome) return
+    ch.track({ nome: perfil.nome, cor: perfil.cor, em: Date.now(), ...p })
+  }, [perfil?.nome, perfil?.cor])
+
   // ── escritas otimistas ──
   const capturar = useCallback((dados) => {
     const id = crypto.randomUUID()
@@ -199,6 +227,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     tarefas, fila, eleitas, feitas, pronto,
     capturar, atualizar, eleger, paraFila, concluir, apagar,
     equipa, colegas, equipaPorId, delegadas, delegar,
+    presencas, setPresenca,
     agua, addAgua, removeAgua,
     playerAnchor, setPlayerAnchor,
     diaComecou, setDiaComecou,

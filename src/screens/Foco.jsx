@@ -73,8 +73,71 @@ const SUGESTOES = {
   ],
 }
 
+// ═══ A TUA EQUIPA AGORA — presença real (Fase 2 · Etapa 5) ═══
+function EquipaAgora({ colegas, presencas }) {
+  const [, setTick] = useState(0)
+  const alguemEmFoco = Object.values(presencas).some((q) => q && q.estado === 'foco')
+  useEffect(() => {
+    if (!alguemEmFoco) return
+    const t = setInterval(() => setTick((x) => x + 1), 1000)
+    return () => clearInterval(t)
+  }, [alguemEmFoco])
+
+  const ORD = { foco: 0, pausa: 1, livre: 2, off: 3 }
+  const linhas = colegas.map((c) => {
+    const q = presencas[c.id] || null
+    const estado = q ? q.estado : 'off'
+    let restante = null, prog = 0
+    if (q && q.restante != null) {
+      restante = q.estado === 'foco'
+        ? Math.max(0, Math.round(q.restante - (Date.now() - q.em) / 1000))
+        : Math.round(q.restante)
+      const tot = Math.max(60, (q.min || 1) * 60)
+      prog = Math.max(0, Math.min(1, 1 - restante / tot))
+    }
+    return { ...c, q, estado, restante, prog }
+  }).sort((a, b) => (ORD[a.estado] ?? 3) - (ORD[b.estado] ?? 3) || a.nome.localeCompare(b.nome))
+
+  const fmtT = (sg) => Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0')
+  const nFoco = linhas.filter((l) => l.estado === 'foco').length
+  const nOn = linhas.filter((l) => l.estado !== 'off').length
+
+  if (colegas.length === 0) return (
+    <>
+      <div className="eq-vazio">Ainda estás sozinho na ROE — partilha o link e o código de convite, e a tua equipa aparece aqui, ao vivo.</div>
+    </>
+  )
+  return (
+    <>
+      <div className="eq-list">
+        {linhas.map((u) => (
+          <div key={u.id} className={'eq-row ' + u.estado}>
+            <span className="eq-av" style={{ background: u.cor }}>{u.nome.trim().charAt(0).toUpperCase()}</span>
+            <div className="eq-b">
+              <div className="eq-n">{u.nome.split(' ')[0]}</div>
+              <div className="eq-t">
+                {u.estado === 'foco' ? (u.q.tarefa || 'em foco')
+                  : u.estado === 'pausa' ? 'em pausa ☕' + (u.q && u.q.tarefa ? ' · ' + u.q.tarefa : '')
+                  : u.estado === 'livre' ? 'disponível'
+                  : 'fora da app'}
+              </div>
+            </div>
+            {u.estado === 'foco' && u.restante != null ? (
+              <div className="eq-timer">
+                <svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" className="eqt-bg" /><circle cx="15" cy="15" r="12" className="eqt-fg" style={{ strokeDashoffset: 75.4 - 75.4 * u.prog }} /></svg>
+                <span>{fmtT(u.restante)}</span>
+              </div>
+            ) : <span className={'eq-dot ' + u.estado} />}
+          </div>
+        ))}
+      </div>
+      <div className="eq-note">{nOn === 0 ? 'ninguém online agora' : nFoco > 0 ? nFoco + ' em foco · ' + nOn + ' online — em tempo real' : nOn + ' online — em tempo real'}</div>
+    </>
+  )
+}
+
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor } = useRoe()
+  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor, colegas, presencas, setPresenca } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -98,6 +161,17 @@ export default function Foco({ onNavigate }) {
     }), 1000)
     return () => clearInterval(t)
   }, [running])
+
+  // presença: publica só nas transições (iniciar/pausar/estender/concluir), nunca a cada segundo —
+  // quem vê calcula o tempo localmente a partir de {restante, em}
+  const secsRef = useRef(0)
+  useEffect(() => { secsRef.current = secs }, [secs])
+  useEffect(() => {
+    if (task && running) setPresenca({ estado: 'foco', tarefa: task.texto, min: Math.round(total / 60) || task.min, restante: secsRef.current })
+    else if (task) setPresenca({ estado: 'pausa', tarefa: task.texto, min: Math.round(total / 60) || task.min, restante: secsRef.current })
+    else setPresenca({ estado: 'livre', tarefa: null, min: null, restante: null })
+  }, [task?.id, running, total, setPresenca]) // total nas deps: +5/+15 min republicam o restante certo
+  useEffect(() => () => setPresenca({ estado: 'livre', tarefa: null, min: null, restante: null }), [setPresenca])
 
   const iniciar = (t) => { const m = t.min * 60; setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true); setEsgotado(false) }
   const concluirTask = () => {
@@ -444,34 +518,8 @@ export default function Foco({ onNavigate }) {
           </div>
 
           <div className="panel equipa enter" style={{ animationDelay: '.1s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>A tua equipa agora<span className="fase2-badge">esboço · Fase 2</span></div>
-            <div className="eq-list">
-              {[
-                { n: 'Ana', c: '#FF1F3D', t: 'Orçamento fachada RX-12', m: '12:40', p: 62, s: 'foco' },
-                { n: 'Bruno', c: '#1FB8E0', t: 'Medições obra Matosinhos', m: '31:05', p: 28, s: 'foco' },
-                { n: 'Carla', c: '#00C865', t: null, m: null, p: 0, s: 'livre' },
-                { n: 'Diogo', c: '#FFCE0A', t: 'Relatório térmico bloco B', m: '04:12', p: 88, s: 'foco' },
-                { n: 'Eva', c: '#b07de8', t: null, m: null, p: 0, s: 'pausa' },
-                { n: 'Filipe', c: '#FF7846', t: 'Revisão estrutural pilar P3', m: '22:58', p: 45, s: 'foco' },
-                { n: 'Inês', c: '#2dd4a7', t: null, m: null, p: 0, s: 'livre' },
-                { n: 'JP', c: '#e85d8a', t: 'Email cliente TorreSul', m: '08:31', p: 71, s: 'foco' },
-              ].map((u) => (
-                <div key={u.n} className={`eq-row ${u.s}`}>
-                  <span className="eq-av" style={{ background: u.c }}>{u.n[0]}</span>
-                  <div className="eq-b">
-                    <div className="eq-n">{u.n}</div>
-                    <div className="eq-t">{u.t || (u.s === 'pausa' ? 'em pausa ☕' : 'disponível')}</div>
-                  </div>
-                  {u.t ? (
-                    <div className="eq-timer">
-                      <svg viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" className="eqt-bg" /><circle cx="15" cy="15" r="12" className="eqt-fg" style={{ strokeDashoffset: 75.4 - 75.4 * u.p / 100 }} /></svg>
-                      <span>{u.m}</span>
-                    </div>
-                  ) : <span className={`eq-dot ${u.s}`} />}
-                </div>
-              ))}
-            </div>
-            <div className="eq-note">pré-visualização com dados de exemplo — na Fase 2 é a tua equipa real, em tempo real</div>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>A tua equipa agora<span className="eq-live">● ao vivo</span></div>
+            <EquipaAgora colegas={colegas} presencas={presencas} />
           </div>
         </div>
       </div>
