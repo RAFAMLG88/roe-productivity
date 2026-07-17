@@ -144,12 +144,12 @@ function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
 function EquipaAgora({ colegas, presencas, tarefasDe }) {
   const [, setTick] = useState(0)
   const [aberto, setAberto] = useState(null) // colega da página de detalhe
-  const alguemEmFoco = Object.values(presencas).some((q) => q && q.estado === 'foco')
+  // tick permanente de 1s: as transições, o envelhecimento (>95s → fora) e os
+  // anéis pintam-se sozinhos — nunca é preciso refresh para ver o estado atual
   useEffect(() => {
-    if (!alguemEmFoco) return
     const t = setInterval(() => setTick((x) => x + 1), 1000)
     return () => clearInterval(t)
-  }, [alguemEmFoco])
+  }, [])
 
   const AGORA = Date.now()
   const ORD = { foco: 0, pausa: 1, livre: 2, off: 3 }

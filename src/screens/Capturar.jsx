@@ -221,7 +221,7 @@ export default function Capturar() {
           </div>
 
           <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🔌</span>Fontes automáticas <span style={{ marginLeft: 'auto', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>a ligar na Fase 2</span></div>
+            <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🔌</span>Fontes automáticas <span style={{ marginLeft: 'auto', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>Fase 3 · em breve</span></div>
             <div className="df-row"><span>Gmail — inbox principal</span><span className="dfk off">por ligar</span></div>
             <div className="df-row"><span>Outlook — trabalho</span><span className="dfk off">por ligar</span></div>
             <div className="df-row"><span>WhatsApp Web</span><span className="dfk off">por ligar</span></div>

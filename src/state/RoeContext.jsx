@@ -213,7 +213,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
         setPresRetry((n) => n + 1)
       }
     }, 25000)
-    const aoVoltar = () => { if (document.visibilityState === 'visible') bater() }
+    const aoVoltar = () => { if (document.visibilityState === 'visible') { bater(); reconstruir() } }
     document.addEventListener('visibilitychange', aoVoltar)
     window.addEventListener('online', bater)
 
