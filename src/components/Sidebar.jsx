@@ -5,12 +5,13 @@ import { ROE_VER } from '../lib/versao.js'
 const NAV = [
   { id: 'capturar', ic: '＋', label: 'Capturar' },
   { id: 'briefing', ic: '◎', label: 'Escritório' },
+  { id: 'externo', ic: '↗', label: 'Externo' },
   { id: 'foco', ic: '◉', label: 'Foco' },
   { id: 'cidade', ic: '▲', label: 'Cidade' },
   { id: 'analise', ic: '∿', label: 'Análise' },
 ]
 const FOOT = {
-  briefing: 'o teu escritório', foco: 'em foco', capturar: 'entrada do dia',
+  briefing: 'o teu escritório', foco: 'em foco', capturar: 'entrada do dia', externo: 'fora do escritório',
   cidade: 'a tua recompensa', analise: 'a tua análise',
 }
 

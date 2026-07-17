@@ -1,0 +1,103 @@
+/* ═══ EXTERNO — o que se passa fora do escritório ═══ */
+.externo{flex:1;min-width:0;display:flex;flex-direction:column;padding:20px 22px;gap:14px;overflow:hidden;height:100%}
+.externo .ext-head{display:flex;align-items:center;gap:14px}
+.externo .ext-ic{width:44px;height:44px;border-radius:14px;background:var(--sky-soft);display:grid;place-items:center;font-size:20px;animation:extBussola 6s ease-in-out infinite}
+@keyframes extBussola{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.externo h1{font-family:var(--font-display);font-weight:600;font-size:21px;color:var(--ink)}
+.externo .ext-sub{font-size:11.5px;color:var(--soft);margin-top:2px}
+.externo .hoje-pill{margin-left:auto;font-family:var(--font-mono);font-size:10px;background:var(--card,#fff);border:1px solid var(--line);padding:8px 14px;border-radius:12px;color:var(--soft)}
+.externo .hoje-pill b{color:var(--ink)}
+
+.externo .ext-canvas{flex:1;min-height:0;display:flex;gap:14px}
+.externo .ext-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.externo .ext-col.esq{width:352px;flex:none;overflow-y:auto;scrollbar-width:thin;padding-right:2px}
+.externo .ext-col.esq>*{flex:none}
+.externo .ext-col.dir{flex:1}
+.externo .panel{border-top:3px solid var(--line)}
+.externo .panel.p-sky{border-top-color:var(--sky,#1FB8E0)}
+.externo .panel.p-mustard{border-top-color:var(--mustard)}
+.externo .panel.p-forest{border-top-color:var(--forest)}
+.externo .ext-vazio{font-size:11.5px;color:var(--soft);padding:4px 2px;line-height:1.5}
+.externo .ext-nota{font-size:10px;font-family:var(--font-mono);color:var(--faint);line-height:1.6;margin-top:6px}
+
+/* agora fora */
+.externo .fora-card{display:flex;gap:11px;background:var(--card,#fff);border:1px solid var(--line);border-left:3px solid var(--sky,#1FB8E0);border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.externo .fora-card.prox{border-left-color:var(--line);opacity:.75}
+.externo .fora-card.viva{animation:extViva 3s ease-in-out infinite}
+@keyframes extViva{0%,100%{box-shadow:0 0 0 0 rgba(31,184,224,0)}50%{box-shadow:0 0 0 5px rgba(31,184,224,.14)}}
+.externo .fc-av{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:600;font-size:13px}
+.externo .fc-b{min-width:0;flex:1}
+.externo .fc-n{font-family:var(--font-display);font-weight:600;font-size:13px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.externo .fc-pill{margin-left:auto;font-family:var(--font-mono);font-size:8px;letter-spacing:.09em;text-transform:uppercase;background:var(--sky-soft);color:#0D7FA6;padding:3px 8px;border-radius:8px}
+.externo .fc-pill.cinza{background:var(--cream-2);color:var(--soft)}
+.externo .fc-t{font-size:12px;font-weight:700;margin-top:3px;line-height:1.4;color:var(--ink)}
+.externo .fc-h{font-family:var(--font-mono);font-size:10px;color:#0D7FA6;margin-top:4px;display:flex;align-items:center;gap:6px}
+.externo .fc-dot{width:6px;height:6px;border-radius:50%;background:var(--sky,#1FB8E0);animation:extPulse 2s ease-in-out infinite}
+@keyframes extPulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* marcar */
+.externo .f-lab{font-size:9px;font-family:var(--font-mono);letter-spacing:.13em;text-transform:uppercase;color:var(--soft);margin:10px 0 5px}
+.externo .f-lab:first-of-type{margin-top:0}
+.externo input{width:100%;border:1.5px solid var(--line);border-radius:11px;background:var(--card,#fff);padding:10px 12px;font-family:var(--font-body);font-weight:600;font-size:13px;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s}
+.externo input:focus{border-color:var(--mustard);box-shadow:0 0 0 3px rgba(255,206,10,.2)}
+.externo .f-row{display:flex;gap:8px}
+.externo .f-row input{flex:1;min-width:0}
+.externo .f-erro{background:var(--red-soft);border:1px solid rgba(255,31,61,.25);color:var(--red-ink);border-radius:11px;padding:9px 12px;font-size:11.5px;font-weight:600;margin-top:10px}
+.externo .marcar{width:100%;margin-top:14px;border:none;cursor:pointer;background:var(--black);color:var(--cream);border-radius:13px;padding:13px 0;font-family:var(--font-display);font-weight:600;font-size:14px;box-shadow:0 8px 20px rgba(20,18,7,.3);transition:transform .2s}
+.externo .marcar:hover{transform:translateY(-1px)}
+.externo .marcar .aviao{display:inline-block;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.externo .marcar:hover .aviao{transform:translateX(9px) translateY(-4px) rotate(12deg)}
+
+/* meus blocos */
+.externo .bl{display:flex;align-items:center;gap:10px;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:7px;min-width:0}
+.externo .bl-h{font-family:var(--font-mono);font-size:9.5px;font-weight:700;background:var(--cream-2);padding:4px 8px;border-radius:8px;color:var(--ink);flex:none}
+.externo .bl-t{flex:1;min-width:0;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.externo .bl-d{font-family:var(--font-mono);font-size:8.5px;color:var(--faint);flex:none}
+.externo .bl-x{flex:none;border:none;background:none;color:var(--faint);cursor:pointer;font-size:12px;padding:4px;border-radius:7px;transition:all .2s}
+.externo .bl-x:hover{color:var(--red-ink);background:var(--red-soft)}
+
+
+/* ═══ CALENDÁRIO — marfim e ouro: papel nobre, moldura de latão ═══ */
+.externo .cal-panel{flex:1;display:flex;flex-direction:column;min-height:0;
+  background:
+    radial-gradient(120% 55% at 85% -10%, rgba(255,206,10,.12) 0%, rgba(255,206,10,0) 55%),
+    linear-gradient(180deg,#FFFDF6 0%,#FBF5E2 100%)!important;
+  border:1px solid rgba(148,118,10,.38)!important;border-top:1px solid rgba(148,118,10,.38)!important;
+  box-shadow:0 12px 40px rgba(90,78,50,.10), inset 0 0 0 1px rgba(255,255,255,.75)!important}
+.externo .cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid rgba(148,118,10,.22)}
+.externo .cal-mes{font-family:var(--font-display);font-weight:600;font-size:17px;text-transform:capitalize;color:var(--ink);letter-spacing:.02em}
+.externo .cal-nav{display:flex;gap:5px;margin-left:auto}
+.externo .cal-nav button{width:30px;height:30px;border:1px solid rgba(148,118,10,.32);background:#fff;border-radius:10px;cursor:pointer;font-size:13px;color:#8A6D00}
+.externo .cal-nav button:hover{border-color:#8A6D00;background:var(--mustard-soft)}
+.externo .dias-sem{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.externo .dias-sem span{text-align:center;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:#8A6D00}
+.externo .dia{position:relative;background:#fff;border:1px solid #EAE0C4;border-radius:13px;padding:8px 9px;cursor:pointer;display:flex;flex-direction:column;gap:5px;min-height:0;transition:border-color .2s,box-shadow .2s;animation:extDiaIn .35s ease both}
+.externo .dia:hover{border-color:rgba(148,118,10,.5);box-shadow:0 4px 14px rgba(148,118,10,.10)}
+.externo .dia.fora-mes{opacity:.35;background:transparent}
+.externo .dia.semana-atual{background:linear-gradient(180deg,#FFF7D4,#FFF1B8);border-color:#E4CC77}
+.externo .dia.hoje{border:2px solid var(--mustard);box-shadow:0 0 0 3px rgba(255,206,10,.18)}
+.externo .dia.sel{box-shadow:0 0 0 3px rgba(255,206,10,.45);border-color:var(--mustard)}
+.externo .d-num{font-family:var(--font-display);font-weight:600;font-size:12.5px;color:var(--ink)}
+.externo .dia.hoje .d-num::after{content:'hoje';font-family:var(--font-mono);font-size:7px;letter-spacing:.1em;text-transform:uppercase;background:var(--mustard);color:var(--black);padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:2px;font-weight:700}
+.externo .dia-det{margin-top:12px;border-top:1px dashed rgba(148,118,10,.28);padding-top:11px}
+.externo .dd-t{font-family:var(--font-mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8A6D00;margin-bottom:8px}
+.externo .cal-panel .dd-item{background:#fff;border:1px solid #EAE0C4}
+.externo .cal-panel .dd-h{color:#8A6D00}
+.externo .cal-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:6px}
+@keyframes extDiaIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.externo .d-evs{display:flex;flex-direction:column;gap:3px;min-height:0;overflow:hidden}
+.externo .ev{display:flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;color:var(--ink);border-radius:7px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.externo .ev i{flex:none;width:7px;height:7px;border-radius:50%;font-style:normal}
+.externo .ev-mais{font-family:var(--font-mono);font-size:8px;color:var(--soft)}
+.externo .sem-tag{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--mustard);color:var(--black);padding:4px 10px;border-radius:9px;font-weight:700;position:relative;overflow:hidden}
+.externo .sem-tag::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.65) 50%,transparent 70%);transform:translateX(-110%);animation:extVarre 4s ease-in-out infinite}
+@keyframes extVarre{0%,60%{transform:translateX(-110%)}85%,100%{transform:translateX(110%)}}
+.externo .dd-list{display:flex;gap:8px;flex-wrap:wrap}
+.externo .dd-item{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #EAE0C4;border-radius:12px;padding:8px 12px;animation:extDdIn .3s ease both}
+@keyframes extDdIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.externo .dd-av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-weight:600;font-size:10px;flex:none}
+.externo .dd-tx{font-size:11.5px;font-weight:700;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.externo .dd-h{font-family:var(--font-mono);font-size:9.5px;color:#8A6D00;flex:none}
+
+@media (max-width:1340px){.externo{padding:14px 14px}.externo .ext-col.esq{width:310px}}
+@media (prefers-reduced-motion:reduce){.externo .ext-ic,.externo .fora-card.viva,.externo .fc-dot,.externo .sem-tag::after,.externo .dia,.externo .dd-item{animation:none}}

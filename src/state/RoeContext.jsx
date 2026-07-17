@@ -12,6 +12,11 @@ const hojeStr = () => {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
 }
 
+const daAg = (r) => ({
+  id: r.id, userId: r.user_id, dia: r.dia,
+  inicio: (r.inicio || '').slice(0, 5), fim: (r.fim || '').slice(0, 5), texto: r.texto,
+})
+
 const daBD = (r) => ({
   id: r.id,
   texto: r.texto,
@@ -44,6 +49,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const uid = perfil?.id || null
   const [tarefas, setTarefas] = useState([])
   const [equipa, setEquipa] = useState([])
+  const [agenda, setAgenda] = useState([]) // blocos de trabalho externo de toda a equipa
   const [agua, setAgua] = useState(0) // copos de 250 ml (0–8), hoje
   const [pronto, setPronto] = useState(false)
   const [syncErro, setSyncErro] = useState('')
@@ -79,12 +85,14 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
         .order('criada_em', { ascending: false }),
       supabase.from('profiles').select('id,nome,cor').order('criado_em', { ascending: true }),
       supabase.from('agua').select('ml').eq('user_id', uid).eq('dia', hojeStr()).maybeSingle(),
-    ]).then(([t, p, a]) => {
+      supabase.from('agenda_externa').select('*').order('dia').order('inicio'),
+    ]).then(([t, p, a, g]) => {
       if (!vivo) return
       if (t.error) avisaErro(t.error)
       else setTarefas((t.data || []).map(daBD))
       if (!p.error) setEquipa(p.data || [])
       if (!a.error && a.data) setAgua(Math.min(8, Math.round((a.data.ml || 0) / 250)))
+      if (!g.error) setAgenda((g.data || []).map(daAg))
       setPronto(true)
     })
     recarregarRef.current = () => {
@@ -159,6 +167,17 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'owner_id=eq.' + uid }, aplica)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'criada_por=eq.' + uid }, aplica)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, novoPerfil)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'agenda_externa' }, (payload) => {
+        if (payload.eventType === 'DELETE') {
+          const id = payload.old && payload.old.id
+          if (id) setAgenda((a) => a.filter((b) => b.id !== id))
+          return
+        }
+        const r = payload.new
+        if (!r) return
+        const b = daAg(r)
+        setAgenda((a) => a.some((x) => x.id === b.id) ? a.map((x) => x.id === b.id ? b : x) : [...a, b])
+      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'presenca' }, (payload) => {
         const r = payload.new
         if (!r || r.user_id === uid) return
@@ -295,6 +314,19 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     supabase.from('tarefas').delete().eq('id', id).then(({ error }) => { if (error) avisaErro(error) })
   }, [avisaErro])
 
+  // marcar/apagar trabalho externo (a equipa recebe ao segundo)
+  const marcarExterno = useCallback(({ dia, inicio, fim, texto }) => {
+    const id = crypto.randomUUID()
+    setAgenda((a) => [...a, { id, userId: uid, dia, inicio, fim, texto }])
+    supabase.from('agenda_externa').insert({ id, user_id: uid, dia, inicio, fim, texto })
+      .then(({ error }) => { if (error) avisaErro(error) })
+  }, [uid, avisaErro])
+  const apagarExterno = useCallback((id) => {
+    setAgenda((a) => a.filter((b) => b.id !== id))
+    supabase.from('agenda_externa').delete().eq('id', id)
+      .then(({ error }) => { if (error) avisaErro(error) })
+  }, [avisaErro])
+
   // ordem de trabalhos de um colega (leitura pontual; exige a policy "equipa ve o trabalho da equipa")
   const tarefasDe = useCallback(async (colegaId) => {
     const { data, error } = await supabase.from('tarefas').select('*')
@@ -326,6 +358,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     capturar, atualizar, eleger, paraFila, concluir, apagar,
     equipa, colegas, equipaPorId, delegadas, delegar,
     presencas, setPresenca, tarefasDe,
+    agenda, marcarExterno, apagarExterno,
     agua, addAgua, removeAgua,
     playerAnchor, setPlayerAnchor,
     diaComecou, setDiaComecou,

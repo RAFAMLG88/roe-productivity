@@ -73,7 +73,7 @@ const TIPO_META_EQ = {
 }
 
 // página-sobreposição com a ordem de trabalhos de um colega, catalogada como no Escritório
-function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
+function EquipaModal({ colega, presenca, tarefasDe, agenda, onClose }) {
   const [carregando, setCarregando] = useState(true)
   const [lista, setLista] = useState([])
   useEffect(() => {
@@ -122,6 +122,24 @@ function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
           <button className="eqm-x" onClick={onClose} title="fechar (Esc)">✕</button>
         </div>
         <div className="eqm-corpo">
+          {(() => {
+            const hojeAg = (agenda || []).filter((b) => b.userId === colega.id && b.dia === isoHoje())
+              .sort((a, b) => a.inicio.localeCompare(b.inicio))
+            return hojeAg.length > 0 && (
+              <>
+                <div className="eqm-sec">Agenda externa de hoje <span className="eqm-n">{hojeAg.length}</span></div>
+                {hojeAg.map((b) => (
+                  <div key={b.id} className="eqm-wt">
+                    <div className="eqm-ic">🧭</div>
+                    <div className="eqm-body">
+                      <div className="eqm-t">{b.texto}</div>
+                      <div className="eqm-meta"><span className="badge-min">{b.inicio}–{b.fim}</span></div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )
+          })()}
           {carregando ? (
             <div className="eqm-load">a espreitar a ordem de trabalhos…</div>
           ) : lista.length === 0 ? (
@@ -141,7 +159,21 @@ function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
   )
 }
 
-function EquipaAgora({ colegas, presencas, tarefasDe }) {
+const isoHoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') }
+const minsDe = (h) => parseInt(h.slice(0, 2), 10) * 60 + parseInt(h.slice(3, 5), 10)
+// bloco externo relevante de um colega AGORA: o a decorrer, ou o próximo de hoje
+function externoDe(agenda, userId) {
+  const agora = new Date()
+  const m = agora.getHours() * 60 + agora.getMinutes()
+  const deHoje = (agenda || []).filter((b) => b.userId === userId && b.dia === isoHoje())
+    .sort((a, b) => a.inicio.localeCompare(b.inicio))
+  const atual = deHoje.find((b) => minsDe(b.inicio) <= m && m < minsDe(b.fim))
+  if (atual) return { ...atual, aDecorrer: true }
+  const prox = deHoje.find((b) => minsDe(b.inicio) > m)
+  return prox ? { ...prox, aDecorrer: false } : null
+}
+
+function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
   const [, setTick] = useState(0)
   const [aberto, setAberto] = useState(null) // colega da página de detalhe
   // tick permanente de 1s: as transições, o envelhecimento (>95s → fora) e os
@@ -152,8 +184,8 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
   }, [])
 
   const AGORA = Date.now()
-  const ORD = { foco: 0, pausa: 1, livre: 2, off: 3 }
-  const ETIQ = { foco: 'em foco', pausa: 'pausa', livre: 'livre', off: 'fora' }
+  const ORD = { foco: 0, pausa: 1, externo: 2, livre: 3, off: 4 }
+  const ETIQ = { foco: 'em foco', pausa: 'pausa', externo: 'externo', livre: 'livre', off: 'fora' }
   const fmtT = (sg) => Math.floor(sg / 60) + ':' + String(sg % 60).padStart(2, '0')
 
   const linhas = colegas.map((c) => {
@@ -170,11 +202,18 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
       const tot = Math.max(60, (q.min || 1) * 60)
       prog = Math.max(0, Math.min(1, 1 - restante / tot))
     }
-    return { ...c, q, estado, restante, prog }
-  }).sort((a, b) => (ORD[a.estado] ?? 3) - (ORD[b.estado] ?? 3) || a.nome.localeCompare(b.nome))
+    let ext = null
+    let est = estado
+    if (est === 'off') {
+      ext = externoDe(agenda, c.id) // offline mas com plano marcado → a agenda fala por ele
+      if (ext) est = 'externo'
+    }
+    return { ...c, q, estado: est, ext, restante, prog }
+  }).sort((a, b) => (ORD[a.estado] ?? 4) - (ORD[b.estado] ?? 4) || a.nome.localeCompare(b.nome))
 
   const nFoco = linhas.filter((l) => l.estado === 'foco').length
-  const nOn = linhas.filter((l) => l.estado !== 'off').length
+  const nExt = linhas.filter((l) => l.estado === 'externo').length
+  const nOn = linhas.filter((l) => l.estado !== 'off' && l.estado !== 'externo').length
   const sel = aberto ? linhas.find((l) => l.id === aberto) : null
 
   if (colegas.length === 0) return (
@@ -206,6 +245,12 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
                 <span className="eqc-de">de {u.q.min}m</span>
               </div>
             )}
+            {u.estado === 'externo' && u.ext && (
+              <>
+                <div className="eqc-tarefa">{u.ext.texto}</div>
+                <div className="eqc-ext">🧭 {u.ext.aDecorrer ? u.ext.inicio + '–' + u.ext.fim + ' · a decorrer' : 'às ' + u.ext.inicio}</div>
+              </>
+            )}
             {u.estado === 'pausa' && u.restante != null && (
               <div className="eqc-prog pausa">
                 <span className="eqc-tempo">{fmtT(u.restante)}</span>
@@ -216,14 +261,14 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
           </div>
         ))}
       </div>
-      <div className="eq-note">{nOn === 0 ? 'ninguém online agora' : nFoco > 0 ? nFoco + ' em foco · ' + nOn + ' online — em tempo real' : nOn + ' online — em tempo real'}</div>
-      {sel && <EquipaModal colega={sel} presenca={sel.q} tarefasDe={tarefasDe} onClose={() => setAberto(null)} />}
+      <div className="eq-note">{[nFoco > 0 ? nFoco + ' em foco' : null, nOn > 0 ? nOn + ' online' : null, nExt > 0 ? nExt + ' em trabalho externo' : null].filter(Boolean).join(' · ') || 'ninguém online agora'}{(nOn > 0 || nFoco > 0) ? ' — em tempo real' : ''}</div>
+      {sel && <EquipaModal colega={sel} presenca={sel.q} tarefasDe={tarefasDe} agenda={agenda} onClose={() => setAberto(null)} />}
     </>
   )
 }
 
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor, colegas, presencas, setPresenca, tarefasDe } = useRoe()
+  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor, colegas, presencas, setPresenca, tarefasDe, agenda } = useRoe()
 
   const [taskId, setTaskId] = useState(null)
   const task = eleitas.find((t) => t.id === taskId) || null
@@ -598,7 +643,7 @@ export default function Foco({ onNavigate }) {
 
           <div className="panel equipa enter" style={{ animationDelay: '.1s' }}>
             <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>A tua equipa agora<span className="eq-live">● ao vivo</span></div>
-            <EquipaAgora colegas={colegas} presencas={presencas} tarefasDe={tarefasDe} />
+            <EquipaAgora colegas={colegas} presencas={presencas} tarefasDe={tarefasDe} agenda={agenda} />
           </div>
         </div>
       </div>

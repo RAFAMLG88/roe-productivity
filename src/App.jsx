@@ -9,6 +9,7 @@ import Foco from './screens/Foco.jsx'
 import Capturar from './screens/Capturar.jsx'
 import Cidade from './screens/Cidade.jsx'
 import Analise from './screens/Analise.jsx'
+import Externo from './screens/Externo.jsx'
 import Entrada from './screens/Entrada.jsx'
 
 const SCREENS = {
@@ -17,6 +18,7 @@ const SCREENS = {
   capturar: Capturar,
   cidade: Cidade,
   analise: Analise,
+  externo: Externo,
 }
 
 // Splash mínimo enquanto se confirma a sessão (evita "flash" do login a quem já entrou)
