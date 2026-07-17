@@ -539,43 +539,43 @@
 @media (prefers-reduced-motion:reduce){.foco .eqc-pulse,.foco .eqc-fill::after{animation:none}}
 
 /* ── ORDEM DE TRABALHOS de um colega — página sobreposta ── */
-.foco .eqm-scrim{position:fixed;inset:0;z-index:90;background:rgba(20,18,7,.55);backdrop-filter:blur(4px);
+.eqm-scrim{position:fixed;inset:0;z-index:90;background:rgba(20,18,7,.55);backdrop-filter:blur(4px);
   display:grid;place-items:center;animation:eqmIn .25s ease both}
 @keyframes eqmIn{from{opacity:0}to{opacity:1}}
-.foco .eqm{width:560px;max-width:92vw;max-height:82vh;display:flex;flex-direction:column;background:var(--cream);
+.eqm{width:min(560px,94vw);max-height:min(84vh,720px);display:flex;flex-direction:column;background:var(--cream);
   border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,206,10,.18);overflow:hidden;
   animation:eqmUp .3s cubic-bezier(.2,.8,.2,1) both}
 @keyframes eqmUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-.foco .eqm-head{display:flex;align-items:center;gap:13px;padding:18px 20px 14px;border-bottom:1px solid var(--line)}
-.foco .eqm-av{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;
+.eqm-head{display:flex;align-items:center;gap:13px;padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+.eqm-av{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;
   font-family:var(--font-display);font-weight:600;font-size:18px;box-shadow:0 5px 14px rgba(20,18,7,.25)}
-.foco .eqm-quem{flex:1;min-width:0}
-.foco .eqm-nome{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--ink)}
-.foco .eqm-est{font-size:11px;color:var(--soft);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foco .eqm-est.foco{color:var(--forest-ink);font-weight:700}
-.foco .eqm-est.pausa{color:var(--mustard-ink)}
-.foco .eqm-x{flex:none;border:none;background:none;font-size:15px;color:var(--soft);cursor:pointer;
+.eqm-quem{flex:1;min-width:0}
+.eqm-nome{font-family:var(--font-display);font-weight:600;font-size:17px;color:var(--ink)}
+.eqm-est{font-size:11px;color:var(--soft);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eqm-est.foco{color:var(--forest-ink);font-weight:700}
+.eqm-est.pausa{color:var(--mustard-ink)}
+.eqm-x{flex:none;border:none;background:none;font-size:15px;color:var(--soft);cursor:pointer;
   width:34px;height:34px;border-radius:10px;transition:all .2s}
-.foco .eqm-x:hover{background:var(--red-soft);color:var(--red-ink)}
-.foco .eqm-corpo{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding:14px 20px 20px}
-.foco .eqm-sec{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);
+.eqm-x:hover{background:var(--red-soft);color:var(--red-ink)}
+.eqm-corpo{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin;padding:14px 20px 20px}
+.eqm-sec{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);
   margin:12px 0 8px;display:flex;align-items:center;gap:8px}
-.foco .eqm-sec:first-child{margin-top:0}
-.foco .eqm-n{background:var(--cream-2);border:1px solid var(--line);border-radius:8px;padding:1px 7px;font-size:9px}
-.foco .eqm-wt{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--line);
+.eqm-sec:first-child{margin-top:0}
+.eqm-n{background:var(--cream-2);border:1px solid var(--line);border-radius:8px;padding:1px 7px;font-size:9px}
+.eqm-wt{display:flex;align-items:center;gap:12px;background:var(--card,#fff);border:1px solid var(--line);
   border-radius:14px;padding:11px 13px;margin-bottom:7px;min-width:0}
-.foco .eqm-ic{flex:none;width:34px;height:34px;border-radius:11px;background:var(--cream-2);display:grid;place-items:center;font-size:15px}
-.foco .eqm-body{flex:1;min-width:0}
-.foco .eqm-t{font-family:var(--font-display);font-size:13.5px;font-weight:500;color:var(--ink);
+.eqm-ic{flex:none;width:34px;height:34px;border-radius:11px;background:var(--cream-2);display:grid;place-items:center;font-size:15px}
+.eqm-body{flex:1;min-width:0}
+.eqm-t{font-family:var(--font-display);font-size:13.5px;font-weight:500;color:var(--ink);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.foco .eqm-meta{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
-.foco .eqm-load{font-size:11.5px;color:var(--soft);padding:6px 0}
+.eqm-meta{display:flex;align-items:center;gap:6px;margin-top:4px;flex-wrap:wrap}
+.eqm-load{font-size:11.5px;color:var(--soft);padding:6px 0}
 
 /* badges herdados do Escritório para o modal da equipa */
-.foco .eqm-meta .badge-imp{font-size:9px;font-family:var(--font-mono);background:var(--red);color:#fff;padding:3px 10px;border-radius:9px;box-shadow:0 2px 8px rgba(255,31,61,.3);font-weight:600}
-.foco .eqm-meta .badge-tipo{font-size:9px;font-family:var(--font-mono);background:var(--cream-2);color:var(--soft);padding:3px 10px;border-radius:9px}
-.foco .eqm-meta .badge-min{font-size:9px;font-family:var(--font-mono);background:var(--mustard-soft);color:var(--mustard-ink);padding:3px 10px;border-radius:9px;font-weight:600}
-.foco .eqm-meta .badge-pri{font-size:9px;font-family:var(--font-mono);padding:3px 10px;border-radius:9px;font-weight:700}
-.foco .eqm-meta .badge-pri.urgente{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,31,61,.3)}
-.foco .eqm-meta .badge-pri.importante{background:var(--mustard);color:var(--black)}
-.foco .eqm-meta .badge-pri.normal{background:var(--cream-2);color:var(--soft)}
+.eqm-meta .badge-imp{font-size:9px;font-family:var(--font-mono);background:var(--red);color:#fff;padding:3px 10px;border-radius:9px;box-shadow:0 2px 8px rgba(255,31,61,.3);font-weight:600}
+.eqm-meta .badge-tipo{font-size:9px;font-family:var(--font-mono);background:var(--cream-2);color:var(--soft);padding:3px 10px;border-radius:9px}
+.eqm-meta .badge-min{font-size:9px;font-family:var(--font-mono);background:var(--mustard-soft);color:var(--mustard-ink);padding:3px 10px;border-radius:9px;font-weight:600}
+.eqm-meta .badge-pri{font-size:9px;font-family:var(--font-mono);padding:3px 10px;border-radius:9px;font-weight:700}
+.eqm-meta .badge-pri.urgente{background:var(--red);color:#fff;box-shadow:0 2px 8px rgba(255,31,61,.3)}
+.eqm-meta .badge-pri.importante{background:var(--mustard);color:var(--black)}
+.eqm-meta .badge-pri.normal{background:var(--cream-2);color:var(--soft)}

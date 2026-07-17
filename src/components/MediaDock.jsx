@@ -32,14 +32,16 @@ export default function MediaDock({ cityOpen }) {
   const drag = useRef(null)
   const onGrab = (e) => {
     if (e.target.closest('.md-btn')) return
+    const z = window.__roeZ || 1 // com o auto-ajuste ativo, o rato fala em px reais e o dock em px escalados
     const dk = e.currentTarget.closest('.media-dock')
     const r = dk.getBoundingClientRect()
-    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height }
+    drag.current = { dx: e.clientX / z - r.left / z, dy: e.clientY / z - r.top / z, w: r.width / z, h: r.height / z }
     setDragging(true)
     const move = (ev) => {
       const d = drag.current; if (!d) return
-      const x = Math.min(Math.max(6, ev.clientX - d.dx), window.innerWidth - d.w - 6)
-      const y = Math.min(Math.max(6, ev.clientY - d.dy), window.innerHeight - d.h - 6)
+      const zz = window.__roeZ || 1
+      const x = Math.min(Math.max(6, ev.clientX / zz - d.dx), window.innerWidth / zz - d.w - 6)
+      const y = Math.min(Math.max(6, ev.clientY / zz - d.dy), window.innerHeight / zz - d.h - 6)
       setPos({ x, y })
     }
     const up = () => { drag.current = null; setDragging(false); window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up) }

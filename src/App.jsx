@@ -40,16 +40,20 @@ export default function App() {
   const [session, setSession] = useState(null)
   const [perfil, setPerfil] = useState(null)
 
-  // auto-ajuste: em monitores mais pequenos que o de referência (1360×860),
-  // a app encolhe sozinha para enquadrar — ninguém precisa de mexer no zoom
+  // auto-ajuste: em monitores mais pequenos que a referência (1360×860) a app
+  // encolhe sozinha por transform:scale — comportamento idêntico em todos os
+  // browsers (o zoom do body partia a geometria dos elementos fixed)
+  const [esc, setEsc] = useState({ z: 1, w: 0, h: 0 })
   useEffect(() => {
     const fit = () => {
-      const z = Math.min(1, window.innerWidth / 1360, window.innerHeight / 860)
-      document.body.style.zoom = z < 0.995 ? String(Math.max(0.7, Math.round(z * 100) / 100)) : ''
+      const raw = Math.min(1, window.innerWidth / 1360, window.innerHeight / 860)
+      const z = raw < 0.995 ? Math.max(0.7, Math.round(raw * 1000) / 1000) : 1
+      window.__roeZ = z // usado pelo MediaDock e pelo Foco para converter coordenadas
+      setEsc({ z, w: window.innerWidth, h: window.innerHeight })
     }
     fit()
     window.addEventListener('resize', fit)
-    return () => { window.removeEventListener('resize', fit); document.body.style.zoom = '' }
+    return () => { window.removeEventListener('resize', fit); window.__roeZ = 1 }
   }, [])
 
   // sessão: verifica ao arrancar e reage a login/logout
@@ -96,6 +100,7 @@ export default function App() {
 
   return (
     <RoeProvider key={session.user.id} perfil={perfil} sair={sair}>
+      <div className="escala-root" style={esc.z !== 1 ? { width: esc.w / esc.z, height: esc.h / esc.z, transform: 'scale(' + esc.z + ')' } : undefined}>
       <div className="app">
         <div className="bg-blob bb1" />
         <div className="bg-blob bb2" />
@@ -105,6 +110,7 @@ export default function App() {
         </div>
         <Cidade3D visible={show3D} onClose={() => setShow3D(false)} />
         <MediaDock cityOpen={show3D} />
+      </div>
       </div>
     </RoeProvider>
   )

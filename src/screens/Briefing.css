@@ -209,3 +209,5 @@
 .briefing .canvas .col:nth-child(2){overflow-y:auto;scrollbar-width:thin;padding-right:3px}
 .briefing .canvas .col:nth-child(2)>*{flex:none}
 .briefing .dl-list{max-height:186px;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
+
+.briefing .badge-de{font-size:9px;font-family:var(--font-mono);padding:3px 10px;border-radius:9px;font-weight:700;color:#fff}

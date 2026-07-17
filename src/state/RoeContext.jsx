@@ -86,6 +86,27 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
 
   // ── tempo real: tarefas delegadas a mim aparecem ao segundo; o estado
   //    das que deleguei atualiza-se quando o colega mexe nelas ──
+  const [notifDeleg, setNotifDeleg] = useState(null) // { texto, deId }
+  const notifTimer = useRef(null)
+  const somDeleg = () => {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext
+      const ctx = new AC()
+      const o = ctx.createOscillator(), g = ctx.createGain()
+      o.connect(g); g.connect(ctx.destination)
+      o.frequency.value = 988; g.gain.setValueAtTime(0.0001, ctx.currentTime)
+      g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02)
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.1)
+      o.start(); o.stop(ctx.currentTime + 1.15)
+    } catch { /* sem gesto do utilizador o browser pode recusar áudio — tudo bem */ }
+  }
+  const avisaDelegacao = useCallback((r) => {
+    setNotifDeleg({ texto: r.texto, deId: r.criada_por })
+    somDeleg()
+    clearTimeout(notifTimer.current)
+    notifTimer.current = setTimeout(() => setNotifDeleg(null), 8000)
+  }, [])
+
   useEffect(() => {
     if (!uid) return
     const aplica = (payload) => {
@@ -102,6 +123,11 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
         return
       }
       const t = daBD(r)
+      // delegaram-me algo? (nasceu já minha por outro, ou mudou de dono para mim)
+      const nasceuDelegada = payload.eventType === 'INSERT' && r.owner_id === uid && r.criada_por !== uid
+      const passouParaMim = payload.eventType === 'UPDATE' && r.owner_id === uid
+        && payload.old && payload.old.owner_id && payload.old.owner_id !== uid
+      if (nasceuDelegada || passouParaMim) avisaDelegacao(r)
       setTarefas((ts) => {
         const i = ts.findIndex((x) => x.id === t.id)
         if (i === -1) return [t, ...ts]
@@ -126,8 +152,10 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   // qualquer reconexão (rede a piscar, separador em fundo, portátil a dormir).
   // Quem vê considera "fora" uma presença sem sinal há >95s.
   const [presencas, setPresencas] = useState({})
+  const [presRetry, setPresRetry] = useState(0) // watchdog: força recriar o canal se ele morrer
   const presCh = useRef(null)
   const ultimaPres = useRef(null) // último payload publicado (para reenvio/keepalive)
+  const presAntes = useRef({})    // para carimbar rx (hora local de RECEÇÃO) — imune a relógios errados
 
   useEffect(() => {
     if (!uid || !perfil?.nome) return
@@ -135,7 +163,16 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     const reconstruir = () => {
       const st = ch.presenceState()
       const m = {}
-      for (const k of Object.keys(st)) { if (st[k] && st[k][0]) m[k] = st[k][0] }
+      const antes = presAntes.current
+      for (const k of Object.keys(st)) {
+        if (st[k] && st[k][0]) {
+          const nv = st[k][0]
+          const ant = antes[k]
+          // rx: se o payload mudou (em diferente), chegou AGORA; senão mantém o carimbo
+          m[k] = { ...nv, rx: ant && ant.em === nv.em ? ant.rx : Date.now() }
+        }
+      }
+      presAntes.current = m
       setPresencas(m)
     }
     ch.on('presence', { event: 'sync' }, reconstruir)
@@ -148,7 +185,8 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
         const base = ultimaPres.current || { estado: 'livre', tarefa: null, min: null, restante: null }
         const payload = { ...base, em: Date.now() }
         ultimaPres.current = payload // CRÍTICO: sem isto o keepalive não bate até o Foco publicar algo
-        ch.track({ nome: perfil.nome, cor: perfil.cor, ...payload })
+        const t = ch.track({ nome: perfil.nome, cor: perfil.cor, ...payload })
+        if (t && t.then) t.then((r) => { if (r !== 'ok') console.warn('[ROE presença] track:', r) })
       }
     })
     presCh.current = ch
@@ -163,21 +201,31 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       }
       q.em = Date.now()
       ultimaPres.current = q
-      presCh.current.track({ nome: perfil.nome, cor: perfil.cor, ...q })
+      const t = presCh.current.track({ nome: perfil.nome, cor: perfil.cor, ...q })
+      if (t && t.then) t.then((r) => { if (r !== 'ok') console.warn('[ROE presença] track:', r) })
     }
     const kaTimer = setInterval(bater, 20000)
+    // watchdog: se o canal cair e não se levantar sozinho, recria-o do zero
+    const wdTimer = setInterval(() => {
+      const st = presCh.current && presCh.current.state
+      if (st !== 'joined' && st !== 'joining') {
+        console.warn('[ROE presença] canal em estado', st, '— a recriar')
+        setPresRetry((n) => n + 1)
+      }
+    }, 25000)
     const aoVoltar = () => { if (document.visibilityState === 'visible') bater() }
     document.addEventListener('visibilitychange', aoVoltar)
     window.addEventListener('online', bater)
 
     return () => {
       clearInterval(kaTimer)
+      clearInterval(wdTimer)
       document.removeEventListener('visibilitychange', aoVoltar)
       window.removeEventListener('online', bater)
       presCh.current = null
       supabase.removeChannel(ch)
     }
-  }, [uid, perfil?.nome, perfil?.cor])
+  }, [uid, perfil?.nome, perfil?.cor, presRetry])
 
   // publicar o MEU estado (chamado pelo Foco ao iniciar/pausar/estender/concluir)
   const setPresenca = useCallback((p) => {
@@ -287,6 +335,17 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     <RoeContext.Provider value={value}>
       {children}
       {syncErro && <div className="sync-erro" role="alert">{syncErro}</div>}
+      {notifDeleg && (
+        <div className="deleg-toast" role="status" onClick={() => setNotifDeleg(null)}>
+          <span className="dt-av" style={{ background: (equipaPorId[notifDeleg.deId] || {}).cor || 'var(--mustard)' }}>
+            {(((equipaPorId[notifDeleg.deId] || {}).nome || '?').trim().charAt(0) || '?').toUpperCase()}
+          </span>
+          <div className="dt-b">
+            <div className="dt-t">🤝 {((equipaPorId[notifDeleg.deId] || {}).nome || 'Um colega').split(' ')[0]} delegou-te uma tarefa</div>
+            <div className="dt-s">{notifDeleg.texto}</div>
+          </div>
+        </div>
+      )}
     </RoeContext.Provider>
   )
 }

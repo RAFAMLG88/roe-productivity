@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import './Foco.css'
 import { useRoe } from '../state/RoeContext.jsx'
 
@@ -109,7 +110,7 @@ function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
     )
   }
 
-  return (
+  return createPortal(
     <div className="eqm-scrim" onClick={onClose}>
       <div className="eqm" onClick={(e) => e.stopPropagation()}>
         <div className="eqm-head">
@@ -135,7 +136,8 @@ function EquipaModal({ colega, presenca, tarefasDe, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -156,12 +158,14 @@ function EquipaAgora({ colegas, presencas, tarefasDe }) {
 
   const linhas = colegas.map((c) => {
     const q0 = presencas[c.id] || null
-    const q = q0 && (AGORA - (q0.em || 0) < 95000) ? q0 : null
+    // frescura pelo relógio de QUEM VÊ (rx): imune a PCs com a hora errada
+    const q = q0 && (AGORA - (q0.rx || q0.em || 0) < 95000) ? q0 : null
     const estado = q ? q.estado : 'off'
     let restante = null, prog = 0
     if (q && q.restante != null) {
+      const ref = q.rx || q.em
       restante = q.estado === 'foco'
-        ? Math.max(0, Math.round(q.restante - (AGORA - q.em) / 1000))
+        ? Math.max(0, Math.round(q.restante - (AGORA - ref) / 1000))
         : Math.round(q.restante)
       const tot = Math.max(60, (q.min || 1) * 60)
       prog = Math.max(0, Math.min(1, 1 - restante / tot))
@@ -395,7 +399,8 @@ export default function Foco({ onNavigate }) {
       const el = stageRef.current
       if (!el) return
       const r = el.getBoundingClientRect()
-      if (r.width > 40) setPlayerAnchor({ x: r.left, y: r.top, w: r.width, h: r.height })
+      const z = window.__roeZ || 1
+      if (r.width > 40) setPlayerAnchor({ x: r.left / z, y: r.top / z, w: r.width / z, h: r.height / z })
     }
     pub()
     const t1 = setTimeout(pub, 350); const t2 = setTimeout(pub, 900); const t3 = setTimeout(pub, 1400)
@@ -412,7 +417,7 @@ export default function Foco({ onNavigate }) {
   const spawnSparks = () => {
     const el = celRef.current; if (!el) return
     const cols = [C.much, C.half, C.low, '#1FB8E0']
-    const cx = window.innerWidth * 0.53, cy = window.innerHeight * 0.42
+    const _z = window.__roeZ || 1, cx = window.innerWidth / _z * 0.53, cy = window.innerHeight / _z * 0.42
     for (let i = 0; i < 30; i++) {
       const sp = document.createElement('div')
       sp.style.cssText = `position:absolute;width:11px;height:11px;border-radius:2px;background:${cols[i % cols.length]};left:${cx}px;top:${cy}px`

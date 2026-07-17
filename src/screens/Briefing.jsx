@@ -15,7 +15,7 @@ const TIPO_META = {
 import { fmtMin as fmt } from '../utils/formato.js'
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId } = useRoe()
+  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil } = useRoe()
   const [delegAberta, setDelegAberta] = useState(null) // tarefa da fila com o seletor de colega aberto
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
@@ -159,6 +159,11 @@ export default function Briefing({ onNavigate }) {
                             <span className={`badge-pri ${q.prioridade || 'normal'}`}>{(q.prioridade || 'normal')}</span>
                             <span className="badge-tipo">{m.nome}</span>
                             <span className="badge-min">~{q.min} min</span>
+                            {q.criadaPor && perfil && q.criadaPor !== perfil.id && (
+                              <span className="badge-de" style={{ background: (equipaPorId[q.criadaPor] || {}).cor || 'var(--soft)' }}>
+                                de {((equipaPorId[q.criadaPor] || {}).nome || 'colega').split(' ')[0]}
+                              </span>
+                            )}
                           </div>
                         </div>
                         {colegas.length > 0 && (
