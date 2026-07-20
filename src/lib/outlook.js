@@ -13,7 +13,8 @@ async function getMsal() {
       auth: {
         clientId: CLIENT_ID,
         authority: 'https://login.microsoftonline.com/common',
-        redirectUri: window.location.origin,
+        // página mínima de retorno: evita que a app inteira carregue no popup
+        redirectUri: window.location.origin + '/ms-auth.html',
       },
       cache: { cacheLocation: 'localStorage' },
     })

@@ -75,7 +75,14 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
       const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
       if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
       await sync()
-    } catch { setErro('O login Microsoft foi cancelado ou falhou.') }
+    } catch (e) {
+      const cod = (e && (e.errorCode || e.name)) || ''
+      if (cod === 'interaction_in_progress') setErro('Há um login pendente de uma tentativa anterior — faz F5 nesta página e tenta de novo.')
+      else if (cod === 'popup_window_error' || cod === 'empty_window_error') setErro('O browser bloqueou a janela de login — permite popups para este site (ícone na barra de endereço) e tenta de novo.')
+      else if (cod === 'user_cancelled') setErro('Cancelaste o login na janela da Microsoft.')
+      else setErro('Login falhou: ' + (cod || (e && e.message) || 'erro desconhecido'))
+      console.warn('[ROE outlook] login:', e)
+    }
     setBusy(false)
   }
 
