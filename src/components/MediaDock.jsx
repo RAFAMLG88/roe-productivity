@@ -20,6 +20,16 @@ function spEmbed(u) {
   } catch { /* */ }
   return null
 }
+function scEmbed(url) {
+  try {
+    const u = new URL(url.trim())
+    if (!u.hostname.includes('soundcloud.com')) return null
+    if (u.pathname.split('/').filter(Boolean).length < 1) return null
+    return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(u.origin + u.pathname)
+      + '&color=%23ffce0a&auto_play=false&hide_related=true&show_comments=false&visual=false'
+  } catch { return null }
+}
+
 
 // Dock de música global: vive fora dos ecrãs, por isso mudar de aba NUNCA pára a música.
 // Só pára se o utilizador pausar no player ou clicar ✕.
@@ -48,11 +58,11 @@ export default function MediaDock({ cityOpen }) {
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up)
     e.preventDefault()
   }
-  const fonte = media.yt ? 'yt' : media.sp ? 'sp' : null
+  const fonte = media.yt ? 'yt' : media.sp ? 'sp' : media.sc ? 'sc' : null
   if (!fonte) return null
-  const src = fonte === 'yt' ? ytEmbed(media.yt) : spEmbed(media.sp)
+  const src = fonte === 'yt' ? ytEmbed(media.yt) : fonte === 'sp' ? spEmbed(media.sp) : scEmbed(media.sc)
   if (!src) return null
-  const titulo = mediaTitle[fonte] || (fonte === 'yt' ? 'YouTube' : 'Spotify')
+  const titulo = mediaTitle[fonte] || (fonte === 'yt' ? 'YouTube' : fonte === 'sp' ? 'Spotify' : 'SoundCloud')
 
   const anch = playerAnchor
   const style = anch

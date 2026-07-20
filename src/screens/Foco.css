@@ -358,6 +358,7 @@
 /* palco onde o reprodutor aterra: 16:9, moldura interior subtil */
 .foco .player-stage{width:100%;aspect-ratio:16/9;border-radius:14px;background:#0a0906;border:1px dashed rgba(255,206,10,.2);margin-bottom:9px}
 .foco .player-stage.sp{aspect-ratio:auto;height:152px}
+.foco .player-stage.sc{aspect-ratio:auto;height:166px}
 
 /* ===== SANTUÁRIO: a noite desce sobre a tua cidade ===== */
 .foco .zen-bg{position:fixed;inset:0;z-index:1;pointer-events:none;animation:zenin 2.2s ease}

@@ -63,6 +63,16 @@ function spEmbed(url) {
   } catch { return null }
 }
 
+function scEmbed(url) {
+  try {
+    const u = new URL(url.trim())
+    if (!u.hostname.includes('soundcloud.com')) return null
+    if (u.pathname.split('/').filter(Boolean).length < 1) return null
+    return 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(u.origin + u.pathname)
+      + '&color=%23ffce0a&auto_play=false&hide_related=true&show_comments=false&visual=false'
+  } catch { return null }
+}
+
 // ═══ A TUA EQUIPA AGORA — presença real ═══
 const TIPO_META_EQ = {
   interno:  { ic: '👤', nome: 'interno' },
@@ -420,19 +430,21 @@ export default function Foco({ onNavigate }) {
   const [fonte, setFonte] = useState('yt')
   const [urlInput, setUrlInput] = useState('')
   const [urlErro, setUrlErro] = useState('')
-  const embedUrl = fonte === 'yt' ? (media.yt ? ytEmbed(media.yt) : null) : fonte === 'sp' ? (media.sp ? spEmbed(media.sp) : null) : null
+  const embedUrl = fonte === 'yt' ? (media.yt ? ytEmbed(media.yt) : null) : fonte === 'sp' ? (media.sp ? spEmbed(media.sp) : null) : fonte === 'sc' ? (media.sc ? scEmbed(media.sc) : null) : null
 
   const carregar = (url) => {
     const u = url !== undefined ? url : urlInput
-    const emb = fonte === 'yt' ? ytEmbed(u) : spEmbed(u)
-    if (!emb) { setUrlErro(fonte === 'yt' ? 'Cola um link válido do YouTube.' : 'Cola um link válido do Spotify.'); return }
+    const emb = fonte === 'yt' ? ytEmbed(u) : fonte === 'sp' ? spEmbed(u) : scEmbed(u)
+    if (!emb) { setUrlErro(fonte === 'yt' ? 'Cola um link válido do YouTube.' : fonte === 'sp' ? 'Cola um link válido do Spotify.' : 'Cola um link válido do SoundCloud.'); return }
     setUrlErro('')
     setMediaUrl(fonte, u)
     setUrlInput('')
     // título via oEmbed oficial (sem contas); se falhar, fica o nome da fonte
     const oe = fonte === 'yt'
       ? `https://www.youtube.com/oembed?url=${encodeURIComponent(u)}&format=json`
-      : `https://open.spotify.com/oembed?url=${encodeURIComponent(u)}`
+      : fonte === 'sp'
+        ? `https://open.spotify.com/oembed?url=${encodeURIComponent(u)}`
+        : `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(u)}`
     fetch(oe).then((r) => r.json()).then((j) => { if (j && j.title) setMediaTitulo(fonte, j.title) }).catch(() => {})
   }
   const limpar = () => { setMediaUrl(fonte, ''); setUrlErro('') }
@@ -615,24 +627,19 @@ export default function Foco({ onNavigate }) {
             <div className="src-tabs">
               <button className={`srct ${fonte === 'yt' ? 'on' : ''}`} onClick={() => { setFonte('yt'); setUrlErro('') }}><span className="si">🔴</span>YouTube</button>
               <button className={`srct ${fonte === 'sp' ? 'on' : ''}`} onClick={() => { setFonte('sp'); setUrlErro('') }}><span className="si">🟢</span>Spotify</button>
-              <button className={`srct off ${fonte === 'sys' ? 'on' : ''}`} onClick={() => { setFonte('sys'); setUrlErro('') }}><span className="si">🖥️</span>Sistema</button>
+              <button className={`srct ${fonte === 'sc' ? 'on' : ''}`} onClick={() => { setFonte('sc'); setUrlErro('') }}><span className="si">🟠</span>SoundCloud</button>
             </div>
 
-            {fonte === 'sys' ? (
-              <div className="sys-note">
-                <div className="sn-t">Controlo do áudio do PC</div>
-                <div className="sn-s">Os browsers não deixam uma página web controlar o som do sistema — é uma proteção deles. Chega na <b>Fase 2</b>, com a app de desktop. Usa YouTube ou Spotify aqui dentro.</div>
-              </div>
-            ) : embedUrl ? (
+            {embedUrl ? (
               <div className="player-live">
-                <div ref={stageRef} className={`player-stage ${fonte === 'sp' ? 'sp' : ''}`} />
+                <div ref={stageRef} className={`player-stage ${fonte === 'sp' ? 'sp' : fonte === 'sc' ? 'sc' : ''}`} />
                 <button className="pl-trocar" onClick={limpar}>↻ trocar música</button>
               </div>
             ) : (
               <div className="player-setup">
                 <input
                   className="pl-input" type="text" value={urlInput}
-                  placeholder={fonte === 'yt' ? 'Cola um link do YouTube (vídeo ou playlist)' : 'Cola um link do Spotify (playlist, álbum…)'}
+                  placeholder={fonte === 'yt' ? 'Cola um link do YouTube (vídeo ou playlist)' : fonte === 'sp' ? 'Cola um link do Spotify (playlist, álbum…)' : 'Cola um link do SoundCloud (faixa, set…)'}
                   onChange={(e) => { setUrlInput(e.target.value); setUrlErro('') }}
                   onKeyDown={(e) => { if (e.key === 'Enter') carregar() }}
                 />
