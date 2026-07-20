@@ -10,6 +10,7 @@ import Capturar from './screens/Capturar.jsx'
 import Cidade from './screens/Cidade.jsx'
 import Analise from './screens/Analise.jsx'
 import Externo from './screens/Externo.jsx'
+import { outlookProcessarRegresso } from './lib/outlook.js'
 import Entrada from './screens/Entrada.jsx'
 
 const SCREENS = {
@@ -36,7 +37,10 @@ function Boot() {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState('briefing')
+  // se estamos a regressar do login Microsoft, aterrar direto no Capturar
+  const [screen, setScreen] = useState(() => {
+    try { return localStorage.getItem('roe-ol-intencao') ? 'capturar' : 'briefing' } catch { return 'briefing' }
+  })
   const [show3D, setShow3D] = useState(false)
   const [aVerificar, setAVerificar] = useState(true)
   const [session, setSession] = useState(null)
@@ -57,6 +61,9 @@ export default function App() {
     window.addEventListener('resize', fit)
     return () => { window.removeEventListener('resize', fit); window.__roeZ = 1 }
   }, [])
+
+  // consumir um eventual regresso do login Microsoft (fluxo de redirect)
+  useEffect(() => { outlookProcessarRegresso().catch(() => {}) }, [])
 
   // sessão: verifica ao arrancar e reage a login/logout
   useEffect(() => {

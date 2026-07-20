@@ -13,14 +13,22 @@ async function getMsal() {
       auth: {
         clientId: CLIENT_ID,
         authority: 'https://login.microsoftonline.com/common',
-        // página mínima de retorno: evita que a app inteira carregue no popup
-        redirectUri: window.location.origin + '/ms-auth.html',
+        // fluxo de REDIRECT: a própria página vai à Microsoft e volta ao endereço da app
+        redirectUri: window.location.origin,
       },
       cache: { cacheLocation: 'localStorage' },
     })
     await _msal.initialize()
+    // obrigatório no fluxo de redirect: consumir a resposta que vem no regresso
+    try { await _msal.handleRedirectPromise() } catch (e) { console.warn('[ROE outlook] regresso:', e) }
   }
   return _msal
+}
+
+// chamado no arranque da app para processar um eventual regresso da Microsoft
+export async function outlookProcessarRegresso() {
+  await getMsal()
+  return outlookConta()
 }
 
 export async function outlookConta() {
@@ -31,14 +39,16 @@ export async function outlookConta() {
 
 export async function outlookLigar() {
   const m = await getMsal()
-  const r = await m.loginPopup({ scopes: SCOPES, prompt: 'select_account' })
-  return r.account
+  const contas = m.getAllAccounts()
+  if (contas[0]) return contas[0] // já há sessão Microsoft — não é preciso sair da página
+  await m.loginRedirect({ scopes: SCOPES, prompt: 'select_account' })
+  return null // a página vai sair — nunca chega aqui
 }
 
 export async function outlookSair() {
   const m = await getMsal()
   const conta = (m.getAllAccounts() || [])[0]
-  if (conta) await m.logoutPopup({ account: conta }).catch(() => {})
+  if (conta) await m.logoutRedirect({ account: conta, postLogoutRedirectUri: window.location.origin }).catch(() => {})
 }
 
 async function token() {
@@ -49,10 +59,7 @@ async function token() {
     const r = await m.acquireTokenSilent({ scopes: SCOPES, account: conta })
     return r.accessToken
   } catch {
-    try {
-      const r = await m.acquireTokenPopup({ scopes: SCOPES, account: conta })
-      return r.accessToken
-    } catch { return null }
+    return null // token expirado sem renovação silenciosa: o cartão pede para religar
   }
 }
 

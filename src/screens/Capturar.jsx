@@ -62,18 +62,34 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
 
   useEffect(() => {
     let vivo = true
-    outlookConta().then((c) => { if (vivo) { setConta(c); if (c) sync() } }).catch(() => {})
+    ;(async () => {
+      try {
+        const c = await outlookConta()
+        if (!vivo) return
+        setConta(c)
+        // regressámos do login Microsoft com intenção de ligar? nasce o quilómetro zero
+        if (c && localStorage.getItem('roe-ol-intencao')) {
+          const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
+          if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
+          localStorage.removeItem('roe-ol-intencao')
+        }
+        if (c) sync()
+      } catch (e) { console.warn('[ROE outlook]', e) }
+    })()
     return () => { vivo = false }
   }, [uid]) // eslint-disable-line
 
   const ligar = async () => {
     setErro(''); setBusy(true)
     try {
-      const c = await outlookLigar()
+      localStorage.setItem('roe-ol-intencao', '1') // para o regresso saber ao que veio
+      const c = await outlookLigar() // sem sessão Microsoft, a página SAI daqui e volta ao Capturar
+      if (!c) return
+      // já havia sessão Microsoft neste browser — liga sem sair da página
       setConta(c)
-      // quilómetro zero: só nasce na PRIMEIRA ligação; religar retoma o marcador antigo
       const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
       if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
+      localStorage.removeItem('roe-ol-intencao')
       await sync()
     } catch (e) {
       const cod = (e && (e.errorCode || e.name)) || ''
