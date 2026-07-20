@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import './Capturar.css'
 import { useRoe } from '../state/RoeContext.jsx'
 import { fmtMin, desvioMedio } from '../utils/formato.js'
+import { supabase } from '../lib/supabase.js'
+import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
 
 const TIPOS = {
   interno: { ci: 'chefe', icon: '👤', tag: 'interno', ph: 'De quem? (ex: pedido da Ana)' },
@@ -20,6 +22,124 @@ function nomeDeFicheiro(fname) {
   return n.charAt(0).toUpperCase() + n.slice(1)
 }
 
+// ═══ OUTLOOK → CAPTURAR: quilómetro zero + marcador de triagem ═══
+function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
+  const [conta, setConta] = useState(null)
+  const [temMarco, setTemMarco] = useState(false)
+  const [lista, setLista] = useState([])
+  const [busy, setBusy] = useState(false)
+  const [erro, setErro] = useState('')
+  const uid = perfil && perfil.id
+
+  const sync = async () => {
+    if (!uid) return
+    setBusy(true); setErro('')
+    try {
+      const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
+      if (!mrow) { setTemMarco(false); setBusy(false); return }
+      setTemMarco(true)
+      const res = await outlookEmailsDesde(mrow.marco)
+      if (res.erro) {
+        setErro(res.erro === 'sessao' ? 'A sessão Microsoft expirou — religa o Outlook.' : 'O Outlook não respondeu (' + res.erro + ') — tenta atualizar.')
+        setBusy(false); return
+      }
+      const { data: desp } = await supabase.from('outlook_despachados').select('email_id').eq('user_id', uid)
+      const feito = new Set((desp || []).map((d) => d.email_id))
+      // o marcador avança sobre o prefixo já despachado (e limpa o rasto)
+      let novoMarco = null
+      const podados = []
+      for (const e of res.emails) {
+        if (feito.has(e.id)) { novoMarco = e.recebido; podados.push(e.id) } else break
+      }
+      if (novoMarco) {
+        await supabase.from('outlook_marco').update({ marco: novoMarco }).eq('user_id', uid)
+        await supabase.from('outlook_despachados').delete().eq('user_id', uid).in('email_id', podados)
+      }
+      setLista(res.emails.filter((e) => !feito.has(e.id)))
+    } catch (e) { setErro('Algo falhou na sincronização.'); console.warn('[ROE outlook]', e) }
+    setBusy(false)
+  }
+
+  useEffect(() => {
+    let vivo = true
+    outlookConta().then((c) => { if (vivo) { setConta(c); if (c) sync() } }).catch(() => {})
+    return () => { vivo = false }
+  }, [uid]) // eslint-disable-line
+
+  const ligar = async () => {
+    setErro(''); setBusy(true)
+    try {
+      const c = await outlookLigar()
+      setConta(c)
+      // quilómetro zero: só nasce na PRIMEIRA ligação; religar retoma o marcador antigo
+      const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
+      if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
+      await sync()
+    } catch { setErro('O login Microsoft foi cancelado ou falhou.') }
+    setBusy(false)
+  }
+
+  const desligar = async () => {
+    await outlookSair()
+    setConta(null); setLista([])
+    // o marcador fica na base de dados — religar retoma exatamente onde ficou
+  }
+
+  const dispensar = async (e) => {
+    await despacharOl({ id: e.id, recebido: e.recebido })
+    setLista((l) => l.filter((x) => x.id !== e.id))
+  }
+
+  const hora = (isoStr) => {
+    const d = new Date(isoStr)
+    const hoje = new Date()
+    const mesmoDia = d.toDateString() === hoje.toDateString()
+    return mesmoDia
+      ? d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>
+      <div className="pt">
+        <span className="pico" style={{ background: 'var(--sky-soft)' }}>📨</span>Outlook
+        {conta && temMarco && (
+          <span className="ol-conta"><span className="ol-dot" />{(conta.username || '').toLowerCase()}</span>
+        )}
+        {conta && (
+          <button className="ol-mini" title="atualizar agora" onClick={sync} disabled={busy}>{busy ? '…' : '↻'}</button>
+        )}
+      </div>
+      {!conta || !temMarco ? (
+        <>
+          <div className="ol-vazio">Liga a tua caixa Outlook e os emails que chegarem <b>a partir desse momento</b> aparecem aqui para triagem — o passado fica onde está, intocado.</div>
+          <button className="ol-ligar" onClick={ligar} disabled={busy}>{busy ? 'a abrir a Microsoft…' : conta ? 'Ativar a triagem' : 'Ligar Outlook'}</button>
+          {erro && <div className="ol-erro">{erro}</div>}
+        </>
+      ) : (
+        <>
+          {erro && <div className="ol-erro">{erro} {erro.includes('religa') && <button className="ol-link" onClick={ligar}>religar</button>}</div>}
+          {lista.length === 0 && !erro && (
+            <div className="ol-vazio">sem emails novos por triar — em dia ✓</div>
+          )}
+          {lista.slice(0, 8).map((e) => (
+            <div key={e.id} className="ol-mail">
+              <div className="ol-b">
+                <div className="ol-as">{e.assunto}</div>
+                <div className="ol-de">{e.de} · {hora(e.recebido)}</div>
+              </div>
+              <button className="ol-cat" title="catalogar e capturar" onClick={() => { aoCatalogar(e); setLista((l) => l.filter((x) => x.id !== e.id)) }}>→</button>
+              <button className="ol-x" title="dispensar (não é tarefa)" onClick={() => dispensar(e)}>✕</button>
+            </div>
+          ))}
+          {lista.length > 8 && <div className="ol-mais">+ {lista.length - 8} em espera — despacha estes primeiro</div>}
+          <button className="ol-desligar" onClick={desligar}>desligar o Outlook deste browser</button>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function Capturar() {
   const { capturar, fila, feitas, apagar, atualizar, perfil, colegas, equipaPorId } = useRoe()
   const [tipo, setTipo] = useState('outros')
@@ -34,7 +154,16 @@ export default function Capturar() {
   const toastT = useRef(null)
   const dropRef = useRef(null)
   const fileRef = useRef(null)
-  const [pendentes, setPendentes] = useState([])  // emails lidos, à espera de catalogação
+  const [pendentes, setPendentes] = useState([])  // {texto, ol} à espera de catalogação
+  const despacharOl = (ol) => {
+    if (!perfil) return
+    supabase.from('outlook_despachados')
+      .upsert({ user_id: perfil.id, email_id: ol.id, recebido_em: ol.recebido })
+      .then(({ error }) => { if (error) console.warn('[ROE outlook] despacho:', error.message) })
+  }
+  const catalogarOutlook = (e) => {
+    setPendentes((p) => [...p, { texto: e.assunto + ' — ' + e.de, ol: { id: e.id, recebido: e.recebido } }])
+  }
 
   const lista = fila
   const showToast = (msg) => {
@@ -45,7 +174,8 @@ export default function Capturar() {
   // o primeiro pendente entra no formulário (texto editável) para catalogares
   useEffect(() => {
     if (pendentes.length > 0) {
-      setTexto(pendentes[0])
+      const p0 = pendentes[0]
+      setTexto(typeof p0 === 'string' ? p0 : p0.texto)
       if (inputRef.current) inputRef.current.focus()
     }
   }, [pendentes])
@@ -58,6 +188,8 @@ export default function Capturar() {
     if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
     setTexto(''); setPri('normal'); setMin(15); setPara('eu')
     if (pendentes.length > 0) {
+      const p0 = pendentes[0]
+      if (p0 && p0.ol) despacharOl(p0.ol) // capturado → o marcador Outlook avança
       const resto = pendentes.slice(1)
       setPendentes(resto)
       showToast(resto.length > 0 ? `Capturado ✓ · falta${resto.length > 1 ? 'm' : ''} ${resto.length} email${resto.length > 1 ? 's' : ''}` : 'Capturado ✓')
@@ -86,7 +218,7 @@ export default function Capturar() {
     setReading(true)
     setTimeout(() => {
       setReading(false)
-      setPendentes((p) => [...p, ...files.map((f) => nomeDeFicheiro(f.name))])
+      setPendentes((p) => [...p, ...files.map((f) => ({ texto: nomeDeFicheiro(f.name), ol: null }))])
       burst()
       showToast(files.length > 1 ? `${files.length} emails lidos — cataloga um a um` : 'Email lido — cataloga e captura')
     }, 1200)
@@ -158,7 +290,7 @@ export default function Capturar() {
                   <div className="ep-t">Email lido — cataloga e captura</div>
                   <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : 'ajusta o texto, prioridade e minutos'}</div>
                 </div>
-                <button className="ep-x" title="Descartar este email" onClick={() => setPendentes((p) => p.slice(1))}>✕</button>
+                <button className="ep-x" title="Descartar este email" onClick={() => { const p0 = pendentes[0]; if (p0 && p0.ol) despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
               </div>
             ) : (
               <div className="or-sep"><span>ou escreve à mão</span></div>
@@ -220,12 +352,7 @@ export default function Capturar() {
             <button className="cap-btn full" onClick={fazerCaptura}>{para !== 'eu' && equipaPorId[para] ? 'Delegar a ' + equipaPorId[para].nome.split(' ')[0] + ' ↵' : pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 
-          <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🔌</span>Fontes automáticas <span style={{ marginLeft: 'auto', fontSize: 9, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>Fase 3 · em breve</span></div>
-            <div className="df-row"><span>Gmail — inbox principal</span><span className="dfk off">por ligar</span></div>
-            <div className="df-row"><span>Outlook — trabalho</span><span className="dfk off">por ligar</span></div>
-            <div className="df-row"><span>WhatsApp Web</span><span className="dfk off">por ligar</span></div>
-          </div>
+          <OutlookCard perfil={perfil} aoCatalogar={catalogarOutlook} despacharOl={despacharOl} />
         </div>
 
         <div className="col cap-col">
