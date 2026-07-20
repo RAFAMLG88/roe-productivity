@@ -245,3 +245,5 @@
 .capturar .ol-mais{font-family:var(--font-mono);font-size:9px;color:var(--soft);margin:2px 0 4px}
 .capturar .ol-desligar{border:none;background:none;color:var(--faint);font-size:9px;font-family:var(--font-mono);cursor:pointer;padding:4px 0 0;text-decoration:underline}
 .capturar .ol-desligar:hover{color:var(--soft)}
+
+.capturar .ol-lixo{display:inline-block;margin-right:6px;font-family:var(--font-mono);font-size:8px;letter-spacing:.08em;text-transform:uppercase;background:var(--red-soft);color:var(--red-ink);padding:2px 6px;border-radius:6px;vertical-align:1px}

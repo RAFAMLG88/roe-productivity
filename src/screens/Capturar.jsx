@@ -28,6 +28,7 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
   const [temMarco, setTemMarco] = useState(false)
   const [lista, setLista] = useState([])
   const [busy, setBusy] = useState(false)
+  const [marcoInfo, setMarcoInfo] = useState(null)
   const [erro, setErro] = useState('')
   const uid = perfil && perfil.id
 
@@ -37,8 +38,9 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
     try {
       const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
       if (!mrow) { setTemMarco(false); setBusy(false); return }
-      setTemMarco(true)
+      setTemMarco(true); setMarcoInfo(mrow.marco)
       const res = await outlookEmailsDesde(mrow.marco)
+      console.log('[ROE outlook] marco:', mrow.marco, '· recebidos do Graph:', res.emails ? res.emails.length : ('ERRO ' + res.erro))
       if (res.erro) {
         setErro(res.erro === 'sessao' ? 'A sessão Microsoft expirou — religa o Outlook.' : 'O Outlook não respondeu (' + res.erro + ') — tenta atualizar.')
         setBusy(false); return
@@ -70,7 +72,7 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
         // regressámos do login Microsoft com intenção de ligar? nasce o quilómetro zero
         if (c && localStorage.getItem('roe-ol-intencao')) {
           const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
-          if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
+          if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid }) // marco = now() do SERVIDOR
           localStorage.removeItem('roe-ol-intencao')
         }
         if (c) sync()
@@ -88,7 +90,7 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
       // já havia sessão Microsoft neste browser — liga sem sair da página
       setConta(c)
       const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
-      if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid, marco: new Date().toISOString() })
+      if (!mrow) await supabase.from('outlook_marco').insert({ user_id: uid }) // marco = now() do SERVIDOR
       localStorage.removeItem('roe-ol-intencao')
       await sync()
     } catch (e) {
@@ -143,12 +145,12 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
         <>
           {erro && <div className="ol-erro">{erro} {erro.includes('religa') && <button className="ol-link" onClick={ligar}>religar</button>}</div>}
           {lista.length === 0 && !erro && (
-            <div className="ol-vazio">sem emails novos por triar — em dia ✓</div>
+            <div className="ol-vazio">sem emails novos por triar — em dia ✓{marcoInfo ? ' · a vigiar desde ' + new Date(marcoInfo).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
           )}
           {lista.slice(0, 8).map((e) => (
             <div key={e.id} className="ol-mail">
               <div className="ol-b">
-                <div className="ol-as">{e.assunto}</div>
+                <div className="ol-as">{e.lixo && <span className="ol-lixo">lixo</span>}{e.assunto}</div>
                 <div className="ol-de">{e.de} · {hora(e.recebido)}</div>
               </div>
               <button className="ol-cat" title="catalogar e capturar" onClick={() => { aoCatalogar(e); setLista((l) => l.filter((x) => x.id !== e.id)) }}>→</button>
