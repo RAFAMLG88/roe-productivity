@@ -14,6 +14,16 @@ const TIPO_META = {
 
 import { fmtMin as fmt } from '../utils/formato.js'
 
+const fmtEntrada = (ts) => {
+  const d = new Date(ts), agora = new Date()
+  const hm = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  if (d.toDateString() === agora.toDateString()) return 'hoje ' + hm
+  const ontem = new Date(agora); ontem.setDate(ontem.getDate() - 1)
+  if (d.toDateString() === ontem.toDateString()) return 'ontem ' + hm
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) + ' ' + hm
+}
+const diasDesde = (ts) => Math.floor((Date.now() - ts) / 86400000)
+
 export default function Briefing({ onNavigate }) {
   const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil } = useRoe()
   const [delegAberta, setDelegAberta] = useState(null) // tarefa da fila com o seletor de colega aberto
@@ -154,7 +164,7 @@ export default function Briefing({ onNavigate }) {
                 {fila.map((q) => {
                   const m = TIPO_META[q.tipo] || TIPO_META.outros
                   return (
-                    <div key={q.id} className={`wt tp-${m.cls} ${delegAberta === q.id ? 'com-deleg' : ''}`}>
+                    <div key={q.id} className={`wt tp-${m.cls} ${delegAberta === q.id ? 'com-deleg' : ''} ${diasDesde(q.criadaEm) >= 3 ? 'antiga' : ''}`}>
                       <div className="wt-linha">
                         <div className="wt-ic">{m.ic}</div>
                         <div className="wt-body">
@@ -163,11 +173,13 @@ export default function Briefing({ onNavigate }) {
                             <span className={`badge-pri ${q.prioridade || 'normal'}`}>{(q.prioridade || 'normal')}</span>
                             <span className="badge-tipo">{m.nome}</span>
                             <span className="badge-min">~{q.min} min</span>
-                            {q.criadaPor && perfil && q.criadaPor !== perfil.id && (
-                              <span className="badge-de" style={{ background: (equipaPorId[q.criadaPor] || {}).cor || 'var(--soft)' }}>
-                                de {((equipaPorId[q.criadaPor] || {}).nome || 'colega').split(' ')[0]}
+                            {(() => { const de = q.delegadaPor || q.criadaPor; return de && perfil && de !== perfil.id ? (
+                              <span className="badge-de" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>
+                                de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}
                               </span>
-                            )}
+                            ) : null })()}
+                            <span className="badge-idade" title="entrada na fila">{fmtEntrada(q.criadaEm)}</span>
+                            {diasDesde(q.criadaEm) >= 3 && <span className="badge-velha">⚠ há {diasDesde(q.criadaEm)} dias</span>}
                           </div>
                         </div>
                         {colegas.length > 0 && (
@@ -242,7 +254,10 @@ export default function Briefing({ onNavigate }) {
                         <span className="dl-av" style={{ background: dono.cor || 'var(--faint)' }}>{(dono.nome || '?').trim().charAt(0).toUpperCase()}</span>
                         <div className="dl-corpo">
                           <div className="dl-tx">{t.texto}</div>
-                          <div className="dl-meta">{(dono.nome || 'colega').split(' ')[0]} · {t.delegadaEm ? new Date(t.delegadaEm).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : '—'}</div>
+                          <div className="dl-meta">
+                            <span className="dl-nome" style={{ background: dono.cor || 'var(--faint)' }}>{(dono.nome || 'colega').split(' ')[0]}</span>
+                            <span className="dl-quando">{t.delegadaEm ? fmtEntrada(t.delegadaEm) : '—'}</span>
+                          </div>
                         </div>
                         <span className={'dl-est ' + t.estado}>{t.estado === 'eleita' ? 'no dia' : 'na fila'}</span>
                       </div>

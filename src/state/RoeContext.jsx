@@ -29,6 +29,7 @@ const daBD = (r) => ({
   feitaEm: r.feita_em ? new Date(r.feita_em).getTime() : undefined,
   ownerId: r.owner_id,
   criadaPor: r.criada_por,
+  delegadaPor: r.delegada_por || null,
   delegadaEm: r.delegada_em ? new Date(r.delegada_em).getTime() : null,
 })
 
@@ -81,7 +82,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     let vivo = true
     const carregar = () => Promise.all([
       supabase.from('tarefas').select('*')
-        .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid)
+        .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid + ',delegada_por.eq.' + uid)
         .order('criada_em', { ascending: false }),
       supabase.from('profiles').select('id,nome,cor').order('criado_em', { ascending: true }),
       supabase.from('agua').select('ml').eq('user_id', uid).eq('dia', hojeStr()).maybeSingle(),
@@ -97,7 +98,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     })
     recarregarRef.current = () => {
       supabase.from('tarefas').select('*')
-        .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid)
+        .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid + ',delegada_por.eq.' + uid)
         .order('criada_em', { ascending: false })
         .then(({ data, error }) => { if (vivo && !error) setTarefas((data || []).map(daBD)) })
     }
@@ -139,7 +140,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       const r = payload.new
       if (!r) return
       // se deixou de me dizer respeito (ex.: re-delegada entre outros), remove
-      if (r.owner_id !== uid && r.criada_por !== uid) {
+      if (r.owner_id !== uid && r.criada_por !== uid && r.delegada_por !== uid) {
         setTarefas((ts) => ts.filter((t) => t.id !== r.id))
         return
       }
@@ -166,6 +167,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     const ch = supabase.channel('roe-dados-' + uid)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'owner_id=eq.' + uid }, aplica)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'criada_por=eq.' + uid }, aplica)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tarefas', filter: 'delegada_por=eq.' + uid }, aplica)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, novoPerfil)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agenda_externa' }, (payload) => {
         if (payload.eventType === 'DELETE') {
@@ -300,11 +302,11 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       id, texto: dados.texto, tipo: dados.tipo || 'outros',
       min: Number(dados.min) || 15, prioridade: dados.prioridade || 'normal',
       estado: 'fila', criadaEm: Date.now(),
-      ownerId: para, criadaPor: uid, delegadaEm: delegada ? Date.now() : null,
+      ownerId: para, criadaPor: uid, delegadaPor: delegada ? uid : null, delegadaEm: delegada ? Date.now() : null,
     }
     setTarefas((ts) => [t, ...ts])
     supabase.from('tarefas').insert({
-      id, owner_id: para, criada_por: uid,
+      id, owner_id: para, criada_por: uid, delegada_por: delegada ? uid : null,
       texto: t.texto, tipo: t.tipo, min: t.min, prioridade: t.prioridade,
       estado: 'fila', delegada_em: delegada ? new Date().toISOString() : null,
     }).then(({ error }) => { if (error) avisaErro(error) })
@@ -314,9 +316,9 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   // delegar uma tarefa existente da minha fila a um colega
   const delegar = useCallback((id, paraId) => {
     if (!paraId || paraId === uid) return
-    setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, ownerId: paraId, estado: 'fila', delegadaEm: Date.now() } : t))
+    setTarefas((ts) => ts.map((t) => t.id === id ? { ...t, ownerId: paraId, estado: 'fila', delegadaPor: uid, delegadaEm: Date.now() } : t))
     supabase.from('tarefas')
-      .update({ owner_id: paraId, estado: 'fila', delegada_em: new Date().toISOString() })
+      .update({ owner_id: paraId, delegada_por: uid, estado: 'fila', delegada_em: new Date().toISOString() })
       .eq('id', id)
       .then(({ error }) => { if (error) avisaErro(error) })
   }, [uid, avisaErro])
@@ -383,7 +385,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const fila = useMemo(() => minhas.filter((t) => t.estado === 'fila'), [minhas])
   const eleitas = useMemo(() => minhas.filter((t) => t.estado === 'eleita'), [minhas])
   const feitas = useMemo(() => minhas.filter((t) => t.estado === 'feita'), [minhas])
-  const delegadas = useMemo(() => tarefas.filter((t) => t.criadaPor === uid && t.ownerId !== uid), [tarefas, uid])
+  const delegadas = useMemo(() => tarefas.filter((t) => t.delegadaPor === uid && t.ownerId !== uid), [tarefas, uid])
   const colegas = useMemo(() => equipa.filter((p) => p.id !== uid), [equipa, uid])
   const equipaPorId = useMemo(() => Object.fromEntries(equipa.map((p) => [p.id, p])), [equipa])
 

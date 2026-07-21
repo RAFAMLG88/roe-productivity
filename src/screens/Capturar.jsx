@@ -202,6 +202,7 @@ export default function Capturar() {
   const [min, setMin] = useState(15)
   const [pri, setPri] = useState('normal')
   const [para, setPara] = useState('eu') // 'eu' ou id do colega
+  const [editAberta, setEditAberta] = useState(null) // tarefa da fila com o editor aberto
   const [toast, setToast] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [reading, setReading] = useState(false)
@@ -403,20 +404,52 @@ export default function Capturar() {
               const isFile = c.tipo === 'ficheiro'
               const p = c.prioridade || 'normal'
               return (
-                <div key={c.id} className={`cap show pri-${p}`}>
-                  <div className={`ci ${isFile ? 'ficheiro' : tp.ci}`}>{isFile ? '📧' : tp.icon}</div>
-                  <div className="body">
-                    <div className="a">{c.texto}</div>
-                    <div className="tags">
-                      <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
-                      <span className={`tg ${TAGCLS[c.tipo] || 'src-ficheiro'}`}>{isFile ? 'email' : (TIPOS[c.tipo]?.tag || c.tipo)}</span>
-                      {c.criadaPor && perfil && c.criadaPor !== perfil.id && (
-                        <span className="tg deleg" style={{ background: (equipaPorId[c.criadaPor] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[c.criadaPor] || {}).nome || 'colega').split(' ')[0]}</span>
-                      )}
-                      <span className="tg tm edit">~<input type="number" min="5" step="5" value={c.min} onChange={(e) => atualizar(c.id, { min: Number(e.target.value) || 5 })} /> min</span>
+                <div key={c.id} className={`cap show pri-${p} ${editAberta === c.id ? 'a-editar' : ''}`}>
+                  <div className="cap-linha">
+                    <div className={`ci ${isFile ? 'ficheiro' : tp.ci}`}>{isFile ? '📧' : tp.icon}</div>
+                    <div className="body">
+                      <div className="a">{c.texto}</div>
+                      <div className="tags">
+                        <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
+                        <span className={`tg ${TAGCLS[c.tipo] || 'src-ficheiro'}`}>{isFile ? 'email' : (TIPOS[c.tipo]?.tag || c.tipo)}</span>
+                        {(() => { const de = c.delegadaPor || c.criadaPor; return de && perfil && de !== perfil.id ? (
+                          <span className="tg deleg" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}</span>
+                        ) : null })()}
+                        <span className="tg tm">~{c.min} min</span>
+                        <button className={`tg editar ${editAberta === c.id ? 'on' : ''}`} title="editar tipo e duração"
+                          onClick={() => setEditAberta(editAberta === c.id ? null : c.id)}>✎ editar</button>
+                      </div>
                     </div>
+                    <button className="cap-del" title="Apagar" onClick={() => apagar(c.id)}>✕</button>
                   </div>
-                  <button className="cap-del" title="Apagar" onClick={() => apagar(c.id)}>✕</button>
+                  {editAberta === c.id && (
+                    <div className="cap-edit">
+                      <div className="ce-lab">tipo</div>
+                      <div className="ce-grid t4">
+                        {Object.keys(TIPOS).filter((k) => k !== 'ficheiro').map((k) => (
+                          <button key={k} className={`ce-chip ${c.tipo === k ? 'on' : ''}`} onClick={() => atualizar(c.id, { tipo: k })}>
+                            {TIPOS[k].icon} {TIPOS[k].tag || k}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="ce-lab">duração estimada</div>
+                      <div className="ce-dur">
+                        <div className="ce-grid t6">
+                          {[15, 30, 45, 60, 90, 120].map((v) => (
+                            <button key={v} className={`ce-chip ${Number(c.min) === v ? 'on' : ''}`} onClick={() => atualizar(c.id, { min: v })}>
+                              {v === 60 ? '1h' : v === 90 ? '1h30' : v === 120 ? '2h' : v}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="ce-passo">
+                          <button onClick={() => atualizar(c.id, { min: Math.max(5, Number(c.min) - 5) })}>−</button>
+                          <span>{fmtMin(c.min)}</span>
+                          <button onClick={() => atualizar(c.id, { min: Math.min(480, Number(c.min) + 5) })}>＋</button>
+                        </div>
+                      </div>
+                      <button className="ce-fechar" onClick={() => setEditAberta(null)}>concluído ✓</button>
+                    </div>
+                  )}
                 </div>
               )
             })}

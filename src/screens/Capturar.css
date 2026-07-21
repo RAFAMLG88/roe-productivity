@@ -285,3 +285,39 @@
 .capturar .ol-ficheiro:hover{color:var(--soft)}
 .capturar .ol-ficheiro.centrado{display:block;margin:8px auto 0}
 @media (prefers-reduced-motion:reduce){.capturar .ol-pico,.capturar .ol-env,.capturar .ol-mail{animation:none}}
+
+/* ── EDITOR ✎ das tarefas classificadas ── */
+.capturar .cap{flex-direction:column;align-items:stretch}
+.capturar .cap-linha{display:flex;align-items:center;gap:12px;min-width:0}
+.capturar .tg.editar{border:1px dashed var(--faint);background:none;color:var(--soft);cursor:pointer;transition:all .2s}
+.capturar .tg.editar:hover,.capturar .tg.editar.on{border-color:var(--mustard);background:var(--mustard-soft);color:var(--mustard-ink)}
+.capturar .cap-edit{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);animation:ceIn .22s ease both}
+@keyframes ceIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.capturar .ce-lab{font-size:8.5px;font-family:var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--soft);margin:8px 0 6px}
+.capturar .ce-lab:first-child{margin-top:0}
+.capturar .ce-grid{display:grid;gap:6px}
+.capturar .ce-grid.t4{grid-template-columns:repeat(4,1fr)}
+.capturar .ce-grid.t6{grid-template-columns:repeat(6,1fr);flex:1;min-width:220px}
+.capturar .ce-chip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 4px;font-family:var(--font-body);font-weight:700;font-size:10.5px;color:var(--soft);cursor:pointer;transition:all .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.capturar .ce-chip:hover{border-color:var(--faint);color:var(--ink)}
+.capturar .ce-chip.on{border-color:var(--black);background:var(--black);color:var(--cream)}
+.capturar .ce-dur{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.capturar .ce-passo{display:flex;align-items:center;gap:8px;flex:none}
+.capturar .ce-passo button{width:26px;height:26px;border:1.5px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-size:13px;color:var(--ink)}
+.capturar .ce-passo span{font-family:var(--font-mono);font-weight:700;font-size:11.5px;min-width:44px;text-align:center}
+.capturar .ce-fechar{margin-top:10px;border:none;background:var(--forest-soft);color:var(--forest-ink);border-radius:10px;padding:7px 14px;font-family:var(--font-body);font-weight:700;font-size:11px;cursor:pointer;transition:all .2s}
+.capturar .ce-fechar:hover{background:var(--forest);color:#fff}
+
+/* ── VIDA na caixa Outlook + respiro do formulário ── */
+.capturar .ol-hero{margin-bottom:16px;position:relative;overflow:hidden;border-top:1px solid var(--line)}
+.capturar .ol-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg,#1FB8E0 0%,#8fe2f7 25%,#1FB8E0 50%,#8fe2f7 75%,#1FB8E0 100%);background-size:200% 100%;
+  animation:olFilete 7s linear infinite}
+@keyframes olFilete{to{background-position:-200% 0}}
+.capturar .ol-dot{position:relative}
+.capturar .ol-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--forest);animation:olPing 2.6s ease-out infinite}
+@keyframes olPing{0%{transform:scale(.6);opacity:.8}80%,100%{transform:scale(1.5);opacity:0}}
+.capturar .ol-badge{animation:olBadgeResp 3.4s ease-in-out infinite}
+@keyframes olBadgeResp{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.capturar .cap-sec-lab.primeiro{margin-top:18px}
+@media (prefers-reduced-motion:reduce){.capturar .ol-hero::before,.capturar .ol-dot::after,.capturar .ol-badge{animation:none}}
