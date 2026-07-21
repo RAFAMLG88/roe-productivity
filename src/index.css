@@ -127,3 +127,17 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
 .deleg-toast .dt-b{min-width:0}
 .deleg-toast .dt-t{font-family:var(--font-display);font-weight:600;font-size:12.5px}
 .deleg-toast .dt-s{font-size:11px;color:rgba(244,238,224,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+
+/* ── RITO — véu cerimonial de entrada/saída (as cores do foco) ── */
+.rito{position:fixed;inset:0;z-index:400;display:grid;place-items:center;pointer-events:none;
+  background:
+    radial-gradient(58% 58% at 50% 44%, rgba(255,206,10,.20) 0%, rgba(255,206,10,0) 62%),
+    radial-gradient(90% 70% at 50% 100%, rgba(0,200,101,.10) 0%, rgba(0,200,101,0) 55%),
+    #141207}
+.rito.entrada{animation:ritoEntra 1.3s cubic-bezier(.4,.0,.2,1) forwards}
+@keyframes ritoEntra{0%{opacity:1}52%{opacity:1}100%{opacity:0}}
+.rito.saida{animation:ritoSai 1.45s cubic-bezier(.4,.0,.2,1) forwards}
+@keyframes ritoSai{0%{opacity:0}28%{opacity:1}72%{opacity:1}100%{opacity:0}}
+.rito .rito-anel{animation:ritoAnel 1.3s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 0 26px rgba(255,206,10,.35))}
+@keyframes ritoAnel{0%{transform:scale(.72);opacity:0}38%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.rito,.rito .rito-anel{animation-duration:.01s}}

@@ -77,7 +77,7 @@ export default function Analise({ onNavigate }) {
           <div className="estado-row"><span>Eleitas por fazer</span><b>{eleitas.length}</b></div>
           <div className="estado-row"><span>Na fila</span><b>{fila.length}</b></div>
           <div className="estado-row"><span>Concluídas</span><b style={{ color: 'var(--forest-ink)' }}>{feitas.length}</b></div>
-          <div className="ana-nota">💡 Os teus dados já ficam guardados dia após dia (Fase 2 ✓) — esta análise acumula histórico real. As estatísticas de longo prazo (prime time, tendências, padrões) chegam na Fase 3.</div>
+
         </div>
       </div>
     </div>

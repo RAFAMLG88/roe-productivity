@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase.js'
 import { RoeProvider } from './state/RoeContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -44,6 +44,9 @@ export default function App() {
   const [show3D, setShow3D] = useState(false)
   const [aVerificar, setAVerificar] = useState(true)
   const [session, setSession] = useState(null)
+  const [rito, setRito] = useState(null) // 'entrada' | 'saida' — véu cerimonial de login/logout
+  const ritoTimer = useRef(null)
+  const prevSess = useRef(false)
   const [perfil, setPerfil] = useState(null)
 
   // auto-ajuste: em monitores mais pequenos que a referência (1360×860) a app
@@ -101,10 +104,26 @@ export default function App() {
     return () => { vivo = false }
   }, [session?.user?.id])
 
+  // deteta o momento do login para acender o rito de entrada
+  useEffect(() => {
+    const tem = !!session
+    if (tem && !prevSess.current) {
+      setRito('entrada')
+      clearTimeout(ritoTimer.current)
+      ritoTimer.current = setTimeout(() => setRito(null), 1350)
+    }
+    prevSess.current = tem
+  }, [session])
+
   const sair = async () => {
-    await supabase.auth.signOut()
-    setScreen('briefing')
-    setShow3D(false)
+    setRito('saida')
+    clearTimeout(ritoTimer.current)
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+      setScreen('briefing')
+      setShow3D(false)
+    }, 550) // o véu cobre a troca de ecrã
+    ritoTimer.current = setTimeout(() => setRito(null), 1500)
   }
 
   const navigate = (target) => {
@@ -112,8 +131,19 @@ export default function App() {
     setScreen(target)
   }
 
-  if (aVerificar) return <Boot />
-  if (!session) return <Entrada />
+  const ritoEl = rito ? (
+    <div className={'rito ' + rito}>
+      <svg className="rito-anel" width="64" height="64" viewBox="0 0 100 100">
+        <rect x="6" y="6" width="88" height="88" rx="26" fill="#1d1a10" />
+        <circle cx="50" cy="50" r="27" fill="none" stroke="#FFCE0A" strokeWidth="7" />
+        <circle cx="50" cy="50" r="14" fill="none" stroke="#00C865" strokeWidth="6" />
+        <circle cx="50" cy="50" r="6" fill="#FF1F3D" />
+      </svg>
+    </div>
+  ) : null
+
+  if (aVerificar) return <><Boot />{ritoEl}</>
+  if (!session) return <><Entrada />{ritoEl}</>
 
   const Screen = SCREENS[screen] || Briefing
 
@@ -131,6 +161,7 @@ export default function App() {
         <MediaDock cityOpen={show3D} />
       </div>
       </div>
+      {ritoEl}
     </RoeProvider>
   )
 }

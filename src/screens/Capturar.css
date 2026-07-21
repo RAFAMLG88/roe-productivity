@@ -321,3 +321,16 @@
 @keyframes olBadgeResp{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 .capturar .cap-sec-lab.primeiro{margin-top:18px}
 @media (prefers-reduced-motion:reduce){.capturar .ol-hero::before,.capturar .ol-dot::after,.capturar .ol-badge{animation:none}}
+
+/* colunas com scroll próprio — o conteúdo pode crescer, o botão fica sempre à mão */
+.capturar .canvas{min-height:0}
+.capturar .canvas .col{min-height:0;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
+.capturar .canvas .col>*{flex:none}
+
+/* botões do Outlook com presença clicável */
+.capturar .ol-mini{width:30px;height:30px;border:1.5px solid var(--sky,#1FB8E0);color:#0D7FA6;background:#fff;box-shadow:0 2px 8px rgba(31,184,224,.15)}
+.capturar .ol-mini:hover{background:var(--sky-soft)}
+.capturar .ol-desligar,.capturar .ol-ficheiro{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:6px 12px;text-decoration:none;color:var(--soft);transition:all .2s;box-shadow:0 2px 6px rgba(90,78,50,.06)}
+.capturar .ol-desligar:hover{border-color:var(--red);color:var(--red-ink);background:var(--red-soft)}
+.capturar .ol-ficheiro:hover{border-color:var(--faint);color:var(--ink)}
+.capturar .ol-ficheiro.centrado{display:inline-block;margin:10px auto 0}
