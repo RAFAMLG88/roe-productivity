@@ -2,7 +2,7 @@
 // index/app: network-first (nunca ficas preso a versão antiga após deploy)
 // cidade 3D (5MB): stale-while-revalidate (abre instantâneo da cache; atualiza em fundo)
 
-const CACHE = 'roe-productivity-v26'
+const CACHE = 'roe-productivity-v27'
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg', './icon-192.png', './icon-512.png']
 
 self.addEventListener('install', (e) => {

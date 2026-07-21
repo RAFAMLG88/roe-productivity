@@ -51,15 +51,25 @@ export default function App() {
   // browsers (o zoom do body partia a geometria dos elementos fixed)
   const [esc, setEsc] = useState({ z: 1, w: 0, h: 0 })
   useEffect(() => {
+    // referência generosa (1440×900 = ambiente validado); SEM piso castrador:
+    // encolhe o que for preciso (até 0,45) para caber SEMPRE — ecrã pequeno,
+    // janela redimensionada ou Windows com escala 125–150% (o assassino dos 14")
     const fit = () => {
-      const raw = Math.min(1, window.innerWidth / 1360, window.innerHeight / 860)
-      const z = raw < 0.995 ? Math.max(0.7, Math.round(raw * 1000) / 1000) : 1
+      const raw = Math.min(1, window.innerWidth / 1440, window.innerHeight / 900)
+      const z = raw < 0.995 ? Math.max(0.45, Math.round(raw * 1000) / 1000) : 1
       window.__roeZ = z // usado pelo MediaDock e pelo Foco para converter coordenadas
       setEsc({ z, w: window.innerWidth, h: window.innerHeight })
     }
     fit()
     window.addEventListener('resize', fit)
-    return () => { window.removeEventListener('resize', fit); window.__roeZ = 1 }
+    window.addEventListener('orientationchange', fit)
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fit)
+    return () => {
+      window.removeEventListener('resize', fit)
+      window.removeEventListener('orientationchange', fit)
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', fit)
+      window.__roeZ = 1
+    }
   }, [])
 
   // consumir um eventual regresso do login Microsoft (fluxo de redirect)

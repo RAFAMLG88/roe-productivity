@@ -214,7 +214,6 @@ export default function Cidade({ onNavigate }) {
             )}
           </div>
           <button className="cta" onClick={() => onNavigate && onNavigate('cidade3d')}><span>🖥️</span> Visitar a ROE City em 3D</button>
-          <div className="cta-sub">ambiente ao vivo · reage à hora e ao tempo onde estás</div>
         </div>
       </div>
     </div>

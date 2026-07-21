@@ -647,7 +647,6 @@ export default function Foco({ onNavigate }) {
                 {urlErro && <div className="pl-erro">{urlErro}</div>}
               </div>
             )}
-            <div className="hint">A tua música, o teu gosto — toca <b>aqui dentro</b> — e quando mudas de aba, segue contigo num leitor de bolso. Nunca pára.</div>
           </div>
 
           <div className="panel equipa enter" style={{ animationDelay: '.1s' }}>
@@ -758,7 +757,6 @@ export default function Foco({ onNavigate }) {
           <button className="za-btn ok" onClick={concluirTask}>✓ concluir</button>
         </div>
       )}
-      {dim && <div className="sanct-hint">santuário · pausa para voltar à app</div>}
 
       <div className={`eyerest ${eyeShow ? 'show' : ''}`}>
         <div className="circ" />

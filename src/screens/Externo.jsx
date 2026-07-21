@@ -120,7 +120,7 @@ export default function Externo() {
                 <button className="bl-x" title="apagar" onClick={() => apagarExterno(b.id)}>✕</button>
               </div>
             ))}
-            <div className="ext-nota">a equipa só vê isto quando estás offline — se voltares mais cedo e abrires a app, a tua presença real vence sempre</div>
+            
           </div>
         </div>
 
