@@ -299,7 +299,7 @@ export default function Capturar() {
   return (
     <div className="capturar">
       <div className="topbar">
-        <div><div className="l1">Entrada do dia · fricção zero</div><div className="l2">Capturar</div></div>
+        <div><div className="l2">Capturar</div></div>
         <div className="tstats">
           <div className="tst u"><span className="v">{nUrg}</span><span className="l">urgentes</span></div>
           <div className="tst b"><span className="v">{nImp}</span><span className="l">importantes</span></div>

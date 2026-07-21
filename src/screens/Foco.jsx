@@ -503,7 +503,7 @@ export default function Foco({ onNavigate }) {
     <div className={`foco ${dim ? 'dim' : ''} ${celebrate ? 'celebrating' : ''}`}>
       <div className="aurora" style={{ background: `radial-gradient(circle, ${auraCol} 0%, rgba(0,0,0,0) 62%)`, opacity: dim ? 0.22 : (task ? 0.15 : 0.05) }} />
       <div className="topbar">
-        <div><div className="l1">{task ? 'Em foco · a decorrer' : 'Foco · pronto quando estiveres'}</div><div className="l2">{task ? 'Em foco' : 'Foco'}</div></div>
+        <div>{task && <div className="l1">Em foco · a decorrer</div>}<div className="l2">{task ? 'Em foco' : 'Foco'}</div></div>
         <div className="now" style={{ color: task ? col : 'var(--soft)' }}><span className="pulse" style={{ background: task ? col : 'var(--faint)' }} /><span>{nowTxt}</span></div>
       </div>
 

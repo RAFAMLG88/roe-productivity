@@ -324,8 +324,8 @@
 
 /* colunas com scroll próprio — o conteúdo pode crescer, o botão fica sempre à mão */
 .capturar .canvas{min-height:0}
-.capturar .canvas .col{min-height:0;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
-.capturar .canvas .col>*{flex:none}
+.capturar .canvas .col.cap-col{min-height:0;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
+.capturar .canvas .col.cap-col>*{flex:none}
 
 /* botões do Outlook com presença clicável */
 .capturar .ol-mini{width:30px;height:30px;border:1.5px solid var(--sky,#1FB8E0);color:#0D7FA6;background:#fff;box-shadow:0 2px 8px rgba(31,184,224,.15)}
@@ -337,7 +337,12 @@
 
 /* botão Capturar SEMPRE visível: o painel rola, o rodapé fica ancorado */
 .capturar .canvas .col:first-child{display:flex;flex-direction:column;overflow:hidden;padding-right:0}
-.capturar .painel-captura{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .capturar .cap-rodape{flex:none;padding-top:12px;margin-top:2px;border-top:1px solid var(--line);
   background:linear-gradient(180deg,rgba(244,238,224,0),var(--cream) 22%)}
 .capturar .cap-rodape .cap-btn{margin:0}
+
+/* rodapé do Capturar: ancorado FORA da zona que rola, sempre visível */
+.capturar .canvas .col:not(.cap-col){display:flex;flex-direction:column;overflow:hidden;padding-right:0;min-height:0}
+.capturar .canvas .col:not(.cap-col)>.painel-captura{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+.capturar .canvas .col:not(.cap-col)>.cap-rodape{flex:0 0 auto;padding:12px 0 2px;border-top:1px solid var(--line);background:var(--cream)}
+.capturar .cap-rodape .cap-btn{margin:0;width:100%}

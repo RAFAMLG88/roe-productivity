@@ -25,7 +25,7 @@ export default function Analise({ onNavigate }) {
     return (
       <div className="analise">
         <div className="topbar">
-          <div><div className="l1">O que muda a tua próxima decisão</div><div className="l2">A tua análise</div></div>
+          <div><div className="l2">A tua análise</div></div>
         </div>
         <div className="canvas">
           <div className="empty-analise">
@@ -62,7 +62,7 @@ export default function Analise({ onNavigate }) {
   return (
     <div className="analise">
       <div className="topbar">
-        <div><div className="l1">O que fizeste nesta sessão</div><div className="l2">A tua análise</div></div>
+        <div><div className="l2">A tua análise</div></div>
       </div>
       <div className="canvas cheia">
         <div className="sgrid">
