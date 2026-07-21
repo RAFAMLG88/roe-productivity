@@ -213,5 +213,10 @@
 .briefing .badge-de{font-size:9px;font-family:var(--font-mono);padding:3px 10px;border-radius:9px;font-weight:700;color:#fff}
 
 /* alinhamento do topo: intro-card (esq) e botão do dia (dir) com a mesma altura */
-.briefing .intro-card{min-height:98px}
 .briefing .ricta.topo{min-height:98px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+
+/* delega informativa */
+.briefing .dl-cnt{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;background:var(--mustard-soft);color:var(--mustard-ink);padding:3px 9px;border-radius:9px;font-weight:700}
+.briefing .dl-corpo{flex:1;min-width:0}
+.briefing .dl-meta{font-family:var(--font-mono);font-size:8.5px;color:var(--faint);margin-top:2px}
+.briefing .dl-list{max-height:220px}

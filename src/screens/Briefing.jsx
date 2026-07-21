@@ -93,13 +93,17 @@ export default function Briefing({ onNavigate }) {
 
       <div className="canvas">
         <div className="col">
-          <div className="panel intro-card enter">
-            <div className="sunny" />
-            <div style={{ flex: 1 }}>
-              <div className="q">Elege as poucas que merecem o teu dia.</div>
-              <div className="h">O que capturares aparece na fila. <b>Toca em ↑ para eleger</b> as que contam hoje.</div>
+          <div className="panel load enter">
+            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
+            <div className="lt">
+              <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{fmt(min)}</span>
+              <span className="u">de 7h eleitos</span>
             </div>
-            <button className="go-capturar" onClick={() => onNavigate && onNavigate('capturar')}>＋ Capturar</button>
+            <div className="track">
+              <div className="inner"><div className="fill" style={{ width: Math.min(min / SCALE * 100, 100) + '%', background: verdict.fill }} /></div>
+              <div className="cap" />
+            </div>
+            <div className="verdict" style={{ color: verdict.color }}>{verdict.text}</div>
           </div>
 
           <div className="bloco-eleicao">
@@ -198,19 +202,6 @@ export default function Briefing({ onNavigate }) {
             <span className="s">{diaComecou ? 'de volta ao foco' : n === 0 ? 'elege ao menos uma' : `${n} importante${n > 1 ? 's' : ''} · ~${fmt(min)}${min > CAP ? ' · demasiado' : ''}`}</span>
           </button>
 
-          <div className="panel load enter">
-            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
-            <div className="lt">
-              <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{fmt(min)}</span>
-              <span className="u">de 7h eleitos</span>
-            </div>
-            <div className="track">
-              <div className="inner"><div className="fill" style={{ width: Math.min(min / SCALE * 100, 100) + '%', background: verdict.fill }} /></div>
-              <div className="cap" />
-            </div>
-            <div className="verdict" style={{ color: verdict.color }}>{verdict.text}</div>
-          </div>
-
           <div className="panel sugestao enter" style={{ animationDelay: '.1s' }}>
             <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>✨</span>Sugestão ROE</div>
             {!sugestao ? (
@@ -235,41 +226,31 @@ export default function Briefing({ onNavigate }) {
           </div>
 
           <div className="panel delega enter" style={{ animationDelay: '.22s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🤝</span>Delegar na equipa</div>
-            {colegas.length === 0 ? (
-              <div className="dg-vazio">
-                <div className="dg-vazio-t">Ainda estás sozinho na ROE.</div>
-                <div className="dg-vazio-s">Partilha o link da app e o código de convite — mal alguém se registe, aparece aqui.</div>
-              </div>
-            ) : (
-              <>
-                <div className="dg-strip">
-                  {colegas.map((c) => (
-                    <span key={c.id} className="dg-mini" title={c.nome}>
-                      <span className="dg-mini-av" style={{ background: c.cor }}>{c.nome.trim().charAt(0).toUpperCase()}</span>
-                      {c.nome.split(' ')[0]}
-                    </span>
-                  ))}
-                </div>
-                {delegadas.length > 0 && (
-                  <div className="dl-list">
-                    <div className="dl-lab">o que delegaste · {delegadas.filter((t) => t.estado === 'feita').length}/{delegadas.length} feito</div>
-                    {delegadas.slice(0, 6).map((t) => {
-                      const dono = equipaPorId[t.ownerId] || {}
-                      return (
-                        <div key={t.id} className="dl-item">
-                          <span className="dl-av" style={{ background: dono.cor || 'var(--faint)' }}>{(dono.nome || '?').trim().charAt(0).toUpperCase()}</span>
-                          <span className="dl-tx">{t.texto}</span>
-                          <span className={'dl-est ' + t.estado}>{t.estado === 'feita' ? 'feita ✓' : t.estado === 'eleita' ? 'no dia' : 'na fila'}</span>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🤝</span>Tarefas delegadas{(() => { const a = delegadas.filter((t) => t.estado !== 'feita'); return a.length > 0 ? <span className="dl-cnt">{a.length} ativa{a.length === 1 ? '' : 's'}</span> : null })()}</div>
+            {(() => {
+              const ativas = delegadas.filter((t) => t.estado !== 'feita')
+                .sort((a, b) => (b.delegadaEm || 0) - (a.delegadaEm || 0))
+              if (ativas.length === 0) return (
+                <div className="dg-note">nada delegado em aberto — usa o 🤝 em qualquer tarefa da fila para entregar a um colega</div>
+              )
+              return (
+                <div className="dl-list">
+                  {ativas.map((t) => {
+                    const dono = equipaPorId[t.ownerId] || {}
+                    return (
+                      <div key={t.id} className="dl-item">
+                        <span className="dl-av" style={{ background: dono.cor || 'var(--faint)' }}>{(dono.nome || '?').trim().charAt(0).toUpperCase()}</span>
+                        <div className="dl-corpo">
+                          <div className="dl-tx">{t.texto}</div>
+                          <div className="dl-meta">{(dono.nome || 'colega').split(' ')[0]} · {t.delegadaEm ? new Date(t.delegadaEm).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : '—'}</div>
                         </div>
-                      )
-                    })}
-                    {delegadas.length > 6 && <div className="dg-note">+ {delegadas.length - 6} mais</div>}
-                  </div>
-                )}
-                <div className="dg-note">para delegar, usa o 🤝 em qualquer tarefa da fila — cai na fila do colega ao segundo</div>
-              </>
-            )}
+                        <span className={'dl-est ' + t.estado}>{t.estado === 'eleita' ? 'no dia' : 'na fila'}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
           </div>
         </div>
       </div>

@@ -23,7 +23,10 @@ function nomeDeFicheiro(fname) {
 }
 
 // ═══ OUTLOOK → CAPTURAR: quilómetro zero + marcador de triagem ═══
-function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
+const OL_CORES = ['#FF1F3D', '#00C865', '#1FB8E0', '#B48CFF', '#FF7AB6', '#FFB84D', '#6FA8FF']
+const corDe = (nome) => OL_CORES[(nome || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0) % OL_CORES.length]
+
+function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
   const [conta, setConta] = useState(null)
   const [temMarco, setTemMarco] = useState(false)
   const [lista, setLista] = useState([])
@@ -81,6 +84,15 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
     return () => { vivo = false }
   }, [uid]) // eslint-disable-line
 
+  // auto-atualização: a cada 60s e sempre que voltas ao separador — o ↻ passa a ser opcional
+  useEffect(() => {
+    if (!conta || !temMarco) return
+    const t = setInterval(() => { if (document.visibilityState === 'visible') sync() }, 60000)
+    const aoVoltar = () => { if (document.visibilityState === 'visible') sync() }
+    document.addEventListener('visibilitychange', aoVoltar)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', aoVoltar) }
+  }, [conta, temMarco]) // eslint-disable-line
+
   const ligar = async () => {
     setErro(''); setBusy(true)
     try {
@@ -125,45 +137,63 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl }) {
   }
 
   return (
-    <div className="panel fontes enter" style={{ animationDelay: '.12s' }}>
+    <div className="panel fontes enter ol-hero" style={{ animationDelay: '.04s' }}>
       <div className="pt">
-        <span className="pico" style={{ background: 'var(--sky-soft)' }}>📨</span>Outlook
+        <span className="pico ol-pico" style={{ background: 'var(--sky-soft)' }}>📨</span>Outlook
         {conta && temMarco && (
           <span className="ol-conta"><span className="ol-dot" />{(conta.username || '').toLowerCase()}</span>
         )}
+        {conta && temMarco && lista.length > 0 && <span className="ol-badge">{lista.length} por triar</span>}
         {conta && (
-          <button className="ol-mini" title="atualizar agora" onClick={sync} disabled={busy}>{busy ? '…' : '↻'}</button>
+          <button className="ol-mini" title="atualizar agora (também atualiza sozinho a cada minuto)" onClick={sync} disabled={busy}>{busy ? '…' : '↻'}</button>
         )}
       </div>
       {!conta || !temMarco ? (
-        <>
+        <div className="ol-convite">
+          <div className="ol-env">✉</div>
           <div className="ol-vazio">Liga a tua caixa Outlook e os emails que chegarem <b>a partir desse momento</b> aparecem aqui para triagem — o passado fica onde está, intocado.</div>
           <button className="ol-ligar" onClick={ligar} disabled={busy}>{busy ? 'a abrir a Microsoft…' : conta ? 'Ativar a triagem' : 'Ligar Outlook'}</button>
           {erro && <div className="ol-erro">{erro}</div>}
-        </>
+        </div>
       ) : (
         <>
           {erro && <div className="ol-erro">{erro} {erro.includes('religa') && <button className="ol-link" onClick={ligar}>religar</button>}</div>}
-          {lista.length === 0 && !erro && (
-            <div className="ol-vazio">sem emails novos por triar — em dia ✓{marcoInfo ? ' · a vigiar desde ' + new Date(marcoInfo).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
-          )}
-          {lista.slice(0, 8).map((e) => (
-            <div key={e.id} className="ol-mail">
-              <div className="ol-b">
-                <div className="ol-as">{e.lixo && <span className="ol-lixo">lixo</span>}{e.assunto}</div>
-                <div className="ol-de">{e.de} · {hora(e.recebido)}</div>
+          {lista.length === 0 && !erro ? (
+            <div className="ol-emdia">
+              <span className="ol-emdia-ic">✓</span>
+              <div>
+                <div className="ol-emdia-t">Caixa triada — em dia.</div>
+                <div className="ol-emdia-s">{marcoInfo ? 'a vigiar desde ' + new Date(marcoInfo).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' · atualiza sozinho' : 'atualiza sozinho a cada minuto'}</div>
               </div>
-              <button className="ol-cat" title="catalogar e capturar" onClick={() => { aoCatalogar(e); setLista((l) => l.filter((x) => x.id !== e.id)) }}>→</button>
-              <button className="ol-x" title="dispensar (não é tarefa)" onClick={() => dispensar(e)}>✕</button>
             </div>
-          ))}
-          {lista.length > 8 && <div className="ol-mais">+ {lista.length - 8} em espera — despacha estes primeiro</div>}
-          <button className="ol-desligar" onClick={desligar}>desligar o Outlook deste browser</button>
+          ) : (
+            <div className="ol-scroll">
+              {lista.map((e, ix) => (
+                <div key={e.id} className="ol-mail" style={{ animationDelay: Math.min(ix * 55, 440) + 'ms' }}>
+                  <span className="ol-av" style={{ background: corDe(e.de) }}>{(e.de || '?').trim().charAt(0).toUpperCase()}</span>
+                  <div className="ol-b">
+                    <div className="ol-as">{e.lixo && <span className="ol-lixo">lixo</span>}{e.assunto}</div>
+                    <div className="ol-de">{e.de} · {hora(e.recebido)}</div>
+                  </div>
+                  <button className="ol-cat" title="catalogar e capturar" onClick={() => { aoCatalogar(e); setLista((l) => l.filter((x) => x.id !== e.id)) }}>→</button>
+                  <button className="ol-x" title="dispensar (não é tarefa)" onClick={() => dispensar(e)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="ol-rodape">
+            <button className="ol-desligar" onClick={desligar}>desligar o Outlook deste browser</button>
+            {onFicheiro && <button className="ol-ficheiro" onClick={onFicheiro}>📎 ou carrega um ficheiro (.eml, .msg)</button>}
+          </div>
         </>
+      )}
+      {(!conta || !temMarco) && onFicheiro && (
+        <button className="ol-ficheiro centrado" onClick={onFicheiro}>📎 ou carrega um ficheiro (.eml, .msg)</button>
       )}
     </div>
   )
 }
+
 
 export default function Capturar() {
   const { capturar, fila, feitas, apagar, atualizar, perfil, colegas, equipaPorId } = useRoe()
@@ -279,34 +309,8 @@ export default function Capturar() {
       <div className="canvas">
         <div className="col">
           <div className="panel enter painel-captura" style={{ padding: 16 }}>
-            <div
-              className={`drop ${dragOver ? 'hover' : ''} ${reading ? 'reading' : ''}`}
-              ref={dropRef}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={(e) => { e.preventDefault(); setDragOver(false) }}
-              onDrop={onDrop}
-              onClick={() => fileRef.current && fileRef.current.click()}
-              role="button"
-              style={{ cursor: 'pointer' }}
-            >
-              <input ref={fileRef} type="file" accept=".eml,.msg,.txt,.pdf" multiple style={{ display: 'none' }} onChange={onPick} />
-              <svg className="edge" width="100%" height="100%"><rect x="1.5" y="1.5" width="calc(100% - 3px)" height="calc(100% - 3px)" rx="18" /></svg>
-              <div className="scanline" />
-              <div className="scene">
-                <div className="halo" />
-                <span className="fl" style={{ left: '18%', top: '8%' }}>✉</span>
-                <span className="fl" style={{ right: '16%', top: '16%', animationDelay: '.8s' }}>📎</span>
-                <span className="fl" style={{ left: '26%', bottom: '4%', animationDelay: '1.5s' }}>💡</span>
-                <div className="env">✉</div>
-              </div>
-              <div className="dt">Arrasta um email — ou clica para escolher</div>
-              <div className="ds">Larga aqui ficheiros do teu PC (.eml, .msg) ou clica e escolhe.<br />Depois catalogas: prioridade, tipo e minutos — como tudo o resto.</div>
-              <div className="think">
-                <span className={`chip ${reading ? 'done c-imp' : ''}`}>a ler…</span>
-                <span className={`chip ${reading ? 'done c-tm' : ''}`}>assunto</span>
-                <span className={`chip ${reading ? 'done c-src' : ''}`}>origem</span>
-              </div>
-            </div>
+            <input ref={fileRef} type="file" accept=".eml,.msg,.txt,.pdf" multiple style={{ display: 'none' }} onChange={onPick} />
+            <OutlookCard perfil={perfil} aoCatalogar={catalogarOutlook} despacharOl={despacharOl} onFicheiro={() => fileRef.current && fileRef.current.click()} />
 
             {pendentes.length > 0 ? (
               <div className="email-pend">
@@ -318,9 +322,13 @@ export default function Capturar() {
                 <button className="ep-x" title="Descartar este email" onClick={() => { const p0 = pendentes[0]; if (p0 && p0.ol) despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
               </div>
             ) : (
-              <div className="or-sep"><span>ou escreve à mão</span></div>
+              <div className="cap-sec-lab primeiro">nova tarefa</div>
             )}
 
+            <input ref={inputRef} className="cap-input" type="text" value={texto} placeholder={TIPOS[tipo].ph}
+              onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerCaptura() }} />
+
+            <div className="cap-sec-lab">tipo</div>
             <div className="type-tabs">
               {Object.keys(TIPOS).map((k) => (
                 <button key={k} className={`ttab ${tipo === k ? 'on' : ''}`} onClick={() => { setTipo(k); if (inputRef.current) inputRef.current.focus() }}>
@@ -329,8 +337,7 @@ export default function Capturar() {
                 </button>
               ))}
             </div>
-            <input ref={inputRef} className="cap-input" type="text" value={texto} placeholder={TIPOS[tipo].ph}
-              onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerCaptura() }} />
+            <div className="cap-sec-lab">prioridade</div>
             <div className="pri-row">
               {PRIS.map((p) => (
                 <button key={p} className={`pri-chip ${p} ${pri === p ? 'on' : ''}`} onClick={() => setPri(p)}>
@@ -339,8 +346,9 @@ export default function Capturar() {
               ))}
             </div>
             {colegas.length > 0 && (
+              <>
+              <div className="cap-sec-lab">para</div>
               <div className="para-row">
-                <span className="para-lab">para</span>
                 <button className={'para-chip ' + (para === 'eu' ? 'on' : '')} onClick={() => setPara('eu')}>
                   <span className="pa-av" style={{ background: (perfil && perfil.cor) || 'var(--mustard)' }}>{((perfil && perfil.nome) || 'E').trim().charAt(0).toUpperCase()}</span>mim
                 </button>
@@ -350,7 +358,9 @@ export default function Capturar() {
                   </button>
                 ))}
               </div>
+              </>
             )}
+            <div className="cap-sec-lab">duração estimada</div>
             <div className="dur-row">
               <div className="dur-stepper">
                 <button className="dur-btn" onClick={() => setMin((m) => Math.max(5, Number(m) - 5))}>−</button>
@@ -363,7 +373,7 @@ export default function Capturar() {
               <div className="dur-chips">
                 {[15, 30, 45, 60, 90, 120].map((v) => (
                   <button key={v} className={`dur-chip ${Number(min) === v ? 'on' : ''}`} onClick={() => setMin(v)}>
-                    {v >= 60 ? `${v / 60}h${v % 60 ? '30' : ''}` : v}
+                    {v === 60 ? '1h' : v === 90 ? '1h30' : v === 120 ? '2h' : v}
                   </button>
                 ))}
               </div>
@@ -377,7 +387,6 @@ export default function Capturar() {
             <button className="cap-btn full" onClick={fazerCaptura}>{para !== 'eu' && equipaPorId[para] ? 'Delegar a ' + equipaPorId[para].nome.split(' ')[0] + ' ↵' : pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 
-          <OutlookCard perfil={perfil} aoCatalogar={catalogarOutlook} despacharOl={despacharOl} />
         </div>
 
         <div className="col cap-col">
@@ -387,7 +396,7 @@ export default function Capturar() {
               <div className="empty-cap">
                 <div className="empty-ic">📥</div>
                 <div className="empty-t">Ainda não capturaste nada.</div>
-                <div className="empty-s">Arrasta um email ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Escritório.</div>
+                <div className="empty-s">Tria um email do Outlook ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Escritório.</div>
               </div>
             ) : lista.map((c) => {
               const tp = TIPOS[c.tipo] || { ci: 'ficheiro', icon: '📧' }
