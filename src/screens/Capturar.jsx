@@ -380,6 +380,8 @@ export default function Capturar() {
               </div>
             </div>
 
+          </div>
+          <div className="cap-rodape">
             <button className="cap-btn full" onClick={fazerCaptura}>{para !== 'eu' && equipaPorId[para] ? 'Delegar a ' + equipaPorId[para].nome.split(' ')[0] + ' ↵' : pendentes.length > 0 ? 'Capturar email ↵' : 'Capturar ↵'}</button>
           </div>
 

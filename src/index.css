@@ -128,16 +128,43 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
 .deleg-toast .dt-t{font-family:var(--font-display);font-weight:600;font-size:12.5px}
 .deleg-toast .dt-s{font-size:11px;color:rgba(244,238,224,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 
-/* ── RITO — véu cerimonial de entrada/saída (as cores do foco) ── */
-.rito{position:fixed;inset:0;z-index:400;display:grid;place-items:center;pointer-events:none;
+/* ── RITO — cerimónia de entrada e saída ── */
+.rito{position:fixed;inset:0;z-index:400;display:grid;place-items:center;pointer-events:none;overflow:hidden;
   background:
-    radial-gradient(58% 58% at 50% 44%, rgba(255,206,10,.20) 0%, rgba(255,206,10,0) 62%),
-    radial-gradient(90% 70% at 50% 100%, rgba(0,200,101,.10) 0%, rgba(0,200,101,0) 55%),
+    radial-gradient(58% 58% at 50% 42%, rgba(255,206,10,.22) 0%, rgba(255,206,10,0) 62%),
+    radial-gradient(90% 70% at 50% 105%, rgba(0,200,101,.12) 0%, rgba(0,200,101,0) 58%),
+    radial-gradient(70% 50% at 50% -5%, rgba(255,31,61,.07) 0%, rgba(255,31,61,0) 60%),
     #141207}
-.rito.entrada{animation:ritoEntra 1.3s cubic-bezier(.4,.0,.2,1) forwards}
-@keyframes ritoEntra{0%{opacity:1}52%{opacity:1}100%{opacity:0}}
-.rito.saida{animation:ritoSai 1.45s cubic-bezier(.4,.0,.2,1) forwards}
-@keyframes ritoSai{0%{opacity:0}28%{opacity:1}72%{opacity:1}100%{opacity:0}}
-.rito .rito-anel{animation:ritoAnel 1.3s cubic-bezier(.2,.8,.2,1) both;filter:drop-shadow(0 0 26px rgba(255,206,10,.35))}
-@keyframes ritoAnel{0%{transform:scale(.72);opacity:0}38%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
-@media (prefers-reduced-motion:reduce){.rito,.rito .rito-anel{animation-duration:.01s}}
+.rito.entrada{animation:ritoEntra 3.05s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes ritoEntra{0%{opacity:1}74%{opacity:1}100%{opacity:0}}
+.rito.saida{animation:ritoSai 2.85s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes ritoSai{0%{opacity:0}16%{opacity:1}76%{opacity:1}100%{opacity:0}}
+.rito-palco{display:flex;flex-direction:column;align-items:center;gap:18px}
+
+.rito-anel{filter:drop-shadow(0 0 40px rgba(255,206,10,.42));animation:ritoAnel 1.5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ritoAnel{0%{transform:scale(.6) rotate(-14deg);opacity:0}44%{transform:scale(1.08) rotate(3deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.rito-anel .ra-out{transform-origin:50% 50%;animation:ritoGira 7s linear infinite}
+@keyframes ritoGira{to{transform:rotate(360deg)}}
+.rito-anel .ra-in{transform-origin:50% 50%;animation:ritoCoracao 2.4s ease-in-out infinite}
+@keyframes ritoCoracao{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+
+.rito-letras{display:flex;gap:14px}
+.rito-letras span{font-family:var(--font-display);font-weight:600;font-size:58px;line-height:1;color:var(--cream);
+  text-shadow:0 0 34px rgba(255,206,10,.35);animation:ritoLetra .85s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ritoLetra{0%{opacity:0;transform:translateY(20px) scale(.86);filter:blur(6px)}100%{opacity:1;transform:none;filter:blur(0)}}
+
+.rito-lema{display:flex;align-items:center;gap:20px}
+.rito-lema span{font-family:var(--font-body);font-weight:600;font-size:14.5px;letter-spacing:.04em;color:rgba(244,238,224,.82);
+  animation:ritoLema .9s ease both;position:relative}
+.rito-lema span+span::before{content:'·';position:absolute;left:-12px;color:rgba(255,206,10,.55)}
+.rito-lema b{font-family:var(--font-display);font-weight:600;color:var(--mustard);font-size:16px}
+@keyframes ritoLema{0%{opacity:0;transform:translateY(9px)}100%{opacity:1;transform:none}}
+
+.rito-frase{margin-top:4px;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(244,238,224,.5);animation:ritoFrase 1s ease both;animation-delay:1.5s}
+@keyframes ritoFrase{0%{opacity:0;letter-spacing:.5em}100%{opacity:1;letter-spacing:.2em}}
+
+@media (prefers-reduced-motion:reduce){
+  .rito,.rito-anel,.rito-letras span,.rito-lema span,.rito-frase{animation-duration:.01s!important}
+  .rito-anel .ra-out,.rito-anel .ra-in{animation:none}
+}

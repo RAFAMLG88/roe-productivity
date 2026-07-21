@@ -50,6 +50,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const uid = perfil?.id || null
   const [tarefas, setTarefas] = useState([])
   const [equipa, setEquipa] = useState([])
+  const equipaRef = useRef([])
   const [agenda, setAgenda] = useState([]) // blocos de trabalho externo de toda a equipa
   const [agua, setAgua] = useState(0) // copos de 250 ml (0–8), hoje
   const [pronto, setPronto] = useState(false)
@@ -122,12 +123,24 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       o.start(); o.stop(ctx.currentTime + 1.15)
     } catch { /* sem gesto do utilizador o browser pode recusar áudio — tudo bem */ }
   }
+  const notifNativa = useCallback((titulo, corpo) => {
+    try {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return
+      if (document.visibilityState === 'visible') return // já vês o toast na app
+      const n = new Notification(titulo, { body: corpo, icon: '/icon-192.png', tag: 'roe-deleg' })
+      n.onclick = () => { window.focus(); n.close() }
+    } catch { /* sem suporte — o toast interno cobre */ }
+  }, [])
+
   const avisaDelegacao = useCallback((r) => {
-    setNotifDeleg({ texto: r.texto, deId: r.criada_por })
+    const deId = r.delegada_por || r.criada_por
+    setNotifDeleg({ texto: r.texto, deId })
     somDeleg()
+    const quem = (equipaRef.current.find((p) => p.id === deId) || {}).nome || 'Um colega'
+    notifNativa('🤝 ' + quem.split(' ')[0] + ' delegou-te uma tarefa', r.texto)
     clearTimeout(notifTimer.current)
     notifTimer.current = setTimeout(() => setNotifDeleg(null), 8000)
-  }, [])
+  }, [notifNativa])
 
   useEffect(() => {
     if (!uid) return
@@ -363,6 +376,27 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       .then(({ error }) => { if (error) avisaErro(error) })
   }, [avisaErro])
 
+  // ── NOVIDADES: o que aconteceu desde a última visita ──
+  const [ultimaVisita, setUltimaVisita] = useState(null)
+  const visitaCarimbada = useRef(false)
+  useEffect(() => {
+    if (!uid || visitaCarimbada.current) return
+    visitaCarimbada.current = true
+    ;(async () => {
+      const { data } = await supabase.from('visitas').select('vista_em').eq('user_id', uid).maybeSingle()
+      setUltimaVisita(data?.vista_em ? Date.parse(data.vista_em) : null)
+      await supabase.from('visitas').upsert({ user_id: uid, vista_em: new Date().toISOString() })
+    })()
+  }, [uid])
+
+  const pedirNotificacoes = useCallback(async () => {
+    try {
+      if (!('Notification' in window)) return 'nao-suportado'
+      if (Notification.permission === 'granted') return 'granted'
+      return await Notification.requestPermission()
+    } catch { return 'erro' }
+  }, [])
+
   // ordem de trabalhos de um colega (leitura pontual; exige a policy "equipa ve o trabalho da equipa")
   const tarefasDe = useCallback(async (colegaId) => {
     const { data, error } = await supabase.from('tarefas').select('*')
@@ -386,6 +420,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const eleitas = useMemo(() => minhas.filter((t) => t.estado === 'eleita'), [minhas])
   const feitas = useMemo(() => minhas.filter((t) => t.estado === 'feita'), [minhas])
   const delegadas = useMemo(() => tarefas.filter((t) => t.delegadaPor === uid && t.ownerId !== uid), [tarefas, uid])
+  useEffect(() => { equipaRef.current = equipa }, [equipa])
   const colegas = useMemo(() => equipa.filter((p) => p.id !== uid), [equipa, uid])
   const equipaPorId = useMemo(() => Object.fromEntries(equipa.map((p) => [p.id, p])), [equipa])
 
@@ -395,6 +430,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     equipa, colegas, equipaPorId, delegadas, delegar,
     presencas, setPresenca, tarefasDe,
     agenda, marcarExterno, apagarExterno,
+    ultimaVisita, pedirNotificacoes,
     agua, addAgua, removeAgua,
     playerAnchor, setPlayerAnchor,
     diaComecou, setDiaComecou,

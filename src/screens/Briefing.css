@@ -234,3 +234,17 @@
 /* coluna esquerda também rola (o peso do dia somou-lhe altura) */
 .briefing .canvas .col:first-child{min-height:0;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
 .briefing .canvas .col:first-child>*{flex:none}
+
+/* ── NOVIDADES — o mordomo à porta ── */
+.briefing .novidades{border-top:3px solid var(--mustard);animation:nvIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes nvIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.briefing .nv-quando{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.08em;color:var(--soft);background:var(--cream-2);padding:3px 9px;border-radius:9px}
+.briefing .nv-x{border:none;background:none;color:var(--faint);cursor:pointer;font-size:11px;padding:4px 6px;margin-left:6px;border-radius:7px;transition:all .2s}
+.briefing .nv-x:hover{color:var(--red-ink);background:var(--red-soft)}
+.briefing .nv-linha{display:flex;align-items:center;gap:12px;padding:8px 0}
+.briefing .nv-n{flex:none;width:34px;height:34px;border-radius:11px;background:var(--mustard);color:var(--black);display:grid;place-items:center;font-family:var(--font-display);font-weight:600;font-size:15px}
+.briefing .nv-n.verde{background:var(--forest);color:#fff}
+.briefing .nv-t{font-family:var(--font-display);font-weight:500;font-size:13px;color:var(--ink)}
+.briefing .nv-s{font-family:var(--font-mono);font-size:9px;color:var(--soft);margin-top:2px}
+.briefing .nv-perm{width:100%;margin-top:8px;border:1.5px dashed var(--line);background:none;border-radius:11px;padding:9px 0;font-family:var(--font-body);font-weight:600;font-size:11px;color:var(--soft);cursor:pointer;transition:all .2s}
+.briefing .nv-perm:hover{border-color:var(--mustard);background:var(--mustard-soft);color:var(--mustard-ink)}

@@ -25,7 +25,10 @@ const fmtEntrada = (ts) => {
 const diasDesde = (ts) => Math.floor((Date.now() - ts) / 86400000)
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil } = useRoe()
+  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil, ultimaVisita, pedirNotificacoes } = useRoe()
+  const [novidadesFechadas, setNovidadesFechadas] = useState(false)
+  const delegadasFeitasDesde = ultimaVisita ? delegadas.filter((t) => t.estado === 'feita' && (t.feitaEm || 0) > ultimaVisita) : []
+  const [permNotif, setPermNotif] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'default'))
   const [delegAberta, setDelegAberta] = useState(null) // tarefa da fila com o seletor de colega aberto
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
@@ -103,6 +106,48 @@ export default function Briefing({ onNavigate }) {
 
       <div className="canvas">
         <div className="col">
+          {(() => {
+            if (novidadesFechadas || !ultimaVisita) return null
+            const recebidas = fila.filter((t) => (t.delegadaPor || t.criadaPor) !== perfil?.id && (t.delegadaEm || t.criadaEm) > ultimaVisita)
+            const concluidas = delegadasFeitasDesde
+            const nR = recebidas.length, nC = concluidas.length
+            if (nR === 0 && nC === 0) return null
+            const horas = Math.round((Date.now() - ultimaVisita) / 3600000)
+            const ausencia = horas < 1 ? 'na última hora' : horas < 24 ? 'desde há ' + horas + 'h' : 'desde há ' + Math.round(horas / 24) + ' dia' + (horas >= 48 ? 's' : '')
+            return (
+              <div className="panel novidades enter">
+                <div className="pt">
+                  <span className="pico" style={{ background: 'var(--mustard-soft)' }}>🔔</span>
+                  Enquanto estiveste fora
+                  <span className="nv-quando">{ausencia}</span>
+                  <button className="nv-x" title="dispensar" onClick={() => setNovidadesFechadas(true)}>✕</button>
+                </div>
+                {nR > 0 && (
+                  <div className="nv-linha">
+                    <span className="nv-n">{nR}</span>
+                    <div className="nv-b">
+                      <div className="nv-t">tarefa{nR > 1 ? 's' : ''} delegada{nR > 1 ? 's' : ''} para ti</div>
+                      <div className="nv-s">{recebidas.slice(0, 3).map((t) => ((equipaPorId[t.delegadaPor || t.criadaPor] || {}).nome || 'colega').split(' ')[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')}</div>
+                    </div>
+                  </div>
+                )}
+                {nC > 0 && (
+                  <div className="nv-linha">
+                    <span className="nv-n verde">{nC}</span>
+                    <div className="nv-b">
+                      <div className="nv-t">que delegaste, concluída{nC > 1 ? 's' : ''} ✓</div>
+                      <div className="nv-s">{concluidas.slice(0, 3).map((t) => ((equipaPorId[t.ownerId] || {}).nome || 'colega').split(' ')[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')}</div>
+                    </div>
+                  </div>
+                )}
+                {permNotif === 'default' && (
+                  <button className="nv-perm" onClick={async () => setPermNotif(await pedirNotificacoes())}>
+                    🔔 avisar-me no Windows quando me delegarem algo
+                  </button>
+                )}
+              </div>
+            )
+          })()}
           <div className="panel load enter">
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
             <div className="lt">

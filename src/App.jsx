@@ -110,7 +110,7 @@ export default function App() {
     if (tem && !prevSess.current) {
       setRito('entrada')
       clearTimeout(ritoTimer.current)
-      ritoTimer.current = setTimeout(() => setRito(null), 1350)
+      ritoTimer.current = setTimeout(() => setRito(null), 3100)
     }
     prevSess.current = tem
   }, [session])
@@ -122,8 +122,8 @@ export default function App() {
       await supabase.auth.signOut()
       setScreen('briefing')
       setShow3D(false)
-    }, 550) // o véu cobre a troca de ecrã
-    ritoTimer.current = setTimeout(() => setRito(null), 1500)
+    }, 1100) // o véu cobre a troca de ecrã
+    ritoTimer.current = setTimeout(() => setRito(null), 2900)
   }
 
   const navigate = (target) => {
@@ -133,12 +133,25 @@ export default function App() {
 
   const ritoEl = rito ? (
     <div className={'rito ' + rito}>
-      <svg className="rito-anel" width="64" height="64" viewBox="0 0 100 100">
-        <rect x="6" y="6" width="88" height="88" rx="26" fill="#1d1a10" />
-        <circle cx="50" cy="50" r="27" fill="none" stroke="#FFCE0A" strokeWidth="7" />
-        <circle cx="50" cy="50" r="14" fill="none" stroke="#00C865" strokeWidth="6" />
-        <circle cx="50" cy="50" r="6" fill="#FF1F3D" />
-      </svg>
+      <div className="rito-palco">
+        <svg className="rito-anel" width="132" height="132" viewBox="0 0 100 100">
+          <rect x="6" y="6" width="88" height="88" rx="26" fill="#1d1a10" />
+          <circle className="ra-out" cx="50" cy="50" r="27" fill="none" stroke="#FFCE0A" strokeWidth="7" />
+          <circle className="ra-mid" cx="50" cy="50" r="14" fill="none" stroke="#00C865" strokeWidth="6" />
+          <circle className="ra-in" cx="50" cy="50" r="6" fill="#FF1F3D" />
+        </svg>
+        <div className="rito-letras">
+          <span style={{ animationDelay: '.30s' }}>R</span>
+          <span style={{ animationDelay: '.44s' }}>O</span>
+          <span style={{ animationDelay: '.58s' }}>E</span>
+        </div>
+        <div className="rito-lema">
+          <span style={{ animationDelay: '.86s' }}><b>R</b>otina</span>
+          <span style={{ animationDelay: '1.02s' }}><b>O</b>rdem</span>
+          <span style={{ animationDelay: '1.18s' }}><b>E</b>quilíbrio</span>
+        </div>
+        <div className="rito-frase">{rito === 'entrada' ? 'O teu dia começa aqui.' : 'Até já — o que ergueste fica.'}</div>
+      </div>
     </div>
   ) : null
 

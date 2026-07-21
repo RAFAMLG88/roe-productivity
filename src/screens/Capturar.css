@@ -334,3 +334,10 @@
 .capturar .ol-desligar:hover{border-color:var(--red);color:var(--red-ink);background:var(--red-soft)}
 .capturar .ol-ficheiro:hover{border-color:var(--faint);color:var(--ink)}
 .capturar .ol-ficheiro.centrado{display:inline-block;margin:10px auto 0}
+
+/* botão Capturar SEMPRE visível: o painel rola, o rodapé fica ancorado */
+.capturar .canvas .col:first-child{display:flex;flex-direction:column;overflow:hidden;padding-right:0}
+.capturar .painel-captura{flex:1;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.capturar .cap-rodape{flex:none;padding-top:12px;margin-top:2px;border-top:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(244,238,224,0),var(--cream) 22%)}
+.capturar .cap-rodape .cap-btn{margin:0}
