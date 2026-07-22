@@ -25,7 +25,7 @@ const fmtEntrada = (ts) => {
 const diasDesde = (ts) => Math.floor((Date.now() - ts) / 86400000)
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil, ultimaVisita, pedirNotificacoes } = useRoe()
+  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil, ultimaVisita, pedirNotificacoes, agenda } = useRoe()
   const [novidadesFechadas, setNovidadesFechadas] = useState(false)
   const delegadasFeitasDesde = ultimaVisita ? delegadas.filter((t) => t.estado === 'feita' && (t.feitaEm || 0) > ultimaVisita) : []
   const [permNotif, setPermNotif] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'default'))
@@ -109,9 +109,14 @@ export default function Briefing({ onNavigate }) {
           {(() => {
             if (novidadesFechadas || !ultimaVisita) return null
             const recebidas = fila.filter((t) => (t.delegadaPor || t.criadaPor) !== perfil?.id && (t.delegadaEm || t.criadaEm) > ultimaVisita)
+            const d0 = new Date(); const hojeI = d0.getFullYear() + '-' + String(d0.getMonth() + 1).padStart(2, '0') + '-' + String(d0.getDate()).padStart(2, '0')
+            const d1 = new Date(d0); d1.setDate(d1.getDate() + 1)
+            const amanhaI = d1.getFullYear() + '-' + String(d1.getMonth() + 1).padStart(2, '0') + '-' + String(d1.getDate()).padStart(2, '0')
+            const externosNovos = (agenda || []).filter((b) => b.userId !== perfil?.id && (b.dia === hojeI || b.dia === amanhaI))
             const concluidas = delegadasFeitasDesde
             const nR = recebidas.length, nC = concluidas.length
-            if (nR === 0 && nC === 0) return null
+            const nE = externosNovos.length
+            if (nR === 0 && nC === 0 && nE === 0) return null
             const horas = Math.round((Date.now() - ultimaVisita) / 3600000)
             const ausencia = horas < 1 ? 'na última hora' : horas < 24 ? 'desde há ' + horas + 'h' : 'desde há ' + Math.round(horas / 24) + ' dia' + (horas >= 48 ? 's' : '')
             return (
@@ -137,6 +142,15 @@ export default function Briefing({ onNavigate }) {
                     <div className="nv-b">
                       <div className="nv-t">que delegaste, concluída{nC > 1 ? 's' : ''} ✓</div>
                       <div className="nv-s">{concluidas.slice(0, 3).map((t) => ((equipaPorId[t.ownerId] || {}).nome || 'colega').split(' ')[0]).filter((v, i, a) => a.indexOf(v) === i).join(', ')}</div>
+                    </div>
+                  </div>
+                )}
+                {nE > 0 && (
+                  <div className="nv-linha">
+                    <span className="nv-n sky">{nE}</span>
+                    <div className="nv-b">
+                      <div className="nv-t">colega{nE > 1 ? 's' : ''} em trabalho externo hoje/amanhã</div>
+                      <div className="nv-s">{externosNovos.slice(0, 3).map((b) => ((equipaPorId[b.userId] || {}).nome || 'colega').split(' ')[0] + ' ' + (b.dia === hojeI ? '' : 'amanhã ') + b.inicio).join(' · ')}</div>
                     </div>
                   </div>
                 )}
