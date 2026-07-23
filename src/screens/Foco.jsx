@@ -114,6 +114,7 @@ function EquipaModal({ colega, presenca, tarefasDe, agenda, onClose }) {
             <span className={'badge-pri ' + (t.prioridade || 'normal')}>{t.prioridade || 'normal'}</span>
             <span className="badge-tipo">{m.nome}</span>
             <span className="badge-min">~{t.min} min</span>
+            <span className="badge-quando">🕘 {fmtOrigem(t.criadaEm)}</span>
           </div>
         </div>
       </div>
@@ -171,6 +172,16 @@ function EquipaModal({ colega, presenca, tarefasDe, agenda, onClose }) {
 
 const isoHoje = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') }
 const minsDe = (h) => parseInt(h.slice(0, 2), 10) * 60 + parseInt(h.slice(3, 5), 10)
+// data/hora de origem da tarefa (chegada do email ou momento da captura) — visível em todo o lado
+const fmtOrigem = (ts) => {
+  if (!ts) return '—'
+  const d = new Date(ts), agora = new Date()
+  const hm = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  if (d.toDateString() === agora.toDateString()) return 'hoje ' + hm
+  const ontem = new Date(agora); ontem.setDate(ontem.getDate() - 1)
+  if (d.toDateString() === ontem.toDateString()) return 'ontem ' + hm
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) + ' ' + hm
+}
 // bloco externo relevante de um colega AGORA: o a decorrer, ou o próximo de hoje
 function externoDe(agenda, userId) {
   const agora = new Date()

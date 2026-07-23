@@ -314,7 +314,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     const t = {
       id, texto: dados.texto, tipo: dados.tipo || 'outros',
       min: Number(dados.min) || 15, prioridade: dados.prioridade || 'normal',
-      estado: 'fila', criadaEm: Date.now(),
+      estado: 'fila', criadaEm: dados.origemEm ? new Date(dados.origemEm).getTime() : Date.now(),
       ownerId: para, criadaPor: uid, delegadaPor: delegada ? uid : null, delegadaEm: delegada ? Date.now() : null,
     }
     setTarefas((ts) => [t, ...ts])
@@ -322,6 +322,8 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       id, owner_id: para, criada_por: uid, delegada_por: delegada ? uid : null,
       texto: t.texto, tipo: t.tipo, min: t.min, prioridade: t.prioridade,
       estado: 'fila', delegada_em: delegada ? new Date().toISOString() : null,
+      // origem: data/hora REAL de chegada (email) — não o instante da captura
+      criada_em: dados.origemEm ? new Date(dados.origemEm).toISOString() : undefined,
     }).then(({ error }) => { if (error) avisaErro(error) })
     return id
   }, [uid, avisaErro])

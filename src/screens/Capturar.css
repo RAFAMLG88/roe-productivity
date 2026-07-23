@@ -346,3 +346,5 @@
 .capturar .canvas .col:not(.cap-col)>.painel-captura{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 .capturar .canvas .col:not(.cap-col)>.cap-rodape{flex:0 0 auto;padding:12px 0 2px;border-top:1px solid var(--line);background:var(--cream)}
 .capturar .cap-rodape .cap-btn{margin:0;width:100%}
+
+.capturar .tg.quando{background:var(--cream-2);color:var(--soft);font-family:var(--font-mono)}

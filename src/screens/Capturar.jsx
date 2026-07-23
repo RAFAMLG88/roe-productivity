@@ -2,6 +2,16 @@ import React, { useState, useRef, useEffect } from 'react'
 import './Capturar.css'
 import { useRoe } from '../state/RoeContext.jsx'
 import { fmtMin, desvioMedio } from '../utils/formato.js'
+
+const fmtEntradaCap = (ts) => {
+  if (!ts) return '—'
+  const d = new Date(ts), agora = new Date()
+  const hm = d.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+  if (d.toDateString() === agora.toDateString()) return 'hoje ' + hm
+  const ontem = new Date(agora); ontem.setDate(ontem.getDate() - 1)
+  if (d.toDateString() === ontem.toDateString()) return 'ontem ' + hm
+  return d.toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) + ' ' + hm
+}
 import { supabase } from '../lib/supabase.js'
 import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
 
@@ -218,7 +228,7 @@ export default function Capturar() {
       .then(({ error }) => { if (error) console.warn('[ROE outlook] despacho:', error.message) })
   }
   const catalogarOutlook = (e) => {
-    setPendentes((p) => [...p, { texto: e.assunto + ' — ' + e.de, ol: { id: e.id, recebido: e.recebido } }])
+    setPendentes((p) => [...p, { texto: e.assunto + ' — ' + e.de, ol: { id: e.id, recebido: e.recebido }, origemEm: e.recebido }])
   }
 
   const lista = fila
@@ -240,7 +250,8 @@ export default function Capturar() {
     const txt = texto.trim()
     if (!txt) return
     const destino = para !== 'eu' ? equipaPorId[para] : null
-    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri, para: destino ? destino.id : undefined })
+    const orig = pendentes.length > 0 ? pendentes[0].origemEm : null
+    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri, para: destino ? destino.id : undefined, origemEm: orig || undefined })
     if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
     setTexto(''); setPri('normal'); setMin(15); setPara('eu')
     if (pendentes.length > 0) {
@@ -317,7 +328,7 @@ export default function Capturar() {
               <div className="email-pend">
                 <span className="ep-ic">📧</span>
                 <div className="ep-b">
-                  <div className="ep-t">Email lido — cataloga e captura</div>
+                  <div className="ep-t">Email lido — cataloga e captura{pendentes[0] && pendentes[0].origemEm ? ' · chegou ' + new Date(pendentes[0].origemEm).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
                   <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : 'ajusta o texto, prioridade e minutos'}</div>
                 </div>
                 <button className="ep-x" title="Descartar este email" onClick={() => { const p0 = pendentes[0]; if (p0 && p0.ol) despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
@@ -413,6 +424,7 @@ export default function Capturar() {
                           <span className="tg deleg" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}</span>
                         ) : null })()}
                         <span className="tg tm">~{c.min} min</span>
+                        <span className="tg quando" title="entrada na fila">🕘 {fmtEntradaCap(c.criadaEm)}</span>
                         <button className={`tg editar ${editAberta === c.id ? 'on' : ''}`} title="editar tipo e duração"
                           onClick={() => setEditAberta(editAberta === c.id ? null : c.id)}>✎ editar</button>
                       </div>

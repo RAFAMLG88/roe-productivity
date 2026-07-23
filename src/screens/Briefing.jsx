@@ -199,6 +199,12 @@ export default function Briefing({ onNavigate }) {
                           <span className={`badge-pri ${p.prioridade || 'normal'}`}>{(p.prioridade || 'normal')}</span>
                           <span className="badge-tipo">{m.nome}</span>
                           <span className="badge-min">~{p.min} min</span>
+                          <span className="badge-idade" title="entrada na fila">🕘 {fmtEntrada(p.criadaEm)}</span>
+                          {(() => { const de = p.delegadaPor || p.criadaPor; return de && perfil && de !== perfil.id ? (
+                            <span className="badge-de" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>
+                              de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}
+                            </span>
+                          ) : null })()}
                         </div>
                       </div>
                       <button className="pk-back" title="Devolver à fila" onClick={() => paraFila(p.id)}>↓ fila</button>
@@ -237,7 +243,7 @@ export default function Briefing({ onNavigate }) {
                                 de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}
                               </span>
                             ) : null })()}
-                            <span className="badge-idade" title="entrada na fila">{fmtEntrada(q.criadaEm)}</span>
+                            <span className="badge-idade" title="entrada na fila">🕘 {fmtEntrada(q.criadaEm)}</span>
                             {diasDesde(q.criadaEm) >= 3 && <span className="badge-velha">⚠ há {diasDesde(q.criadaEm)} dias</span>}
                           </div>
                         </div>
