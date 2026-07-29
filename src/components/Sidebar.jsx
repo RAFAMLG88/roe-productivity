@@ -45,6 +45,10 @@ export default function Sidebar({ current, onNavigate }) {
           </button>
         ))}
       </div>
+      <button className="cap-rapida" title="Captura rápida — de qualquer ecrã"
+        onClick={() => window.dispatchEvent(new Event('roe-captura-abrir'))}>
+        <span className="cr-ic">⚡</span> captura rápida <span className="cr-kbd">C</span>
+      </button>
       <div className="foot">
         <div className="av" style={perfil?.cor ? { background: perfil.cor } : undefined}>
           {(perfil?.nome || '·').trim().charAt(0).toUpperCase()}

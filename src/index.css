@@ -168,3 +168,62 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
   .rito,.rito-anel,.rito-letras span,.rito-lema span,.rito-frase{animation-duration:.01s!important}
   .rito-anel .ra-out,.rito-anel .ra-in{animation:none}
 }
+
+/* ══ v33 · CAPTURA RÁPIDA (tecla C · Ctrl+K · botão da sidebar) ══ */
+.cr-veu{position:fixed;inset:0;z-index:220;display:grid;place-items:start center;padding-top:13vh;
+  background:rgba(20,18,7,.55);backdrop-filter:blur(3px)}
+.cr-box{width:min(640px,92vw);background:var(--black);border:1px solid rgba(255,206,10,.42);
+  border-radius:18px;box-shadow:0 34px 90px rgba(0,0,0,.55),0 0 40px rgba(255,206,10,.10);
+  overflow:hidden;animation:crIn .18s cubic-bezier(.2,.8,.2,1)}
+@keyframes crIn{from{opacity:0;transform:translateY(-10px)}}
+.cr-cab{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0}
+.cr-cab span{font-family:var(--font-mono);font-weight:700;font-size:9.5px;letter-spacing:.24em;color:var(--mustard)}
+.cr-cab kbd{font-family:var(--font-mono);font-size:9.5px;color:rgba(244,238,224,.5);
+  border:1px solid rgba(244,238,224,.16);border-radius:6px;padding:2px 7px}
+.cr-input{width:100%;background:transparent;border:0;outline:0;color:var(--cream);
+  font-family:var(--font-body);font-weight:600;font-size:20px;padding:13px 18px 10px;caret-color:var(--mustard)}
+.cr-input::placeholder{color:rgba(244,238,224,.32)}
+.cr-lab{font-family:var(--font-mono);font-weight:700;font-size:8.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(244,238,224,.4);padding:9px 18px 5px}
+.cr-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px}
+.cr-chip{font-family:var(--font-mono);font-weight:700;font-size:10px;letter-spacing:.04em;
+  padding:6px 12px;border-radius:99px;border:1px solid rgba(244,238,224,.18);
+  color:rgba(244,238,224,.62);background:transparent;cursor:pointer;transition:all .15s}
+.cr-chip:hover{border-color:rgba(255,206,10,.5);color:var(--cream)}
+.cr-chip.sel{background:rgba(255,206,10,.18);border-color:var(--mustard);color:var(--mustard)}
+.cr-chip.pri-urgente.sel{background:rgba(255,31,61,.2);border-color:var(--red);color:#FF7A8C}
+.cr-chip.pri-importante.sel{background:rgba(255,206,10,.18);border-color:var(--mustard);color:var(--mustard)}
+.cr-pe{border-top:1px solid rgba(244,238,224,.08);padding:11px 18px;margin-top:14px;
+  font-family:var(--font-mono);font-weight:500;font-size:10.5px;letter-spacing:.03em;color:rgba(244,238,224,.55)}
+.cr-pe b{color:var(--mustard)}
+
+/* botão discreto na sidebar */
+.side .cap-rapida{margin:auto 4px 10px;display:flex;align-items:center;gap:8px;justify-content:center;
+  background:none;border:1px dashed rgba(244,238,224,.22);border-radius:12px;padding:9px 10px;
+  color:#8a8272;font-family:var(--font-mono);font-weight:600;font-size:10px;letter-spacing:.06em;
+  cursor:pointer;transition:all .25s}
+.side .cap-rapida:hover{border-color:rgba(255,206,10,.55);color:var(--mustard)}
+.side .cap-rapida .cr-ic{font-size:12px}
+.side .cap-rapida .cr-kbd{border:1px solid rgba(244,238,224,.25);border-radius:5px;padding:1px 6px;font-size:9px}
+
+/* ══ v33 · DESFAZER UNIVERSAL (toast global, 6 s) ══ */
+.undo-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:190;
+  display:flex;align-items:center;gap:14px;max-width:min(560px,92vw);
+  background:var(--black);border:1px solid rgba(255,206,10,.42);color:var(--cream);
+  padding:12px 16px 14px;border-radius:16px;overflow:hidden;
+  box-shadow:0 16px 46px rgba(0,0,0,.5),0 0 40px rgba(255,206,10,.10);
+  animation:undoIn .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes undoIn{from{opacity:0;transform:translate(-50%,12px)}}
+.undo-toast .ut-msg{font-family:var(--font-body);font-weight:600;font-size:13px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.undo-toast .ut-btn{flex:none;background:transparent;border:1px solid rgba(255,206,10,.55);color:var(--mustard);
+  font-family:var(--font-mono);font-weight:700;font-size:10.5px;letter-spacing:.12em;
+  border-radius:99px;padding:6px 13px;cursor:pointer;transition:background .15s}
+.undo-toast .ut-btn:hover{background:rgba(255,206,10,.16)}
+.undo-toast .ut-prog{position:absolute;left:0;bottom:0;height:3px;width:100%;
+  background:linear-gradient(90deg,var(--mustard),#FFE873);transform-origin:left;animation:undoVai 6s linear forwards}
+@keyframes undoVai{to{transform:scaleX(0)}}
+
+@media (prefers-reduced-motion:reduce){
+  .cr-box,.undo-toast{animation-duration:.01s}
+}

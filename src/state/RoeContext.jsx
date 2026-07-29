@@ -25,6 +25,7 @@ const daBD = (r) => ({
   prioridade: r.prioridade,
   estado: r.estado,
   realMin: r.real_min ?? null,
+  ordem: r.ordem ?? null,
   criadaEm: new Date(r.criada_em).getTime(),
   feitaEm: r.feita_em ? new Date(r.feita_em).getTime() : undefined,
   ownerId: r.owner_id,
@@ -41,6 +42,7 @@ const paraBD = (patch) => {
   if ('prioridade' in patch) m.prioridade = patch.prioridade
   if ('estado' in patch) m.estado = patch.estado
   if ('realMin' in patch) m.real_min = patch.realMin
+  if ('ordem' in patch) m.ordem = patch.ordem
   if ('feitaEm' in patch) m.feita_em = patch.feitaEm ? new Date(patch.feitaEm).toISOString() : null
   return m
 }
@@ -419,7 +421,9 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   // ── derivados: o MEU dia vs o que anda na equipa ──
   const minhas = useMemo(() => tarefas.filter((t) => t.ownerId === uid), [tarefas, uid])
   const fila = useMemo(() => minhas.filter((t) => t.estado === 'fila'), [minhas])
-  const eleitas = useMemo(() => minhas.filter((t) => t.estado === 'eleita'), [minhas])
+  // v33: ordem manual (arrasto no Escritório) primeiro; sem ordem definida, mantém o critério de sempre (mais recente primeiro)
+  const eleitas = useMemo(() => minhas.filter((t) => t.estado === 'eleita')
+    .slice().sort((a, b) => ((a.ordem ?? 9999) - (b.ordem ?? 9999)) || (b.criadaEm - a.criadaEm)), [minhas])
   const feitas = useMemo(() => minhas.filter((t) => t.estado === 'feita'), [minhas])
   const delegadas = useMemo(() => tarefas.filter((t) => t.delegadaPor === uid && t.ownerId !== uid), [tarefas, uid])
   useEffect(() => { equipaRef.current = equipa }, [equipa])

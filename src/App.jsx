@@ -4,6 +4,8 @@ import { RoeProvider } from './state/RoeContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Cidade3D from './components/Cidade3D.jsx'
 import MediaDock from './components/MediaDock.jsx'
+import CapturaRapida from './components/CapturaRapida.jsx'
+import DesfazerToast from './components/DesfazerToast.jsx'
 import Briefing from './screens/Briefing.jsx'
 import Foco from './screens/Foco.jsx'
 import Capturar from './screens/Capturar.jsx'
@@ -174,6 +176,9 @@ export default function App() {
         <MediaDock cityOpen={show3D} />
       </div>
       </div>
+      {/* v33: captura rápida global (tecla C / Ctrl+K) + desfazer universal */}
+      <CapturaRapida />
+      <DesfazerToast />
       {ritoEl}
     </RoeProvider>
   )

@@ -264,3 +264,49 @@
 
 .briefing .novidades .nv-linha+.nv-linha{border-top:1px dashed rgba(255,31,61,.18)}
 @media (prefers-reduced-motion:reduce){.briefing .novidades,.briefing .novidades::after,.briefing .novidades .pico{animation:none}}
+
+/* ══ v33 · O TEU DIA (arco marfim-e-ouro no topo do Escritório) ══ */
+.briefing .arco{margin:14px 0 4px;background:linear-gradient(180deg,#FBF7EC,#F1EAD8);
+  border:1px solid rgba(185,143,0,.38);border-radius:16px;padding:13px 22px 24px;position:relative;overflow:hidden}
+.briefing .arco::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--mustard) 18%,#FFE873 50%,var(--mustard) 82%,transparent)}
+.briefing .arco-cab{display:flex;align-items:baseline;gap:12px}
+.briefing .arco-t{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--ink)}
+.briefing .arco-n{font-family:var(--font-mono);font-weight:600;font-size:10.5px;letter-spacing:.6px;color:var(--mustard-ink)}
+.briefing .arco-trilho{position:relative;height:50px;margin-top:15px}
+.briefing .arco-cor{position:absolute;left:0;right:0;top:21px;height:7px;border-radius:99px;opacity:.2;
+  background:linear-gradient(90deg,var(--sky) 0%,var(--sky) 21%,var(--mustard) 25%,var(--mustard) 75%,var(--red) 79%,var(--red) 100%)}
+.briefing .arco-feito{position:absolute;left:0;top:21px;height:7px;border-radius:99px;overflow:hidden}
+.briefing .arco-feito>i{display:block;height:100%;position:relative;
+  background:linear-gradient(90deg,var(--sky) 0%,var(--sky) 21%,var(--mustard) 25%,var(--mustard) 75%,var(--red) 79%,var(--red) 100%)}
+.briefing .arco-feito>i::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:arcoFluir 3s linear infinite}
+@keyframes arcoFluir{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.briefing .arco-tick{position:absolute;top:19px;width:1px;height:11px;background:rgba(20,18,7,.22);transform:translateX(-.5px)}
+.briefing .arco-tick.g{top:16px;height:17px;width:2px;background:rgba(185,143,0,.5)}
+.briefing .arco-hl{position:absolute;top:38px;font-family:var(--font-mono);font-weight:500;font-size:9px;color:var(--soft);transform:translateX(-50%)}
+.briefing .arco-fase{position:absolute;top:0;font-family:var(--font-mono);font-weight:700;font-size:9px;letter-spacing:2.2px;transform:translateX(-50%)}
+.briefing .arco-fase.f-erg{color:var(--sky-ink)}
+.briefing .arco-fase.f-con{color:var(--mustard-ink)}
+.briefing .arco-fase.f-fec{color:var(--red-ink)}
+.briefing .arco-agora{position:absolute;top:13px;width:21px;height:21px;border-radius:50%;transform:translateX(-50%);z-index:3;
+  background:radial-gradient(circle at 34% 32%,#FFE873,var(--mustard) 62%,#E3B400);animation:arcoSol 2.4s ease-in-out infinite}
+@keyframes arcoSol{0%,100%{box-shadow:0 0 12px rgba(255,206,10,.7),0 0 3px rgba(255,206,10,.9)}
+  50%{box-shadow:0 0 26px rgba(255,206,10,1),0 0 8px rgba(255,232,115,1)}}
+.briefing .arco-agora-lbl{position:absolute;top:-5px;font-family:var(--font-mono);font-weight:700;font-size:10px;
+  color:var(--mustard-ink);transform:translateX(-50%);background:#FBF7EC;padding:0 4px;border-radius:4px;z-index:3}
+.briefing .arco-marco{position:absolute;top:18px;width:12px;height:12px;background:var(--mustard);
+  border:1.5px solid #B98F00;transform:translateX(-50%) rotate(45deg);z-index:2;
+  animation:arcoNasce .5s ease,arcoBrilha 2.8s ease-in-out .6s infinite}
+@keyframes arcoNasce{from{transform:translateX(-50%) rotate(45deg) scale(0)}60%{transform:translateX(-50%) rotate(45deg) scale(1.5)}}
+@keyframes arcoBrilha{0%,100%{box-shadow:0 0 6px rgba(255,206,10,.5)}50%{box-shadow:0 0 15px rgba(255,206,10,.95)}}
+
+/* ══ v33 · arrasto das eleitas (pega ⠿) ══ */
+.briefing .pk-pega{cursor:grab;color:var(--faint);font-family:var(--font-mono);font-weight:700;font-size:14px;
+  user-select:none;touch-action:none;padding:6px 2px;line-height:1;flex:none}
+.briefing .pk-pega:active{cursor:grabbing}
+.briefing .pick.arrastando{transition:none;z-index:8;box-shadow:0 16px 36px rgba(60,50,30,.24);border-color:rgba(255,206,10,.65)}
+
+@media (prefers-reduced-motion:reduce){
+  .briefing .arco-feito>i::after,.briefing .arco-agora,.briefing .arco-marco{animation:none}
+}

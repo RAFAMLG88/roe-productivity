@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import './Foco.css'
 import { useRoe } from '../state/RoeContext.jsx'
+import { supabase } from '../lib/supabase.js'
+import { tocarConclusao } from '../lib/som.js'
+import { pedirUndo } from '../state/undo.js'
 
 const C = { much: '#00C865', half: '#FFCE0A', low: '#FF1F3D' }
 const CIRC = 829, R = 132
@@ -197,6 +200,23 @@ function externoDe(agenda, userId) {
 function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
   const [, setTick] = useState(0)
   const [aberto, setAberto] = useState(null) // colega da página de detalhe
+  // v33: ✓N concluídas hoje por pessoa (a policy "equipa vê o trabalho da equipa" permite)
+  const [feitasHoje, setFeitasHoje] = useState({})
+  useEffect(() => {
+    let vivo = true
+    const carrega = async () => {
+      try {
+        const d = new Date(); d.setHours(0, 0, 0, 0)
+        const { data } = await supabase.from('tarefas').select('owner_id').eq('estado', 'feita').gte('feita_em', d.toISOString())
+        if (!vivo || !data) return
+        const m = {}; data.forEach((r) => { m[r.owner_id] = (m[r.owner_id] || 0) + 1 })
+        setFeitasHoje(m)
+      } catch { /* offline — o painel vive sem o contador */ }
+    }
+    carrega()
+    const t = setInterval(carrega, 60000)
+    return () => { vivo = false; clearInterval(t) }
+  }, [])
   // tick permanente de 1s: as transições, o envelhecimento (>95s → fora) e os
   // anéis pintam-se sozinhos — nunca é preciso refresh para ver o estado atual
   useEffect(() => {
@@ -256,6 +276,7 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
                 {u.estado === 'foco' && <span className="eqc-pulse" />}
               </span>
               <span className="eqc-nome">{u.nome.split(' ')[0]}</span>
+              {feitasHoje[u.id] > 0 && <span className="eqc-feitas" title="concluídas hoje">✓{feitasHoje[u.id]}</span>}
               <span className={'eqc-pill ' + CLS(u.estado)}>{ETIQ[u.estado]}</span>
             </div>
             {(u.estado === 'foco' || u.estado === 'pausa') && u.q.tarefa && (
@@ -331,10 +352,14 @@ export default function Foco({ onNavigate }) {
   const concluirTask = () => {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
+    tocarConclusao() // v33: o acorde dourado abre a celebração
     const id = task.id
+    const texto = task.texto
     const realMin = Math.max(1, Math.round((total - secs) / 60)) // tempo efetivamente focado
     setTimeout(() => {
       setCelebrate(false); concluir(id, realMin); setRunning(false); setSecs(0); setTotal(0); setEsgotado(false)
+      const tx = texto.length > 34 ? texto.slice(0, 33) + '…' : texto
+      pedirUndo({ msg: `Concluída ✓ · «${tx}»`, onUndo: () => atualizar(id, { estado: 'eleita', feitaEm: null, realMin: null }) })
       if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
     }, 2600)
   }

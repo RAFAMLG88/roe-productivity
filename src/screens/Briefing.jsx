@@ -2,6 +2,10 @@ import React, { useState, useMemo, useRef } from 'react'
 import './Briefing.css'
 import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
+import ArcoDia from '../components/ArcoDia.jsx'
+import { pedirUndo } from '../state/undo.js'
+
+const curto = (t, n = 34) => (t.length > n ? t.slice(0, n - 1) + '…' : t)
 
 const CAP = 420, SCALE = 480  // dia de trabalho: 7h; barra até 8h
 const TIPO_META = {
@@ -25,7 +29,7 @@ const fmtEntrada = (ts) => {
 const diasDesde = (ts) => Math.floor((Date.now() - ts) / 86400000)
 
 export default function Briefing({ onNavigate }) {
-  const { fila, eleitas, eleger, paraFila, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil, ultimaVisita, pedirNotificacoes, agenda } = useRoe()
+  const { fila, eleitas, eleger, paraFila, atualizar, diaComecou, setDiaComecou, colegas, delegadas, delegar, equipaPorId, perfil, ultimaVisita, pedirNotificacoes, agenda } = useRoe()
   const [novidadesFechadas, setNovidadesFechadas] = useState(false)
   const delegadasFeitasDesde = ultimaVisita ? delegadas.filter((t) => t.estado === 'feita' && (t.feitaEm || 0) > ultimaVisita) : []
   const [permNotif, setPermNotif] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'default'))
@@ -34,6 +38,54 @@ export default function Briefing({ onNavigate }) {
   const week = useMemo(() => semanaUtil(now), [])
   const [showSunrise, setShowSunrise] = useState(false)
   const sunriseRef = useRef(null)
+
+  // ── v33: reordenar as eleitas por arrasto (pega ⠿) ──
+  const picksRef = useRef(null)
+  const dragRef = useRef(null) // { el, startY, pid }
+  const dragDown = (e) => {
+    const el = e.currentTarget.closest('.pick'); if (!el) return
+    e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = { el, startY: e.clientY, pid: e.pointerId }
+    el.classList.add('arrastando')
+  }
+  const dragMove = (e) => {
+    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return
+    d.el.style.transform = 'translateY(' + (e.clientY - d.startY) + 'px)'
+    const lista = picksRef.current; if (!lista) return
+    const irmaos = [...lista.querySelectorAll('.pick:not(.arrastando)')]
+    const r = d.el.getBoundingClientRect(), c = r.top + r.height / 2
+    let alvo = null
+    for (const s of irmaos) { const sr = s.getBoundingClientRect(); if (c < sr.top + sr.height / 2) { alvo = s; break } }
+    if (alvo !== d.el.nextElementSibling) {
+      const antes = new Map(irmaos.map((s) => [s, s.getBoundingClientRect().top]))
+      const topAntes = d.el.offsetTop
+      alvo ? lista.insertBefore(d.el, alvo) : lista.appendChild(d.el)
+      d.startY += d.el.offsetTop - topAntes
+      d.el.style.transform = 'translateY(' + (e.clientY - d.startY) + 'px)'
+      irmaos.forEach((s) => {
+        const delta = antes.get(s) - s.getBoundingClientRect().top
+        if (delta) {
+          s.style.transition = 'none'; s.style.transform = 'translateY(' + delta + 'px)'
+          requestAnimationFrame(() => { s.style.transition = 'transform .18s ease'; s.style.transform = '' })
+        }
+      })
+    }
+  }
+  const dragUp = (e) => {
+    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return
+    dragRef.current = null
+    d.el.classList.remove('arrastando')
+    const lista = picksRef.current
+    if (lista) {
+      lista.querySelectorAll('.pick').forEach((s) => { s.style.transform = ''; s.style.transition = '' })
+      const novaOrdem = [...lista.querySelectorAll('.pick')].map((s) => s.dataset.id)
+      novaOrdem.forEach((id, i) => {
+        const t = eleitas.find((x) => x.id === id)
+        if (t && t.ordem !== i) atualizar(id, { ordem: i })
+      })
+    }
+  }
 
   const n = eleitas.length
   const min = eleitas.reduce((s, t) => s + t.min, 0)
@@ -103,6 +155,8 @@ export default function Briefing({ onNavigate }) {
           ))}
         </div>
       </div>
+
+      <ArcoDia />
 
       <div className="canvas">
         <div className="col">
@@ -187,11 +241,14 @@ export default function Briefing({ onNavigate }) {
                 <div className="empty-s">Elege da fila em baixo, ou captura algo novo.</div>
               </div>
             ) : (
-              <div className="picks">
+              <div className="picks" ref={picksRef}>
                 {eleitas.map((p) => {
                   const m = TIPO_META[p.tipo] || TIPO_META.outros
                   return (
-                    <div key={p.id} className={`pick tp-${m.cls}`}>
+                    <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}`}>
+                      <span className="pk-pega" title="Arrasta para pôr o dia na tua ordem"
+                        onPointerDown={dragDown} onPointerMove={dragMove}
+                        onPointerUp={dragUp} onPointerCancel={dragUp}>⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">
                         <div className="a">{p.texto}</div>
@@ -207,7 +264,8 @@ export default function Briefing({ onNavigate }) {
                           ) : null })()}
                         </div>
                       </div>
-                      <button className="pk-back" title="Devolver à fila" onClick={() => paraFila(p.id)}>↓ fila</button>
+                      <button className="pk-back" title="Devolver à fila"
+                        onClick={() => { paraFila(p.id); pedirUndo({ msg: `Devolvida à fila · «${curto(p.texto)}»`, onUndo: () => eleger(p.id) }) }}>↓ fila</button>
                     </div>
                   )
                 })}
@@ -251,7 +309,7 @@ export default function Briefing({ onNavigate }) {
                           <button className={'dgm ' + (delegAberta === q.id ? 'on' : '')} title="delegar a um colega"
                             onClick={() => setDelegAberta(delegAberta === q.id ? null : q.id)}>🤝</button>
                         )}
-                        <button className="up" onClick={() => eleger(q.id)}>↑ eleger</button>
+                        <button className="up" onClick={() => { eleger(q.id); pedirUndo({ msg: `Eleita para hoje · «${curto(q.texto)}»`, onUndo: () => paraFila(q.id) }) }}>↑ eleger</button>
                       </div>
                       {delegAberta === q.id && (
                         <div className="dg-exp">

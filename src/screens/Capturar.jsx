@@ -14,6 +14,7 @@ const fmtEntradaCap = (ts) => {
 }
 import { supabase } from '../lib/supabase.js'
 import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
+import { pedirUndo, useEscondidas } from '../state/undo.js'
 
 const TIPOS = {
   interno: { ci: 'chefe', icon: '👤', tag: 'interno', ph: 'De quem? (ex: pedido da Ana)' },
@@ -207,6 +208,7 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
 
 export default function Capturar() {
   const { capturar, fila, feitas, apagar, atualizar, perfil, colegas, equipaPorId } = useRoe()
+  const escondidas = useEscondidas() // v33: apagadas à espera da janela de desfazer
   const [tipo, setTipo] = useState('outros')
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
@@ -231,7 +233,7 @@ export default function Capturar() {
     setPendentes((p) => [...p, { texto: e.assunto + ' — ' + e.de, ol: { id: e.id, recebido: e.recebido }, origemEm: e.recebido }])
   }
 
-  const lista = fila
+  const lista = fila.filter((t) => !escondidas.has(t.id)) // v33: fora as que estão na janela de desfazer
   const showToast = (msg) => {
     setToast(msg); clearTimeout(toastT.current)
     toastT.current = setTimeout(() => setToast(''), 3000)
@@ -429,7 +431,10 @@ export default function Capturar() {
                           onClick={() => setEditAberta(editAberta === c.id ? null : c.id)}>✎ editar</button>
                       </div>
                     </div>
-                    <button className="cap-del" title="Apagar" onClick={() => apagar(c.id)}>✕</button>
+                    <button className="cap-del" title="Apagar" onClick={() => {
+                      const tx = c.texto.length > 34 ? c.texto.slice(0, 33) + '…' : c.texto
+                      pedirUndo({ msg: `Apagada · «${tx}»`, esconderId: c.id, onCommit: () => apagar(c.id) })
+                    }}>✕</button>
                   </div>
                   {editAberta === c.id && (
                     <div className="cap-edit">

@@ -589,3 +589,18 @@
 /* data/hora de origem nas tarefas */
 .eqm-meta .badge-quando{font-size:9px;font-family:var(--font-mono);background:var(--cream-2);color:var(--soft);padding:3px 10px;border-radius:9px}
 .foco .el-quando{font-family:var(--font-mono);font-size:8.5px;color:var(--faint);margin-left:auto;flex:none}
+
+/* ══ v33 · vida na equipa ══ */
+.foco .eqc-feitas{margin-left:auto;font-family:var(--font-mono);font-weight:700;font-size:10px;
+  color:var(--mustard-ink);background:var(--mustard-soft);border:1px solid rgba(255,206,10,.5);
+  border-radius:99px;padding:1px 7px;flex:none}
+.foco .eqc-feitas + .eqc-pill{margin-left:0}
+.foco .eqc.foco .eqc-av{animation:eqRespira 3.2s ease-in-out infinite}
+@keyframes eqRespira{50%{transform:scale(1.06)}}
+.foco .eqc-fill{position:relative;overflow:hidden}
+.foco .eqc-fill::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:eqShimmer 2.3s infinite}
+@keyframes eqShimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){
+  .foco .eqc.foco .eqc-av,.foco .eqc-fill::after{animation:none}
+}
