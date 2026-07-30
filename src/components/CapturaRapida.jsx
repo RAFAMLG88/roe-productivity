@@ -6,13 +6,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRoe } from '../state/RoeContext.jsx'
 import { pedirUndo } from '../state/undo.js'
+import { TAGS } from '../lib/tags.js'
 
-const TIPOS = [
-  { k: 'interno',  ic: '👤', tag: 'interno' },
-  { k: 'telefone', ic: '✆',  tag: 'telefone' },
-  { k: 'obra',     ic: '🏗', tag: 'obra' },
-  { k: 'outros',   ic: '📌', tag: 'outros' },
-]
 const PRIS = [
   { k: 'urgente',    ic: '🔥', lab: 'Urgente' },
   { k: 'importante', ic: '⭐', lab: 'Importante' },
@@ -28,13 +23,14 @@ export default function CapturaRapida() {
   const { capturar, apagar } = useRoe()
   const [aberto, setAberto] = useState(false)
   const [texto, setTexto] = useState('')
-  const [tipo, setTipo] = useState('outros')       // defaults reais do capturar()
+  const [tags, setTags] = useState([])            // v34: multi-seleção
   const [pri, setPri] = useState('normal')
   const [min, setMin] = useState(15)
   const inputRef = useRef(null)
+  const toggleTag = (k) => setTags((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])
 
   const abrir = useCallback(() => {
-    setTexto(''); setTipo('outros'); setPri('normal'); setMin(15)
+    setTexto(''); setTags([]); setPri('normal'); setMin(15)
     setAberto(true)
     setTimeout(() => inputRef.current && inputRef.current.focus(), 30)
   }, [])
@@ -56,7 +52,8 @@ export default function CapturaRapida() {
   const guardar = () => {
     const t = texto.trim()
     if (!t) return
-    const id = capturar({ texto: t, tipo, min, prioridade: pri })
+    const tipo = tags[0] || 'outros' // retrocompat: a coluna tipo guarda a 1ª tag
+    const id = capturar({ texto: t, tipo, tags, min, prioridade: pri })
     fechar()
     const curto = t.length > 34 ? t.slice(0, 33) + '…' : t
     pedirUndo({ msg: `Capturada → Fila · «${curto}»`, onUndo: () => apagar(id) })
@@ -73,11 +70,12 @@ export default function CapturaRapida() {
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') guardar() }}
         />
-        <div className="cr-lab">tipo</div>
+        <div className="cr-lab">tipo · escolhe uma ou mais</div>
         <div className="cr-chips">
-          {TIPOS.map((t) => (
-            <button key={t.k} className={'cr-chip' + (tipo === t.k ? ' sel' : '')} onClick={() => { setTipo(t.k); inputRef.current && inputRef.current.focus() }}>
-              {t.ic} {t.tag}
+          {TAGS.map((t) => (
+            <button key={t.key} className={'cr-chip cr-tag-' + t.cls + (tags.includes(t.key) ? ' sel' : '')}
+              onClick={() => { toggleTag(t.key); inputRef.current && inputRef.current.focus() }}>
+              {t.ic} {t.lab}
             </button>
           ))}
         </div>

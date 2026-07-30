@@ -21,6 +21,7 @@ const daBD = (r) => ({
   id: r.id,
   texto: r.texto,
   tipo: r.tipo,
+  tags: Array.isArray(r.tags) ? r.tags : (r.tipo ? [r.tipo] : []),
   min: r.min,
   prioridade: r.prioridade,
   estado: r.estado,
@@ -38,6 +39,7 @@ const paraBD = (patch) => {
   const m = {}
   if ('texto' in patch) m.texto = patch.texto
   if ('tipo' in patch) m.tipo = patch.tipo
+  if ('tags' in patch) m.tags = patch.tags
   if ('min' in patch) m.min = patch.min
   if ('prioridade' in patch) m.prioridade = patch.prioridade
   if ('estado' in patch) m.estado = patch.estado
@@ -315,6 +317,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     const delegada = para !== uid
     const t = {
       id, texto: dados.texto, tipo: dados.tipo || 'outros',
+      tags: Array.isArray(dados.tags) ? dados.tags : (dados.tipo ? [dados.tipo] : []),
       min: Number(dados.min) || 15, prioridade: dados.prioridade || 'normal',
       estado: 'fila', criadaEm: dados.origemEm ? new Date(dados.origemEm).getTime() : Date.now(),
       ownerId: para, criadaPor: uid, delegadaPor: delegada ? uid : null, delegadaEm: delegada ? Date.now() : null,
@@ -322,7 +325,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     setTarefas((ts) => [t, ...ts])
     supabase.from('tarefas').insert({
       id, owner_id: para, criada_por: uid, delegada_por: delegada ? uid : null,
-      texto: t.texto, tipo: t.tipo, min: t.min, prioridade: t.prioridade,
+      texto: t.texto, tipo: t.tipo, tags: t.tags, min: t.min, prioridade: t.prioridade,
       estado: 'fila', delegada_em: delegada ? new Date().toISOString() : null,
       // origem: data/hora REAL de chegada (email) — não o instante da captura
       criada_em: dados.origemEm ? new Date(dados.origemEm).toISOString() : undefined,

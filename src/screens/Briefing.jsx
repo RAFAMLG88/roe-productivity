@@ -5,17 +5,17 @@ import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
 import ArcoDia from '../components/ArcoDia.jsx'
 import { pedirUndo } from '../state/undo.js'
+import { TAG_POR_KEY, tagsDe } from '../lib/tags.js'
 
 const curto = (t, n = 34) => (t.length > n ? t.slice(0, n - 1) + '…' : t)
+// meta visual do cartão a partir da 1ª tag (cor do ícone/moldura); retrocompat com tipos antigos
+const metaCartao = (tarefa) => {
+  const ks = tagsDe(tarefa)
+  const primeira = ks[0] ? TAG_POR_KEY[ks[0]] : null
+  return { cls: primeira ? primeira.cls : 'neutro', ic: primeira ? primeira.ic : '📌', tags: ks }
+}
 
 const CAP = 420, SCALE = 480  // dia de trabalho: 7h; barra até 8h
-const TIPO_META = {
-  interno:  { ic: '👤', cls: 'chefe',  nome: 'interno' },
-  telefone: { ic: '✆',  cls: 'tel',    nome: 'telefone' },
-  obra:     { ic: '🏗', cls: 'obra',   nome: 'obra' },
-  outros:   { ic: '📌', cls: 'ideia',  nome: 'outros' },
-  ficheiro: { ic: '📧', cls: 'email',  nome: 'email' },
-}
 
 import { fmtMin as fmt } from '../utils/formato.js'
 
@@ -257,7 +257,7 @@ export default function Briefing({ onNavigate }) {
             ) : (
               <div className="picks" ref={picksRef}>
                 {eleitas.map((p) => {
-                  const m = TIPO_META[p.tipo] || TIPO_META.outros
+                  const m = metaCartao(p)
                   const aArrastar = drag && drag.id === p.id
                   return (
                     <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}${aArrastar ? ' fantasma-orig' : ''}`}>
@@ -268,7 +268,9 @@ export default function Briefing({ onNavigate }) {
                         <div className="a">{p.texto}</div>
                         <div className="b">
                           <span className={`badge-pri ${p.prioridade || 'normal'}`}>{(p.prioridade || 'normal')}</span>
-                          <span className="badge-tipo">{m.nome}</span>
+                          {m.tags.map((k) => (
+                            <span key={k} className={`badge-tipo ${TAG_POR_KEY[k] ? 'bt-' + TAG_POR_KEY[k].cls : ''}`}>{TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k}</span>
+                          ))}
                           <span className="badge-min">~{p.min} min</span>
                           <span className="badge-idade" title="entrada na fila">🕘 {fmtEntrada(p.criadaEm)}</span>
                           {(() => { const de = p.delegadaPor || p.criadaPor; return de && perfil && de !== perfil.id ? (
@@ -285,20 +287,30 @@ export default function Briefing({ onNavigate }) {
                 })}
                 {drag && (() => {
                   const p = eleitas.find((x) => x.id === drag.id); if (!p) return null
-                  const m = TIPO_META[p.tipo] || TIPO_META.outros
+                  const m = metaCartao(p)
+                  const de = p.delegadaPor || p.criadaPor
                   return createPortal(
                     <div className={`pick tp-${m.cls} pick-fantasma`}
-                      style={{ position: 'fixed', left: drag.x, top: drag.y, width: drag.w, height: drag.h, zIndex: 9999, pointerEvents: 'none' }}>
+                      style={{ position: 'fixed', left: drag.x, top: drag.y, width: drag.w, boxSizing: 'border-box', zIndex: 9999, pointerEvents: 'none' }}>
                       <span className="pk-pega">⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">
                         <div className="a">{p.texto}</div>
                         <div className="b">
                           <span className={`badge-pri ${p.prioridade || 'normal'}`}>{(p.prioridade || 'normal')}</span>
-                          <span className="badge-tipo">{m.nome}</span>
+                          {m.tags.map((k) => (
+                            <span key={k} className={`badge-tipo ${TAG_POR_KEY[k] ? 'bt-' + TAG_POR_KEY[k].cls : ''}`}>{TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k}</span>
+                          ))}
                           <span className="badge-min">~{p.min} min</span>
+                          <span className="badge-idade">🕘 {fmtEntrada(p.criadaEm)}</span>
+                          {de && perfil && de !== perfil.id && (
+                            <span className="badge-de" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>
+                              de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}
+                            </span>
+                          )}
                         </div>
                       </div>
+                      <button className="pk-back" tabIndex={-1}>↓ fila</button>
                     </div>, document.body)
                 })()}
               </div>
@@ -317,7 +329,7 @@ export default function Briefing({ onNavigate }) {
             ) : (
               <div className="wait-list">
                 {fila.map((q) => {
-                  const m = TIPO_META[q.tipo] || TIPO_META.outros
+                  const m = metaCartao(q)
                   return (
                     <div key={q.id} className={`wt tp-${m.cls} ${delegAberta === q.id ? 'com-deleg' : ''} ${diasDesde(q.criadaEm) >= 3 ? 'antiga' : ''}`}>
                       <div className="wt-linha">
@@ -326,7 +338,9 @@ export default function Briefing({ onNavigate }) {
                           <div className="wt-t">{q.texto}</div>
                           <div className="wt-meta">
                             <span className={`badge-pri ${q.prioridade || 'normal'}`}>{(q.prioridade || 'normal')}</span>
-                            <span className="badge-tipo">{m.nome}</span>
+                            {m.tags.map((k) => (
+                              <span key={k} className={`badge-tipo ${TAG_POR_KEY[k] ? 'bt-' + TAG_POR_KEY[k].cls : ''}`}>{TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k}</span>
+                            ))}
                             <span className="badge-min">~{q.min} min</span>
                             {(() => { const de = q.delegadaPor || q.criadaPor; return de && perfil && de !== perfil.id ? (
                               <span className="badge-de" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>

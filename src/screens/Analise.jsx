@@ -3,6 +3,7 @@ import './Analise.css'
 import { useRoe } from '../state/RoeContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { fmtMin, desvioMedio } from '../utils/formato.js'
+import { TAG_POR_KEY, tagsDe } from '../lib/tags.js'
 
 const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 const diaISO = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
@@ -128,11 +129,18 @@ export default function Analise({ onNavigate }) {
           const totalDias = dias.filter((x) => x.n > 0).length
           const mediaDia = totalDias > 0 ? (dias.reduce((s, x) => s + x.n, 0) / totalDias).toFixed(1) : '0'
 
-          // onde vai o tempo (por tipo)
-          const TIPO_L = { interno: 'Pedidos internos', telefone: 'Telefone', obra: 'Obra', outros: 'Outros', ficheiro: 'Email' }
-          const porTipo = Object.entries(comHora.reduce((m, t) => { const k = t.tipo || 'outros'; m[k] = (m[k] || 0) + (t.realMin || t.min); return m }, {}))
+          // onde vai o tempo — por TAG (v34). Tarefas com várias tags contam em cada uma.
+          // Tarefas antigas (tipo simples fora da taxonomia) caem em "Sem tipo".
+          const porTipo = Object.entries(comHora.reduce((m, t) => {
+            const ks = tagsDe(t)
+            const mins = t.realMin || t.min
+            if (ks.length === 0) { m['__sem'] = (m['__sem'] || 0) + mins; return m }
+            ks.forEach((k) => { const key = TAG_POR_KEY[k] ? k : '__sem'; m[key] = (m[key] || 0) + mins })
+            return m
+          }, {}))
             .sort((a, b) => b[1] - a[1])
           const totalTipo = porTipo.reduce((s, [, v]) => s + v, 0) || 1
+          const rotuloTipo = (k) => (k === '__sem' ? 'Sem tipo' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
 
           const aguaOk = hist.agua.filter((a) => (a.ml || 0) >= 2000).length
 
@@ -175,7 +183,7 @@ export default function Analise({ onNavigate }) {
                 <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🧭</span>Onde vai o teu tempo</div>
                 {porTipo.map(([k, v]) => (
                   <div key={k} className="tipo-row">
-                    <span className="tr-l">{TIPO_L[k] || k}</span>
+                    <span className="tr-l">{rotuloTipo(k)}</span>
                     <span className="tr-bar"><span className="tr-fill" style={{ width: Math.round(v / totalTipo * 100) + '%' }} /></span>
                     <span className="tr-v">{fmtMin(v)}</span>
                   </div>

@@ -15,14 +15,8 @@ const fmtEntradaCap = (ts) => {
 import { supabase } from '../lib/supabase.js'
 import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
 import { pedirUndo, useEscondidas } from '../state/undo.js'
+import { TAGS, TAG_POR_KEY, tagsDe } from '../lib/tags.js'
 
-const TIPOS = {
-  interno: { ci: 'chefe', icon: '👤', tag: 'interno', ph: 'De quem? (ex: pedido da Ana)' },
-  telefone: { ci: 'tel', icon: '✆', tag: 'telefone', ph: 'Que chamada devolver?' },
-  obra: { ci: 'email', icon: '🏗', tag: 'obra', ph: 'Que assunto de obra?' },
-  outros: { ci: 'ideia', icon: '📌', tag: 'outros', ph: 'O que tens em mente?' },
-}
-const TAGCLS = { interno: 'src-chefe', telefone: 'src-tel', obra: 'src-email', outros: 'src-ideia', ficheiro: 'src-ficheiro' }
 const PRIS = ['urgente', 'importante', 'normal']
 const PRI_LABEL = { urgente: 'Urgente', importante: 'Importante', normal: 'Normal' }
 const PRI_ICON = { urgente: '🔥', importante: '⭐', normal: '○' }
@@ -209,11 +203,12 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
 export default function Capturar() {
   const { capturar, fila, feitas, apagar, atualizar, perfil, colegas, equipaPorId } = useRoe()
   const escondidas = useEscondidas() // v33: apagadas à espera da janela de desfazer
-  const [tipo, setTipo] = useState('outros')
+  const [tags, setTags] = useState([])  // v34: multi-seleção de tags
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
   const [pri, setPri] = useState('normal')
   const [para, setPara] = useState('eu') // 'eu' ou id do colega
+  const toggleTag = (k) => setTags((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])
   const [editAberta, setEditAberta] = useState(null) // tarefa da fila com o editor aberto
   const [toast, setToast] = useState('')
   const [dragOver, setDragOver] = useState(false)
@@ -253,9 +248,10 @@ export default function Capturar() {
     if (!txt) return
     const destino = para !== 'eu' ? equipaPorId[para] : null
     const orig = pendentes.length > 0 ? pendentes[0].origemEm : null
-    capturar({ texto: txt, tipo: pendentes.length > 0 ? 'ficheiro' : tipo, min, prioridade: pri, para: destino ? destino.id : undefined, origemEm: orig || undefined })
+    const ehFicheiro = pendentes.length > 0
+    capturar({ texto: txt, tipo: ehFicheiro ? 'ficheiro' : (tags[0] || 'outros'), tags: ehFicheiro ? [] : tags, min, prioridade: pri, para: destino ? destino.id : undefined, origemEm: orig || undefined })
     if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
-    setTexto(''); setPri('normal'); setMin(15); setPara('eu')
+    setTexto(''); setPri('normal'); setMin(15); setPara('eu'); setTags([])
     if (pendentes.length > 0) {
       const p0 = pendentes[0]
       if (p0 && p0.ol) despacharOl(p0.ol) // capturado → o marcador Outlook avança
@@ -339,15 +335,16 @@ export default function Capturar() {
               <div className="cap-sec-lab primeiro">nova tarefa</div>
             )}
 
-            <input ref={inputRef} className="cap-input" type="text" value={texto} placeholder={TIPOS[tipo].ph}
+            <input ref={inputRef} className="cap-input" type="text" value={texto} placeholder="Escreve aqui"
               onChange={(e) => setTexto(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') fazerCaptura() }} />
 
-            <div className="cap-sec-lab">tipo</div>
-            <div className="type-tabs">
-              {Object.keys(TIPOS).map((k) => (
-                <button key={k} className={`ttab ${tipo === k ? 'on' : ''}`} onClick={() => { setTipo(k); if (inputRef.current) inputRef.current.focus() }}>
-                  <span className="ti">{TIPOS[k].icon}</span>
-                  <span className="tn">{k === 'interno' ? 'Pedido interno' : k === 'telefone' ? 'Via telefone' : k === 'obra' ? 'Obra' : 'Outros'}</span>
+            <div className="cap-sec-lab">tipo · escolhe uma ou mais</div>
+            <div className="tag-grid">
+              {TAGS.map((t) => (
+                <button key={t.key} className={`tag-cell tag-${t.cls} ${tags.includes(t.key) ? 'on' : ''}`}
+                  onClick={() => { toggleTag(t.key); if (inputRef.current) inputRef.current.focus() }}>
+                  <span className="ti">{t.ic}</span>
+                  <span className="tn">{t.lab}</span>
                 </button>
               ))}
             </div>
@@ -410,18 +407,26 @@ export default function Capturar() {
                 <div className="empty-s">Tria um email do Outlook ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Escritório.</div>
               </div>
             ) : lista.map((c) => {
-              const tp = TIPOS[c.tipo] || { ci: 'ficheiro', icon: '📧' }
               const isFile = c.tipo === 'ficheiro'
+              const cTags = tagsDe(c) // v34: array (novo) ou [tipo] (antigo)
+              const primeira = cTags[0] ? TAG_POR_KEY[cTags[0]] : null
+              const iconeCabeca = isFile ? '📧' : (primeira ? primeira.ic : '📌')
+              const classeIcone = isFile ? 'ficheiro' : (primeira ? 'tag-ic-' + primeira.cls : 'ideia')
               const p = c.prioridade || 'normal'
               return (
                 <div key={c.id} className={`cap show pri-${p} ${editAberta === c.id ? 'a-editar' : ''}`}>
                   <div className="cap-linha">
-                    <div className={`ci ${isFile ? 'ficheiro' : tp.ci}`}>{isFile ? '📧' : tp.icon}</div>
+                    <div className={`ci ${classeIcone}`}>{iconeCabeca}</div>
                     <div className="body">
                       <div className="a">{c.texto}</div>
                       <div className="tags">
                         <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
-                        <span className={`tg ${TAGCLS[c.tipo] || 'src-ficheiro'}`}>{isFile ? 'email' : (TIPOS[c.tipo]?.tag || c.tipo)}</span>
+                        {isFile && <span className="tg src-ficheiro">email</span>}
+                        {!isFile && cTags.map((k) => (
+                          <span key={k} className={`tg ${TAG_POR_KEY[k] ? 'tag-b-' + TAG_POR_KEY[k].cls : 'src-ideia'}`}>
+                            {TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k}
+                          </span>
+                        ))}
                         {(() => { const de = c.delegadaPor || c.criadaPor; return de && perfil && de !== perfil.id ? (
                           <span className="tg deleg" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}</span>
                         ) : null })()}
@@ -438,13 +443,22 @@ export default function Capturar() {
                   </div>
                   {editAberta === c.id && (
                     <div className="cap-edit">
-                      <div className="ce-lab">tipo</div>
-                      <div className="ce-grid t4">
-                        {Object.keys(TIPOS).filter((k) => k !== 'ficheiro').map((k) => (
-                          <button key={k} className={`ce-chip ${c.tipo === k ? 'on' : ''}`} onClick={() => atualizar(c.id, { tipo: k })}>
-                            {TIPOS[k].icon} {TIPOS[k].tag || k}
-                          </button>
-                        ))}
+                      <div className="ce-lab">tipo · escolhe uma ou mais</div>
+                      <div className="ce-tag-grid">
+                        {TAGS.map((t) => {
+                          const cTags = tagsDe(c)
+                          const on = cTags.includes(t.key)
+                          return (
+                            <button key={t.key} className={`ce-chip tag-${t.cls} ${on ? 'on' : ''}`}
+                              onClick={() => {
+                                const cur = tagsDe(c)
+                                const novo = on ? cur.filter((x) => x !== t.key) : [...cur, t.key]
+                                atualizar(c.id, { tags: novo, tipo: novo[0] || 'outros' })
+                              }}>
+                              {t.ic} {t.lab}
+                            </button>
+                          )
+                        })}
                       </div>
                       <div className="ce-lab">duração estimada</div>
                       <div className="ce-dur">

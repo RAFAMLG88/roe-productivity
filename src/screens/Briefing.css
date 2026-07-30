@@ -302,15 +302,41 @@
 @keyframes arcoBrilha{0%,100%{box-shadow:0 0 6px rgba(255,206,10,.5)}50%{box-shadow:0 0 15px rgba(255,206,10,.95)}}
 
 /* ══ v33.1 · arrasto das eleitas (pega ⠿) — grid-safe ══ */
+/* ══ v33.2 · arrasto das eleitas — cópia sólida que segue o cursor ══ */
 .briefing .pk-pega{cursor:grab;color:var(--faint);font-family:var(--font-mono);font-weight:700;font-size:14px;
   user-select:none;touch-action:none;padding:6px 2px;line-height:1;flex:none}
 .briefing .pk-pega:active{cursor:grabbing}
-/* o cartão de origem fica esbatido no lugar enquanto o fantasma anda */
-.briefing .pick.fantasma-orig{opacity:.28;transition:opacity .12s}
-/* o fantasma segue o cursor — SEM transition para não "fugir" do rato */
-.briefing .pick.pick-fantasma{transition:none!important;margin:0;box-shadow:0 20px 44px rgba(60,50,30,.3);
-  border-color:rgba(255,206,10,.7);transform:rotate(-1deg);cursor:grabbing;overflow:hidden}
+/* o cartão de origem fica no lugar, INTACTO — apenas um leve rebaixo indica que foi levantado */
+.briefing .pick.fantasma-orig{opacity:.4;filter:saturate(.6)}
+/* o fantasma é uma cópia idêntica e SÓLIDA presa ao cursor.
+   transição morta desde o 1º frame e conteúdo sem colapso (nada de overflow a esconder o corpo) */
+.briefing .pick.pick-fantasma{transition:none!important;animation:none!important;margin:0!important;
+  box-shadow:0 22px 48px rgba(60,50,30,.32);border-color:rgba(255,206,10,.75);
+  transform:rotate(-1.5deg) scale(1.02);cursor:grabbing;background:var(--card);opacity:1}
+.briefing .pick.pick-fantasma *{transition:none!important;animation:none!important}
 
 @media (prefers-reduced-motion:reduce){
   .briefing .arco-feito>i::after,.briefing .arco-agora,.briefing .arco-marco{animation:none}
 }
+
+/* ══ v34 · cores das tags novas (cartões eleitas + fila) ══ */
+.briefing .pick.tp-red{border-color:#FFD9DF}.briefing .pick.tp-red::before{background:var(--red)}
+.briefing .pick.tp-gold{border-color:#F5E3A8}.briefing .pick.tp-gold::before{background:var(--mustard)}
+.briefing .pick.tp-sky{border-color:#CDEBF7}.briefing .pick.tp-sky::before{background:var(--sky)}
+.briefing .pick.tp-forest{border-color:#C5EFD7}.briefing .pick.tp-forest::before{background:var(--forest)}
+.briefing .pick.tp-neutro{border-color:var(--line)}.briefing .pick.tp-neutro::before{background:var(--faint)}
+.briefing .pick.tp-red .pk-ic{background:linear-gradient(135deg,var(--red),#D81030)}
+.briefing .pick.tp-gold .pk-ic{background:linear-gradient(135deg,var(--mustard),#E5B400);color:var(--black)}
+.briefing .pick.tp-sky .pk-ic{background:linear-gradient(135deg,var(--sky),#1496C4)}
+.briefing .pick.tp-forest .pk-ic{background:linear-gradient(135deg,var(--forest),#00A352)}
+.briefing .pick.tp-neutro .pk-ic{background:linear-gradient(135deg,var(--faint),var(--soft))}
+.briefing .wt.tp-red .wt-ic{background:linear-gradient(135deg,var(--red),#D81030)}
+.briefing .wt.tp-gold .wt-ic{background:linear-gradient(135deg,var(--mustard),#E5B400);color:var(--black)}
+.briefing .wt.tp-sky .wt-ic{background:linear-gradient(135deg,var(--sky),#1496C4)}
+.briefing .wt.tp-forest .wt-ic{background:linear-gradient(135deg,var(--forest),#00A352)}
+.briefing .wt.tp-neutro .wt-ic{background:linear-gradient(135deg,var(--faint),var(--soft))}
+/* badges de tag coloridos (nas metas dos cartões) */
+.briefing .badge-tipo.bt-red{background:var(--red-soft);color:var(--red-ink)}
+.briefing .badge-tipo.bt-gold{background:var(--mustard-soft);color:var(--mustard-ink)}
+.briefing .badge-tipo.bt-sky{background:var(--sky-soft);color:var(--sky-ink)}
+.briefing .badge-tipo.bt-forest{background:var(--forest-soft);color:var(--forest-ink)}

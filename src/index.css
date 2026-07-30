@@ -222,3 +222,9 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){
   .cr-box,.undo-toast{animation-duration:.01s}
 }
+
+/* ══ v34 · cores das tags na captura rápida ══ */
+.cr-chip.cr-tag-red.sel{background:rgba(255,31,61,.2);border-color:var(--red);color:#FF7A8C}
+.cr-chip.cr-tag-gold.sel{background:rgba(255,206,10,.18);border-color:var(--mustard);color:var(--mustard)}
+.cr-chip.cr-tag-sky.sel{background:rgba(31,184,224,.18);border-color:var(--sky);color:#6BD6F0}
+.cr-chip.cr-tag-forest.sel{background:rgba(0,200,101,.18);border-color:var(--forest);color:#4BE39B}

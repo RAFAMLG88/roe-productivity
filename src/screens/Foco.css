@@ -604,3 +604,9 @@
 @media (prefers-reduced-motion:reduce){
   .foco .eqc.foco .eqc-av,.foco .eqc-fill::after{animation:none}
 }
+
+/* ══ v34 · badges de tag no modal de colega ══ */
+.eqm-meta .badge-tipo.bt-red{background:var(--red-soft);color:var(--red-ink)}
+.eqm-meta .badge-tipo.bt-gold{background:var(--mustard-soft);color:var(--mustard-ink)}
+.eqm-meta .badge-tipo.bt-sky{background:var(--sky-soft);color:var(--sky-ink)}
+.eqm-meta .badge-tipo.bt-forest{background:var(--forest-soft);color:var(--forest-ink)}

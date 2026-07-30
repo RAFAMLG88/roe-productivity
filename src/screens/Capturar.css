@@ -348,3 +348,38 @@
 .capturar .cap-rodape .cap-btn{margin:0;width:100%}
 
 .capturar .tg.quando{background:var(--cream-2);color:var(--soft);font-family:var(--font-mono)}
+
+/* ══ v34 · grelha multi-tag (formulário de captura) ══ */
+.capturar .tag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.capturar .tag-cell{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 6px;
+  border:1.5px solid var(--line);border-radius:13px;background:var(--card);cursor:pointer;transition:all .2s;text-align:center}
+.capturar .tag-cell:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(60,50,30,.08)}
+.capturar .tag-cell .ti{font-size:18px;line-height:1}
+.capturar .tag-cell .tn{font-family:var(--font-body);font-weight:700;font-size:11px;color:var(--soft);line-height:1.15}
+.capturar .tag-cell.on .tn{color:var(--ink)}
+/* cor por família ao selecionar */
+.capturar .tag-cell.tag-red.on{border-color:var(--red);background:var(--red-soft)}
+.capturar .tag-cell.tag-gold.on{border-color:var(--mustard);background:var(--mustard-soft)}
+.capturar .tag-cell.tag-sky.on{border-color:var(--sky);background:var(--sky-soft)}
+.capturar .tag-cell.tag-forest.on{border-color:var(--forest);background:var(--forest-soft)}
+.capturar .tag-cell.on{position:relative}
+.capturar .tag-cell.on::after{content:'✓';position:absolute;top:5px;right:7px;font-size:9px;font-weight:700;color:var(--ink);opacity:.5}
+
+/* editor inline na fila: grelha multi-tag */
+.capturar .ce-tag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.capturar .ce-tag-grid .ce-chip{white-space:normal;line-height:1.2;min-height:34px;display:flex;align-items:center;justify-content:center}
+.capturar .ce-chip.tag-red.on{border-color:var(--red);background:var(--red-soft);color:var(--red-ink)}
+.capturar .ce-chip.tag-gold.on{border-color:var(--mustard);background:var(--mustard-soft);color:var(--mustard-ink)}
+.capturar .ce-chip.tag-sky.on{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-ink)}
+.capturar .ce-chip.tag-forest.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest-ink)}
+
+/* badges de tag na lista da fila (por cor) */
+.capturar .tg.tag-b-red{background:var(--red-soft);color:var(--red-ink)}
+.capturar .tg.tag-b-gold{background:var(--mustard-soft);color:var(--mustard-ink)}
+.capturar .tg.tag-b-sky{background:var(--sky-soft);color:var(--sky-ink)}
+.capturar .tg.tag-b-forest{background:var(--forest-soft);color:var(--forest-ink)}
+/* ícone-cabeça por cor da 1ª tag */
+.capturar .ci.tag-ic-red{background:var(--red-soft)}
+.capturar .ci.tag-ic-gold{background:var(--mustard-soft)}
+.capturar .ci.tag-ic-sky{background:var(--sky-soft)}
+.capturar .ci.tag-ic-forest{background:var(--forest-soft)}

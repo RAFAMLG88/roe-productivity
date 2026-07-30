@@ -5,6 +5,7 @@ import { useRoe } from '../state/RoeContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { tocarConclusao } from '../lib/som.js'
 import { pedirUndo } from '../state/undo.js'
+import { TAG_POR_KEY, tagsDe } from '../lib/tags.js'
 
 const C = { much: '#00C865', half: '#FFCE0A', low: '#FF1F3D' }
 const CIRC = 829, R = 132
@@ -77,14 +78,6 @@ function scEmbed(url) {
 }
 
 // ═══ A TUA EQUIPA AGORA — presença real ═══
-const TIPO_META_EQ = {
-  interno:  { ic: '👤', nome: 'interno' },
-  telefone: { ic: '✆',  nome: 'telefone' },
-  obra:     { ic: '🏗', nome: 'obra' },
-  outros:   { ic: '📌', nome: 'outros' },
-  ficheiro: { ic: '📧', nome: 'email' },
-}
-
 // página-sobreposição com a ordem de trabalhos de um colega, catalogada como no Escritório
 function EquipaModal({ colega, presenca, tarefasDe, agenda, onClose }) {
   const [carregando, setCarregando] = useState(true)
@@ -107,15 +100,18 @@ function EquipaModal({ colega, presenca, tarefasDe, agenda, onClose }) {
   const ETIQ = { foco: 'em foco agora', pausa: 'em pausa', livre: 'disponível', off: 'fora da app' }
 
   const Linha = ({ t }) => {
-    const m = TIPO_META_EQ[t.tipo] || TIPO_META_EQ.outros
+    const ks = tagsDe(t)
+    const primeira = ks[0] ? TAG_POR_KEY[ks[0]] : null
     return (
       <div className="eqm-wt">
-        <div className="eqm-ic">{m.ic}</div>
+        <div className="eqm-ic">{primeira ? primeira.ic : '📌'}</div>
         <div className="eqm-body">
           <div className="eqm-t">{t.texto}</div>
           <div className="eqm-meta">
             <span className={'badge-pri ' + (t.prioridade || 'normal')}>{t.prioridade || 'normal'}</span>
-            <span className="badge-tipo">{m.nome}</span>
+            {ks.map((k) => (
+              <span key={k} className={`badge-tipo ${TAG_POR_KEY[k] ? 'bt-' + TAG_POR_KEY[k].cls : ''}`}>{TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k}</span>
+            ))}
             <span className="badge-min">~{t.min} min</span>
             <span className="badge-quando">🕘 {fmtOrigem(t.criadaEm)}</span>
           </div>
