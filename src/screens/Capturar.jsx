@@ -331,7 +331,7 @@ export default function Capturar() {
                 <span className="ep-ic">📧</span>
                 <div className="ep-b">
                   <div className="ep-t">Email lido — cataloga e captura{pendentes[0] && pendentes[0].origemEm ? ' · chegou ' + new Date(pendentes[0].origemEm).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
-                  <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : 'ajusta o texto, prioridade e minutos'}</div>
+                  <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : ''}</div>
                 </div>
                 <button className="ep-x" title="Descartar este email" onClick={() => { const p0 = pendentes[0]; if (p0 && p0.ol) despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
               </div>
@@ -401,7 +401,7 @@ export default function Capturar() {
         </div>
 
         <div className="col cap-col">
-          <div className="group-lab">Na fila · toca na etiqueta p/ mudar prioridade {feitas.length > 0 && `· ${feitas.length} concluída${feitas.length > 1 ? 's' : ''}`}</div>
+          <div className="group-lab">Na fila{feitas.length > 0 && ` · ${feitas.length} concluída${feitas.length > 1 ? 's' : ''}`}</div>
           <div id="list">
             {lista.length === 0 ? (
               <div className="empty-cap">

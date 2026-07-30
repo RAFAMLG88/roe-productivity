@@ -1575,7 +1575,7 @@
   }
 }
 .briefing .arco {
-  margin: 14px 0 4px;
+  margin: 14px 30px 4px;
   background:
     linear-gradient(
       180deg,
@@ -1806,11 +1806,18 @@
 .briefing .pk-pega:active {
   cursor: grabbing;
 }
-.briefing .pick.arrastando {
-  transition: none;
-  z-index: 8;
-  box-shadow: 0 16px 36px rgba(60, 50, 30, .24);
-  border-color: rgba(255, 206, 10, .65);
+.briefing .pick.fantasma-orig {
+  opacity: .28;
+  transition: opacity .12s;
+}
+.briefing .pick.pick-fantasma {
+  transition: none !important;
+  margin: 0;
+  box-shadow: 0 20px 44px rgba(60, 50, 30, .3);
+  border-color: rgba(255, 206, 10, .7);
+  transform: rotate(-1deg);
+  cursor: grabbing;
+  overflow: hidden;
 }
 @media (prefers-reduced-motion:reduce) {
   .briefing .arco-feito > i::after,

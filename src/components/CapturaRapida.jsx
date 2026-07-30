@@ -66,10 +66,10 @@ export default function CapturaRapida() {
   return (
     <div className="cr-veu" onClick={(e) => { if (e.target === e.currentTarget) fechar() }}>
       <div className="cr-box" role="dialog" aria-label="Captura rápida">
-        <div className="cr-cab"><span>CAPTURA RÁPIDA</span><kbd>esc</kbd></div>
+        <div className="cr-cab"><span>CAPTURA RÁPIDA</span><button className="cr-x" title="Fechar" onClick={fechar}>✕</button></div>
         <input
           ref={inputRef} className="cr-input" type="text" value={texto}
-          placeholder="O que te passou pela cabeça?"
+          placeholder="Escreve aqui"
           onChange={(e) => setTexto(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') guardar() }}
         />
@@ -97,7 +97,9 @@ export default function CapturaRapida() {
             </button>
           ))}
         </div>
-        <div className="cr-pe"><b>Enter</b> guarda na fila · 🕘 origem registada agora · chips opcionais — também catalogas depois na fila com ✎</div>
+        <div className="cr-acao">
+          <button className="cr-guardar" onClick={guardar} disabled={!texto.trim()}>Guardar →</button>
+        </div>
       </div>
     </div>
   )

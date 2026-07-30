@@ -13,11 +13,29 @@ export default function Cidade3D({ visible, onClose }) {
 
   // pré-carregar em fundo, sem atrasar o arranque da app
   useEffect(() => {
-    const t = setTimeout(() => setSrc('./cidade-v41.html'), 2500)
+    const t = setTimeout(() => setSrc('./cidade-v41.html'), 2000)
     return () => clearTimeout(t)
   }, [])
   // se o utilizador abrir antes do pré-carregamento, carrega já
   useEffect(() => { if (visible && !src) setSrc('./cidade-v41.html') }, [visible, src])
+
+  // v33.1: aquecer a GPU assim que o iframe reporta _roeReady — independente de
+  // haver obras a sincronizar. Antes o warmup só corria dentro do ciclo de sync,
+  // podendo apanhar a 1ª abertura a meio. Este relógio curto fecha essa janela.
+  useEffect(() => {
+    if (!src || aquecida.current) return
+    let stop = false
+    const aquecer = () => {
+      if (stop || aquecida.current) return
+      const win = iframeRef.current && iframeRef.current.contentWindow
+      let ready = false
+      try { ready = !!(win && win._roeReady) } catch { ready = false }
+      if (!ready) { setTimeout(aquecer, 250); return }
+      try { if (typeof win.roeWarmup === 'function') { win.roeWarmup(); aquecida.current = true } } catch { /* */ }
+    }
+    aquecer()
+    return () => { stop = true }
+  }, [src])
 
   // ao mostrar: recalcular tamanho do canvas; pausar o render 3D quando escondida (poupa CPU)
   useEffect(() => {

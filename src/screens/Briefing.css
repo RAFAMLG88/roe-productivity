@@ -266,7 +266,7 @@
 @media (prefers-reduced-motion:reduce){.briefing .novidades,.briefing .novidades::after,.briefing .novidades .pico{animation:none}}
 
 /* ══ v33 · O TEU DIA (arco marfim-e-ouro no topo do Escritório) ══ */
-.briefing .arco{margin:14px 0 4px;background:linear-gradient(180deg,#FBF7EC,#F1EAD8);
+.briefing .arco{margin:14px 30px 4px;background:linear-gradient(180deg,#FBF7EC,#F1EAD8);
   border:1px solid rgba(185,143,0,.38);border-radius:16px;padding:13px 22px 24px;position:relative;overflow:hidden}
 .briefing .arco::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--mustard) 18%,#FFE873 50%,var(--mustard) 82%,transparent)}
@@ -301,11 +301,15 @@
 @keyframes arcoNasce{from{transform:translateX(-50%) rotate(45deg) scale(0)}60%{transform:translateX(-50%) rotate(45deg) scale(1.5)}}
 @keyframes arcoBrilha{0%,100%{box-shadow:0 0 6px rgba(255,206,10,.5)}50%{box-shadow:0 0 15px rgba(255,206,10,.95)}}
 
-/* ══ v33 · arrasto das eleitas (pega ⠿) ══ */
+/* ══ v33.1 · arrasto das eleitas (pega ⠿) — grid-safe ══ */
 .briefing .pk-pega{cursor:grab;color:var(--faint);font-family:var(--font-mono);font-weight:700;font-size:14px;
   user-select:none;touch-action:none;padding:6px 2px;line-height:1;flex:none}
 .briefing .pk-pega:active{cursor:grabbing}
-.briefing .pick.arrastando{transition:none;z-index:8;box-shadow:0 16px 36px rgba(60,50,30,.24);border-color:rgba(255,206,10,.65)}
+/* o cartão de origem fica esbatido no lugar enquanto o fantasma anda */
+.briefing .pick.fantasma-orig{opacity:.28;transition:opacity .12s}
+/* o fantasma segue o cursor — SEM transition para não "fugir" do rato */
+.briefing .pick.pick-fantasma{transition:none!important;margin:0;box-shadow:0 20px 44px rgba(60,50,30,.3);
+  border-color:rgba(255,206,10,.7);transform:rotate(-1deg);cursor:grabbing;overflow:hidden}
 
 @media (prefers-reduced-motion:reduce){
   .briefing .arco-feito>i::after,.briefing .arco-agora,.briefing .arco-marco{animation:none}

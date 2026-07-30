@@ -178,8 +178,9 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
 @keyframes crIn{from{opacity:0;transform:translateY(-10px)}}
 .cr-cab{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0}
 .cr-cab span{font-family:var(--font-mono);font-weight:700;font-size:9.5px;letter-spacing:.24em;color:var(--mustard)}
-.cr-cab kbd{font-family:var(--font-mono);font-size:9.5px;color:rgba(244,238,224,.5);
-  border:1px solid rgba(244,238,224,.16);border-radius:6px;padding:2px 7px}
+.cr-x{background:transparent;border:1px solid rgba(244,238,224,.16);border-radius:8px;color:rgba(244,238,224,.55);
+  font-size:12px;line-height:1;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;transition:all .15s}
+.cr-x:hover{border-color:rgba(255,31,61,.5);color:#FF7A8C;background:rgba(255,31,61,.08)}
 .cr-input{width:100%;background:transparent;border:0;outline:0;color:var(--cream);
   font-family:var(--font-body);font-weight:600;font-size:20px;padding:13px 18px 10px;caret-color:var(--mustard)}
 .cr-input::placeholder{color:rgba(244,238,224,.32)}
@@ -193,18 +194,12 @@ body.zen-mode .media-dock{opacity:0;pointer-events:none}
 .cr-chip.sel{background:rgba(255,206,10,.18);border-color:var(--mustard);color:var(--mustard)}
 .cr-chip.pri-urgente.sel{background:rgba(255,31,61,.2);border-color:var(--red);color:#FF7A8C}
 .cr-chip.pri-importante.sel{background:rgba(255,206,10,.18);border-color:var(--mustard);color:var(--mustard)}
-.cr-pe{border-top:1px solid rgba(244,238,224,.08);padding:11px 18px;margin-top:14px;
-  font-family:var(--font-mono);font-weight:500;font-size:10.5px;letter-spacing:.03em;color:rgba(244,238,224,.55)}
-.cr-pe b{color:var(--mustard)}
-
-/* botão discreto na sidebar */
-.side .cap-rapida{margin:auto 4px 10px;display:flex;align-items:center;gap:8px;justify-content:center;
-  background:none;border:1px dashed rgba(244,238,224,.22);border-radius:12px;padding:9px 10px;
-  color:#8a8272;font-family:var(--font-mono);font-weight:600;font-size:10px;letter-spacing:.06em;
-  cursor:pointer;transition:all .25s}
-.side .cap-rapida:hover{border-color:rgba(255,206,10,.55);color:var(--mustard)}
-.side .cap-rapida .cr-ic{font-size:12px}
-.side .cap-rapida .cr-kbd{border:1px solid rgba(244,238,224,.25);border-radius:5px;padding:1px 6px;font-size:9px}
+.cr-acao{display:flex;justify-content:flex-end;padding:16px 18px 18px;margin-top:8px;border-top:1px solid rgba(244,238,224,.08)}
+.cr-guardar{background:var(--mustard);color:var(--black);border:0;border-radius:99px;
+  font-family:var(--font-mono);font-weight:700;font-size:12px;letter-spacing:.08em;
+  padding:10px 22px;cursor:pointer;transition:all .18s}
+.cr-guardar:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,206,10,.35)}
+.cr-guardar:disabled{opacity:.32;cursor:default}
 
 /* ══ v33 · DESFAZER UNIVERSAL (toast global, 6 s) ══ */
 .undo-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:190;

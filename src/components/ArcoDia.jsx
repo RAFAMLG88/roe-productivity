@@ -25,7 +25,7 @@ export default function ArcoDia() {
   const p = pos(hf)
 
   return (
-    <div className="arco enter">
+    <div className="arco">
       <div className="arco-cab">
         <span className="arco-t">O teu dia</span>
         <span className="arco-n">{marcos.length} marco{marcos.length === 1 ? '' : 's'} erguido{marcos.length === 1 ? '' : 's'}</span>

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import './Briefing.css'
 import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
@@ -39,52 +40,65 @@ export default function Briefing({ onNavigate }) {
   const [showSunrise, setShowSunrise] = useState(false)
   const sunriseRef = useRef(null)
 
-  // ── v33: reordenar as eleitas por arrasto (pega ⠿) ──
+  // ── v33.1: reordenar eleitas por arrasto — funciona no grid 2-col ──
+  // O cartão "fantasma" segue o cursor (position:fixed); calculamos sobre que
+  // cartão está o centro do rato e escrevemos a nova ordem no ESTADO (não no DOM),
+  // deixando o React reconciliar. Isto elimina o "troca sozinho" da versão grid.
   const picksRef = useRef(null)
-  const dragRef = useRef(null) // { el, startY, pid }
-  const dragDown = (e) => {
-    const el = e.currentTarget.closest('.pick'); if (!el) return
-    e.preventDefault()
-    e.currentTarget.setPointerCapture(e.pointerId)
-    dragRef.current = { el, startY: e.clientY, pid: e.pointerId }
-    el.classList.add('arrastando')
+  const [drag, setDrag] = useState(null) // { id, w, h, dx, dy, x, y }
+  const dragInfo = useRef(null)          // dados mutáveis durante o gesto
+
+  const ordemAtual = () => eleitas.map((t) => t.id)
+
+  const onPegaDown = (e, id) => {
+    e.preventDefault(); e.stopPropagation()
+    const card = e.currentTarget.closest('.pick'); if (!card) return
+    const r = card.getBoundingClientRect()
+    dragInfo.current = {
+      id, pid: e.pointerId,
+      w: r.width, h: r.height,
+      dx: e.clientX - r.left, dy: e.clientY - r.top, // ponto de agarre dentro do cartão
+      ordem: ordemAtual(),
+    }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+    setDrag({ id, w: r.width, h: r.height, x: r.left, y: r.top })
+    window.addEventListener('pointermove', onPegaMove)
+    window.addEventListener('pointerup', onPegaUp)
+    window.addEventListener('pointercancel', onPegaUp)
   }
-  const dragMove = (e) => {
-    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return
-    d.el.style.transform = 'translateY(' + (e.clientY - d.startY) + 'px)'
+
+  const onPegaMove = (e) => {
+    const d = dragInfo.current; if (!d) return
+    const x = e.clientX - d.dx, y = e.clientY - d.dy
+    setDrag((prev) => (prev ? { ...prev, x, y } : prev))
+    // sobre que cartão está o CENTRO do cursor?
     const lista = picksRef.current; if (!lista) return
-    const irmaos = [...lista.querySelectorAll('.pick:not(.arrastando)')]
-    const r = d.el.getBoundingClientRect(), c = r.top + r.height / 2
-    let alvo = null
-    for (const s of irmaos) { const sr = s.getBoundingClientRect(); if (c < sr.top + sr.height / 2) { alvo = s; break } }
-    if (alvo !== d.el.nextElementSibling) {
-      const antes = new Map(irmaos.map((s) => [s, s.getBoundingClientRect().top]))
-      const topAntes = d.el.offsetTop
-      alvo ? lista.insertBefore(d.el, alvo) : lista.appendChild(d.el)
-      d.startY += d.el.offsetTop - topAntes
-      d.el.style.transform = 'translateY(' + (e.clientY - d.startY) + 'px)'
-      irmaos.forEach((s) => {
-        const delta = antes.get(s) - s.getBoundingClientRect().top
-        if (delta) {
-          s.style.transition = 'none'; s.style.transform = 'translateY(' + delta + 'px)'
-          requestAnimationFrame(() => { s.style.transition = 'transform .18s ease'; s.style.transform = '' })
-        }
-      })
+    const cx = e.clientX, cy = e.clientY
+    const cards = [...lista.querySelectorAll('.pick')]
+    let alvoId = null
+    for (const c of cards) {
+      if (c.dataset.id === d.id) continue
+      const r = c.getBoundingClientRect()
+      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) { alvoId = c.dataset.id; break }
     }
+    if (!alvoId) return
+    const ordem = d.ordem.slice()
+    const from = ordem.indexOf(d.id), to = ordem.indexOf(alvoId)
+    if (from === -1 || to === -1 || from === to) return
+    ordem.splice(from, 1); ordem.splice(to, 0, d.id)
+    d.ordem = ordem
+    // aplica a nova ordem já (visual imediato, sem esperar o soltar)
+    ordem.forEach((tid, i) => { const t = eleitas.find((x) => x.id === tid); if (t && t.ordem !== i) atualizar(tid, { ordem: i }) })
   }
-  const dragUp = (e) => {
-    const d = dragRef.current; if (!d || e.pointerId !== d.pid) return
-    dragRef.current = null
-    d.el.classList.remove('arrastando')
-    const lista = picksRef.current
-    if (lista) {
-      lista.querySelectorAll('.pick').forEach((s) => { s.style.transform = ''; s.style.transition = '' })
-      const novaOrdem = [...lista.querySelectorAll('.pick')].map((s) => s.dataset.id)
-      novaOrdem.forEach((id, i) => {
-        const t = eleitas.find((x) => x.id === id)
-        if (t && t.ordem !== i) atualizar(id, { ordem: i })
-      })
-    }
+
+  const onPegaUp = () => {
+    const d = dragInfo.current
+    window.removeEventListener('pointermove', onPegaMove)
+    window.removeEventListener('pointerup', onPegaUp)
+    window.removeEventListener('pointercancel', onPegaUp)
+    if (d) d.ordem.forEach((tid, i) => { const t = eleitas.find((x) => x.id === tid); if (t && t.ordem !== i) atualizar(tid, { ordem: i }) })
+    dragInfo.current = null
+    setDrag(null)
   }
 
   const n = eleitas.length
@@ -244,11 +258,11 @@ export default function Briefing({ onNavigate }) {
               <div className="picks" ref={picksRef}>
                 {eleitas.map((p) => {
                   const m = TIPO_META[p.tipo] || TIPO_META.outros
+                  const aArrastar = drag && drag.id === p.id
                   return (
-                    <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}`}>
-                      <span className="pk-pega" title="Arrasta para pôr o dia na tua ordem"
-                        onPointerDown={dragDown} onPointerMove={dragMove}
-                        onPointerUp={dragUp} onPointerCancel={dragUp}>⠿</span>
+                    <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}${aArrastar ? ' fantasma-orig' : ''}`}>
+                      <span className="pk-pega"
+                        onPointerDown={(e) => onPegaDown(e, p.id)}>⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">
                         <div className="a">{p.texto}</div>
@@ -269,6 +283,24 @@ export default function Briefing({ onNavigate }) {
                     </div>
                   )
                 })}
+                {drag && (() => {
+                  const p = eleitas.find((x) => x.id === drag.id); if (!p) return null
+                  const m = TIPO_META[p.tipo] || TIPO_META.outros
+                  return createPortal(
+                    <div className={`pick tp-${m.cls} pick-fantasma`}
+                      style={{ position: 'fixed', left: drag.x, top: drag.y, width: drag.w, height: drag.h, zIndex: 9999, pointerEvents: 'none' }}>
+                      <span className="pk-pega">⠿</span>
+                      <div className="pk-ic">{m.ic}</div>
+                      <div className="body">
+                        <div className="a">{p.texto}</div>
+                        <div className="b">
+                          <span className={`badge-pri ${p.prioridade || 'normal'}`}>{(p.prioridade || 'normal')}</span>
+                          <span className="badge-tipo">{m.nome}</span>
+                          <span className="badge-min">~{p.min} min</span>
+                        </div>
+                      </div>
+                    </div>, document.body)
+                })()}
               </div>
             )}
           </div>
