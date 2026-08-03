@@ -59,9 +59,10 @@ export default function Briefing({ onNavigate }) {
       w: r.width, h: r.height,
       dx: e.clientX - r.left, dy: e.clientY - r.top, // ponto de agarre dentro do cartão
       ordem: ordemAtual(),
+      arrancou: false, x0: e.clientX, y0: e.clientY,
     }
-    try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
-    setDrag({ id, w: r.width, h: r.height, x: r.left, y: r.top })
+    // captura no cartão (maior alvo que o span); se falhar, os listeners globais garantem o gesto
+    try { card.setPointerCapture(e.pointerId) } catch {}
     window.addEventListener('pointermove', onPegaMove)
     window.addEventListener('pointerup', onPegaUp)
     window.addEventListener('pointercancel', onPegaUp)
@@ -69,8 +70,15 @@ export default function Briefing({ onNavigate }) {
 
   const onPegaMove = (e) => {
     const d = dragInfo.current; if (!d) return
+    // só começa a arrastar depois de um pequeno movimento — evita "saltos" ao clicar
+    if (!d.arrancou) {
+      if (Math.abs(e.clientX - d.x0) < 4 && Math.abs(e.clientY - d.y0) < 4) return
+      d.arrancou = true
+      const r0 = picksRef.current.querySelector(`.pick[data-id="${d.id}"]`)?.getBoundingClientRect()
+      setDrag({ id: d.id, w: d.w, h: d.h, x: r0 ? r0.left : e.clientX - d.dx, y: r0 ? r0.top : e.clientY - d.dy })
+    }
     const x = e.clientX - d.dx, y = e.clientY - d.dy
-    setDrag((prev) => (prev ? { ...prev, x, y } : prev))
+    setDrag((prev) => (prev ? { ...prev, x, y } : { id: d.id, w: d.w, h: d.h, x, y }))
     // sobre que cartão está o CENTRO do cursor?
     const lista = picksRef.current; if (!lista) return
     const cx = e.clientX, cy = e.clientY
@@ -87,7 +95,6 @@ export default function Briefing({ onNavigate }) {
     if (from === -1 || to === -1 || from === to) return
     ordem.splice(from, 1); ordem.splice(to, 0, d.id)
     d.ordem = ordem
-    // aplica a nova ordem já (visual imediato, sem esperar o soltar)
     ordem.forEach((tid, i) => { const t = eleitas.find((x) => x.id === tid); if (t && t.ordem !== i) atualizar(tid, { ordem: i }) })
   }
 
@@ -96,7 +103,7 @@ export default function Briefing({ onNavigate }) {
     window.removeEventListener('pointermove', onPegaMove)
     window.removeEventListener('pointerup', onPegaUp)
     window.removeEventListener('pointercancel', onPegaUp)
-    if (d) d.ordem.forEach((tid, i) => { const t = eleitas.find((x) => x.id === tid); if (t && t.ordem !== i) atualizar(tid, { ordem: i }) })
+    if (d && d.arrancou) d.ordem.forEach((tid, i) => { const t = eleitas.find((x) => x.id === tid); if (t && t.ordem !== i) atualizar(tid, { ordem: i }) })
     dragInfo.current = null
     setDrag(null)
   }
@@ -261,7 +268,7 @@ export default function Briefing({ onNavigate }) {
                   const aArrastar = drag && drag.id === p.id
                   return (
                     <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}${aArrastar ? ' fantasma-orig' : ''}`}>
-                      <span className="pk-pega"
+                      <span className="pk-pega" title="Arrasta-me (v33.3)"
                         onPointerDown={(e) => onPegaDown(e, p.id)}>⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">

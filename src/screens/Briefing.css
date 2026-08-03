@@ -303,9 +303,13 @@
 
 /* ══ v33.1 · arrasto das eleitas (pega ⠿) — grid-safe ══ */
 /* ══ v33.2 · arrasto das eleitas — cópia sólida que segue o cursor ══ */
-.briefing .pk-pega{cursor:grab;color:var(--faint);font-family:var(--font-mono);font-weight:700;font-size:14px;
-  user-select:none;touch-action:none;padding:6px 2px;line-height:1;flex:none}
-.briefing .pk-pega:active{cursor:grabbing}
+.briefing .pk-pega{position:relative;z-index:4;cursor:grab;color:var(--mustard-ink);
+  font-family:var(--font-mono);font-weight:700;font-size:17px;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+  padding:10px 7px;margin:-10px -3px -10px -5px;line-height:1;flex:none;align-self:stretch;
+  display:flex;align-items:center;border-radius:8px;transition:background .15s}
+.briefing .pk-pega:hover{background:var(--mustard-soft)}
+.briefing .pk-pega:active{cursor:grabbing;background:var(--mustard-soft)}
 /* o cartão de origem fica no lugar, INTACTO — apenas um leve rebaixo indica que foi levantado */
 .briefing .pick.fantasma-orig{opacity:.4;filter:saturate(.6)}
 /* o fantasma é uma cópia idêntica e SÓLIDA presa ao cursor.
