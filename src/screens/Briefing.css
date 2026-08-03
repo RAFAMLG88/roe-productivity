@@ -313,11 +313,14 @@
 /* o cartão de origem fica no lugar, INTACTO — apenas um leve rebaixo indica que foi levantado */
 .briefing .pick.fantasma-orig{opacity:.4;filter:saturate(.6)}
 /* o fantasma é uma cópia idêntica e SÓLIDA presa ao cursor.
-   transição morta desde o 1º frame e conteúdo sem colapso (nada de overflow a esconder o corpo) */
-.briefing .pick.pick-fantasma{transition:none!important;animation:none!important;margin:0!important;
+   agora vive DENTRO do .briefing (sem portal) → herda todos os estilos do .pick.
+   position:fixed tira-o do fluxo do grid; transição morta desde o 1º frame */
+.briefing .pick.pick-fantasma{position:fixed!important;transition:none!important;animation:none!important;margin:0!important;
   box-shadow:0 22px 48px rgba(60,50,30,.32);border-color:rgba(255,206,10,.75);
   transform:rotate(-1.5deg) scale(1.02);cursor:grabbing;background:var(--card);opacity:1}
 .briefing .pick.pick-fantasma *{transition:none!important;animation:none!important}
+/* o cartão de origem fica no lugar, intacto, apenas esbatido */
+.briefing .pick.fantasma-orig{opacity:.4;filter:saturate(.6)}
 
 @media (prefers-reduced-motion:reduce){
   .briefing .arco-feito>i::after,.briefing .arco-agora,.briefing .arco-marco{animation:none}

@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useRef } from 'react'
-import { createPortal } from 'react-dom'
 import './Briefing.css'
 import { dataLonga, saudacao, semanaUtil } from '../utils/datas.js'
 import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
@@ -268,7 +267,7 @@ export default function Briefing({ onNavigate }) {
                   const aArrastar = drag && drag.id === p.id
                   return (
                     <div key={p.id} data-id={p.id} className={`pick tp-${m.cls}${aArrastar ? ' fantasma-orig' : ''}`}>
-                      <span className="pk-pega" title="Arrasta-me (v33.3)"
+                      <span className="pk-pega" title="Arrasta para reordenar"
                         onPointerDown={(e) => onPegaDown(e, p.id)}>⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">
@@ -296,9 +295,9 @@ export default function Briefing({ onNavigate }) {
                   const p = eleitas.find((x) => x.id === drag.id); if (!p) return null
                   const m = metaCartao(p)
                   const de = p.delegadaPor || p.criadaPor
-                  return createPortal(
+                  return (
                     <div className={`pick tp-${m.cls} pick-fantasma`}
-                      style={{ position: 'fixed', left: drag.x, top: drag.y, width: drag.w, boxSizing: 'border-box', zIndex: 9999, pointerEvents: 'none' }}>
+                      style={{ position: 'fixed', left: drag.x, top: drag.y, width: drag.w, boxSizing: 'border-box', zIndex: 9999, pointerEvents: 'none', margin: 0 }}>
                       <span className="pk-pega">⠿</span>
                       <div className="pk-ic">{m.ic}</div>
                       <div className="body">
@@ -318,7 +317,8 @@ export default function Briefing({ onNavigate }) {
                         </div>
                       </div>
                       <button className="pk-back" tabIndex={-1}>↓ fila</button>
-                    </div>, document.body)
+                    </div>
+                  )
                 })()}
               </div>
             )}

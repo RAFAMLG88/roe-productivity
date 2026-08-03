@@ -1824,6 +1824,7 @@
   filter: saturate(.6);
 }
 .briefing .pick.pick-fantasma {
+  position: fixed !important;
   transition: none !important;
   animation: none !important;
   margin: 0 !important;
@@ -1837,6 +1838,10 @@
 .briefing .pick.pick-fantasma * {
   transition: none !important;
   animation: none !important;
+}
+.briefing .pick.fantasma-orig {
+  opacity: .4;
+  filter: saturate(.6);
 }
 @media (prefers-reduced-motion:reduce) {
   .briefing .arco-feito > i::after,
