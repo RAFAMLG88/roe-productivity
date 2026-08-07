@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="72" viewBox="0 0 260 72">
+  <circle cx="36" cy="36" r="26" fill="none" stroke="#FFCE0A" stroke-width="6"/>
+  <circle cx="36" cy="36" r="14" fill="none" stroke="#00C865" stroke-width="5"/>
+  <circle cx="36" cy="36" r="5" fill="#FF1F3D"/>
+  <text x="80" y="40" font-family="Fredoka, sans-serif" font-size="34" font-weight="700" fill="#141207">ROE</text>
+  <text x="82" y="58" font-family="monospace" font-size="10" letter-spacing="4.5" fill="#7C7466">PRODUCTIVITY</text>
+</svg>
