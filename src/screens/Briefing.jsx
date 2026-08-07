@@ -14,15 +14,27 @@ const metaCartao = (tarefa) => {
   return { cls: primeira ? primeira.cls : 'neutro', ic: primeira ? primeira.ic : '📌', tags: ks }
 }
 
-const CAP_MAX = 420  // dia pleno de trabalho: 7h
-const H_FIM = 20                   // fim do dia de trabalho (coerente com "O teu dia")
-// capacidade REAL de hoje: se já vai a meio do dia, só resta o tempo até às 20h (nunca mais que 7h)
+const CAP_MAX = 480  // dia pleno de trabalho: 8h (9:00–12:30 + 14:00–18:30)
+// blocos de trabalho do dia, em minutos desde a meia-noite
+const BLOCOS = [
+  [9 * 60, 12 * 60 + 30],   // manhã: 09:00–12:30 (210 min)
+  [14 * 60, 18 * 60 + 30],  // tarde: 14:00–18:30 (270 min)
+]
+// capacidade REAL restante agora: soma dos minutos de trabalho ainda por vir hoje.
+// Ex.: às 10:00 → resto da manhã + tarde inteira. Às 13:00 (almoço) → só a tarde.
+// Fora do horário (antes das 9h) → dia completo (8h). Depois das 18:30 → nada resta hoje.
 function capacidadeAgora() {
   const ag = new Date()
-  const minAoFim = (H_FIM - ag.getHours()) * 60 - ag.getMinutes()
-  return Math.max(30, Math.min(CAP_MAX, minAoFim)) // nunca abaixo de 30min (fim do dia)
+  const agora = ag.getHours() * 60 + ag.getMinutes()
+  let resta = 0
+  for (const [ini, fim] of BLOCOS) {
+    if (agora <= ini) resta += (fim - ini)           // bloco ainda não começou → conta inteiro
+    else if (agora < fim) resta += (fim - agora)     // estamos a meio → conta o que falta
+    // se agora >= fim, o bloco já passou → não conta
+  }
+  return resta
 }
-const fmtH = (m) => { const h = Math.floor(m / 60), r = m % 60; return r ? `${h}h${String(r).padStart(2, '0')}` : `${h}h` }
+const fmtH = (m) => { const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}h${String(r).padStart(2, '0')}` : `${h}h`) : `${r}min` }
 
 import { fmtMin as fmt } from '../utils/formato.js'
 
@@ -124,16 +136,18 @@ export default function Briefing({ onNavigate }) {
   const CAP = capacidadeAgora()
   const capH = fmtH(CAP)
   const diaPleno = CAP >= CAP_MAX - 1
+  const foraDeHoras = CAP === 0
 
   const verdict = useMemo(() => {
+    if (foraDeHoras) return { fill: 'var(--forest)', color: 'var(--soft)', text: min === 0 ? 'Fora do horário — elege tarefas para deixar o dia de amanhã pronto.' : <><b>{fmt(min)} eleitos para amanhã.</b> O expediente de hoje terminou.</> }
     const folga = CAP - min
-    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: diaPleno ? 'Elege tarefas da fila para veres se cabem nas tuas 7h de trabalho.' : `Elege tarefas da fila para veres se cabem nas ${capH} que restam hoje.` }
+    if (min === 0) return { fill: 'var(--forest)', color: 'var(--soft)', text: diaPleno ? 'Elege tarefas da fila para veres se cabem nas tuas 8h de trabalho.' : `Elege tarefas da fila para veres se cabem nas ${capH} que restam hoje.` }
     if (folga >= 120) return { fill: 'var(--forest)', color: 'var(--forest-ink)', text: <><b>Vai dar.</b> Dia com espaço para respirar e absorver imprevistos.</> }
-    if (folga >= 0) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite {diaPleno ? 'das 7h' : `das ${capH} de hoje`}.</b> Dá, mas sem margem para imprevistos.</> }
-    return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Acima {diaPleno ? 'das 7h de trabalho' : `do que resta hoje (${capH})`}.</b> Corta ou devolve à fila — o importante merece espaço.</>, warn: true }
-  }, [min, CAP, capH, diaPleno])
+    if (folga >= 0) return { fill: 'var(--mustard)', color: 'var(--mustard-ink)', text: <><b>No limite {diaPleno ? 'das 8h' : `das ${capH} de hoje`}.</b> Dá, mas sem margem para imprevistos.</> }
+    return { fill: 'var(--red)', color: 'var(--red-ink)', text: <><b>Acima {diaPleno ? 'das 8h de trabalho' : `do que resta hoje (${capH})`}.</b> Corta ou devolve à fila — o importante merece espaço.</>, warn: true }
+  }, [min, CAP, capH, diaPleno, foraDeHoras])
 
-  // ── SUGESTÃO ROE: organizar o dia nas 7h por prioridade ──
+  // ── SUGESTÃO ROE: organizar o dia na capacidade disponível, por prioridade ──
   const sugestao = useMemo(() => {
     const pool = [...eleitas, ...fila]
     if (pool.length === 0) return null
@@ -142,11 +156,12 @@ export default function Briefing({ onNavigate }) {
       if (pa !== pb) return pa - pb
       return a.criadaEm - b.criadaEm
     })
+    const capPlan = foraDeHoras ? CAP_MAX : CAP // fora de horas → planeia para o dia pleno de amanhã
     const dentro = [], fora = []
     let acc = 0
-    ord.forEach((t) => { if (acc + t.min <= CAP) { dentro.push(t); acc += t.min } else fora.push(t) })
-    return { dentro, fora, total: acc }
-  }, [eleitas, fila])
+    ord.forEach((t) => { if (acc + t.min <= capPlan) { dentro.push(t); acc += t.min } else fora.push(t) })
+    return { dentro, fora, total: acc, paraAmanha: foraDeHoras }
+  }, [eleitas, fila, CAP, foraDeHoras])
 
   const aplicarSugestao = () => {
     if (!sugestao) return
@@ -256,10 +271,10 @@ export default function Briefing({ onNavigate }) {
             <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>⚖️</span>Peso do dia</div>
             <div className="lt">
               <span className="big" style={{ color: min === 0 ? 'var(--soft)' : verdict.color }}>{fmt(min)}</span>
-              <span className="u">{diaPleno ? 'de 7h eleitos' : `de ${capH} restantes hoje`}</span>
+              <span className="u">{foraDeHoras ? 'expediente terminado' : diaPleno ? 'de 8h eleitos' : `de ${capH} restantes hoje`}</span>
             </div>
             <div className="track">
-              <div className="inner"><div className="fill" style={{ width: Math.min(min / CAP * 87.5, 100) + '%', background: verdict.fill }} /></div>
+              <div className="inner"><div className="fill" style={{ width: (foraDeHoras ? (min > 0 ? 100 : 0) : Math.min(min / CAP * 87.5, 100)) + '%', background: verdict.fill }} /></div>
               <div className="cap" style={{ left: '87.5%' }} />
             </div>
             <div className="verdict" style={{ color: verdict.color }}>{verdict.text}</div>
@@ -409,10 +424,10 @@ export default function Briefing({ onNavigate }) {
           <div className="panel sugestao enter" style={{ animationDelay: '.1s' }}>
             <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>✨</span>Sugestão ROE</div>
             {!sugestao ? (
-              <div className="sug-empty">Captura tarefas e eu organizo-te o dia — urgentes primeiro, dentro {diaPleno ? 'das 7h' : `das ${capH} de hoje`}.</div>
+              <div className="sug-empty">Captura tarefas e eu organizo-te o dia — urgentes primeiro, dentro {diaPleno ? 'das 8h' : `das ${capH} de hoje`}.</div>
             ) : (
               <>
-                <div className="sug-head">{diaPleno ? 'Nas tuas 7h' : `Nas ${capH} que restam hoje`} cabem <b>{sugestao.dentro.length}</b> de {sugestao.dentro.length + sugestao.fora.length} tarefas ({fmt(sugestao.total)}):</div>
+                <div className="sug-head">{sugestao.paraAmanha ? 'Amanhã' : diaPleno ? 'Nas tuas 8h' : `Nas ${capH} que restam hoje`} cabem <b>{sugestao.dentro.length}</b> de {sugestao.dentro.length + sugestao.fora.length} tarefas ({fmt(sugestao.total)}):</div>
                 <div className="sug-list">
                   {sugestao.dentro.slice(0, 6).map((t, i) => (
                     <div key={t.id} className={`sug-item pri-${t.prioridade || 'normal'}`}>
