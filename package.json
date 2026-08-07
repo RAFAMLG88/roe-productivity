@@ -1,5 +1,5 @@
 {
-  "name": "roe-productivity",
+  "name": "fretwork",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,13 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@azure/msal-browser": "^5.17.1",
-    "@supabase/supabase-js": "^2.110.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^5.4.11"
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.0"
   }
 }

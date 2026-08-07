@@ -1,18 +1,13 @@
 {
-  "name": "ROE Productivity",
-  "short_name": "ROE",
-  "description": "O teu santuário de produtividade intencional.",
-  "start_url": "./",
-  "scope": "./",
+  "name": "ROE Guitar",
+  "short_name": "ROE Guitar",
+  "description": "Curso pessoal de guitarra · 48 semanas",
+  "start_url": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#141207",
-  "theme_color": "#141207",
-  "lang": "pt-PT",
-  "categories": ["productivity", "lifestyle"],
+  "background_color": "#120B24",
+  "theme_color": "#120B24",
   "icons": [
-    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
   ]
 }
