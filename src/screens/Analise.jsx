@@ -4,6 +4,7 @@ import { useRoe } from '../state/RoeContext.jsx'
 import { supabase } from '../lib/supabase.js'
 import { fmtMin, desvioMedio } from '../utils/formato.js'
 import { TAG_POR_KEY, tagsDe } from '../lib/tags.js'
+import Observatorio from './Observatorio.jsx'
 
 const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 const diaISO = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
@@ -11,6 +12,7 @@ const diaISO = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(
 export default function Analise({ onNavigate }) {
   const { feitas, eleitas, fila, perfil } = useRoe()
   const [hist, setHist] = useState({ carregando: true, agua: [] })
+  const [aba, setAba] = useState('resumo') // 'resumo' | 'observatorio'
 
   // histórico de água (as tarefas já vêm todas do contexto)
   useEffect(() => {
@@ -64,7 +66,14 @@ export default function Analise({ onNavigate }) {
     <div className="analise">
       <div className="topbar">
         <div><div className="l2">A tua análise</div></div>
+        <div className="ana-abas">
+          <button className={'ana-aba ' + (aba === 'resumo' ? 'on' : '')} onClick={() => setAba('resumo')}>Resumo</button>
+          <button className={'ana-aba ' + (aba === 'observatorio' ? 'on' : '')} onClick={() => setAba('observatorio')}>Observatório</button>
+        </div>
       </div>
+      {aba === 'observatorio' ? (
+        <div className="canvas cheia"><Observatorio feitas={feitas} /></div>
+      ) : (
       <div className="canvas cheia">
         <div className="sgrid">
           <div className="sg b enter"><div className="v">{feitas.length}</div><div className="l">tarefas concluídas</div></div>
@@ -196,6 +205,7 @@ export default function Analise({ onNavigate }) {
           )
         })()}
       </div>
+      )}
     </div>
   )
 }

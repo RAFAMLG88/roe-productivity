@@ -53,11 +53,21 @@ const novos = {
   ArcoDia: (await import('./src/components/ArcoDia.jsx')).default,
   CapturaRapida: (await import('./src/components/CapturaRapida.jsx')).default,
   DesfazerToast: (await import('./src/components/DesfazerToast.jsx')).default,
+  Observatorio: (await import('./src/screens/Observatorio.jsx')).default,
 }
 for (const [nome, C] of Object.entries(novos)) {
   try {
-    renderToString(<RoeProvider perfil={perfil} sair={() => {}}><C /></RoeProvider>)
-    console.log(`✓ ${nome} (v33)`)
+    // Observatório precisa da prop feitas — geramos histórico sintético mínimo
+    if (nome === 'Observatorio') {
+      const feitas = Array.from({ length: 12 }, (_, i) => ({
+        id: i, texto: 'T' + i, tags: ['orc_cliente'], min: 30, realMin: 40, prioridade: 'normal',
+        feitaEm: Date.now() - i * 3600e3, criadaEm: Date.now() - i * 3600e3 - 864e5,
+      }))
+      renderToString(<RoeProvider perfil={perfil} sair={() => {}}><C feitas={feitas} /></RoeProvider>)
+    } else {
+      renderToString(<RoeProvider perfil={perfil} sair={() => {}}><C /></RoeProvider>)
+    }
+    console.log(`✓ ${nome} (v35)`)
   } catch (e) { console.log(`✗ ${nome} FALHOU:`, e.message); falhas++ }
 }
 
