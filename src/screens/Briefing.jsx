@@ -356,10 +356,7 @@ export default function Briefing({ onNavigate }) {
           </div>
 
           <div className="panel waiting enter" style={{ animationDelay: '.15s' }}>
-            <div className="pt">
-              <span className="pico" style={{ background: 'var(--sky-soft)' }}>🕰</span>Na fila
-              {fila.length > 0 && <span className="fila-count">{fila.length} em espera</span>}
-            </div>
+            <div className="sepB"><span className="lab"><span className="dot" />na fila{fila.length > 0 && <span style={{ color: 'var(--soft)', fontWeight: 600 }}> · {fila.length}</span>}</span></div>
             {fila.length === 0 ? (
               <div className="empty small">
                 <div className="empty-s">Nada em espera. O que capturares aparece aqui, pronto a eleger.</div>
@@ -438,7 +435,7 @@ export default function Briefing({ onNavigate }) {
                   ))}
                   {sugestao.dentro.length > 6 && <div className="sug-mais">+ {sugestao.dentro.length - 6} mais</div>}
                 </div>
-                {sugestao.fora.length > 0 && <div className="sug-fora">{sugestao.fora.length} fica{sugestao.fora.length > 1 ? 'm' : ''} na fila para outro dia — o dia não estica.</div>}
+                {sugestao.fora.length > 0 && <div className="sug-fora">{sugestao.fora.length} fica{sugestao.fora.length > 1 ? 'm' : ''} na fila para outro dia.</div>}
                 <button className="sug-aplicar" onClick={aplicarSugestao}>Aplicar sugestão ✨</button>
               </>
             )}
@@ -450,7 +447,7 @@ export default function Briefing({ onNavigate }) {
               const ativas = delegadas.filter((t) => t.estado !== 'feita')
                 .sort((a, b) => (b.delegadaEm || 0) - (a.delegadaEm || 0))
               if (ativas.length === 0) return (
-                <div className="dg-note">nada delegado em aberto — usa o 🤝 em qualquer tarefa da fila para entregar a um colega</div>
+                <div className="dg-note">nada delegado em aberto</div>
               )
               return (
                 <div className="dl-list">

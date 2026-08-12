@@ -156,7 +156,7 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
       {!conta || !temMarco ? (
         <div className="ol-convite">
           <div className="ol-env">✉</div>
-          <div className="ol-vazio">Liga a tua caixa Outlook e os emails que chegarem <b>a partir desse momento</b> aparecem aqui para triagem — o passado fica onde está, intocado.</div>
+          <div className="ol-vazio">Liga a tua caixa e os emails que chegarem <b>a partir desse momento</b> aparecem aqui para triagem.</div>
           <button className="ol-ligar" onClick={ligar} disabled={busy}>{busy ? 'a abrir a Microsoft…' : conta ? 'Ativar a triagem' : 'Ligar Outlook'}</button>
           {erro && <div className="ol-erro">{erro}</div>}
         </div>
@@ -348,14 +348,6 @@ export default function Capturar() {
                 </button>
               ))}
             </div>
-            <div className="cap-sec-lab">prioridade</div>
-            <div className="pri-row">
-              {PRIS.map((p) => (
-                <button key={p} className={`pri-chip ${p} ${pri === p ? 'on' : ''}`} onClick={() => setPri(p)}>
-                  <span className="pi">{PRI_ICON[p]}</span>{PRI_LABEL[p]}
-                </button>
-              ))}
-            </div>
             {colegas.length > 0 && (
               <>
               <div className="cap-sec-lab">para</div>
@@ -371,22 +363,36 @@ export default function Capturar() {
               </div>
               </>
             )}
-            <div className="cap-sec-lab">duração estimada</div>
-            <div className="dur-row">
-              <div className="dur-stepper">
-                <button className="dur-btn" onClick={() => setMin((m) => Math.max(5, Number(m) - 5))}>−</button>
-                <div className="dur-val">
-                  <span className="dv-n">{Number(min) >= 60 ? `${Math.floor(min / 60)}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : min}</span>
-                  <span className="dv-u">{Number(min) >= 60 ? '' : 'min'}</span>
+            <div className="pri-dur-duo">
+              <div className="pdd-col">
+                <div className="cap-sec-lab">prioridade</div>
+                <div className="pri-row">
+                  {PRIS.map((p) => (
+                    <button key={p} className={`pri-chip ${p} ${pri === p ? 'on' : ''}`} onClick={() => setPri(p)}>
+                      <span className="pi">{PRI_ICON[p]}</span>{PRI_LABEL[p]}
+                    </button>
+                  ))}
                 </div>
-                <button className="dur-btn mais" onClick={() => setMin((m) => Math.min(480, Number(m) + 5))}>＋</button>
               </div>
-              <div className="dur-chips">
-                {[15, 30, 45, 60, 90, 120].map((v) => (
-                  <button key={v} className={`dur-chip ${Number(min) === v ? 'on' : ''}`} onClick={() => setMin(v)}>
-                    {v === 60 ? '1h' : v === 90 ? '1h30' : v === 120 ? '2h' : v}
-                  </button>
-                ))}
+              <div className="pdd-col">
+                <div className="cap-sec-lab">duração estimada</div>
+                <div className="dur-row">
+                  <div className="dur-stepper">
+                    <button className="dur-btn" onClick={() => setMin((m) => Math.max(5, Number(m) - 5))}>−</button>
+                    <div className="dur-val">
+                      <span className="dv-n">{Number(min) >= 60 ? `${Math.floor(min / 60)}h${min % 60 ? String(min % 60).padStart(2, '0') : ''}` : min}</span>
+                      <span className="dv-u">{Number(min) >= 60 ? '' : 'min'}</span>
+                    </div>
+                    <button className="dur-btn mais" onClick={() => setMin((m) => Math.min(480, Number(m) + 5))}>＋</button>
+                  </div>
+                  <div className="dur-chips">
+                    {[15, 30, 45, 60, 90, 120].map((v) => (
+                      <button key={v} className={`dur-chip ${Number(min) === v ? 'on' : ''}`} onClick={() => setMin(v)}>
+                        {v === 60 ? '1h' : v === 90 ? '1h30' : v === 120 ? '2h' : v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -404,7 +410,7 @@ export default function Capturar() {
               <div className="empty-cap">
                 <div className="empty-ic">📥</div>
                 <div className="empty-t">Ainda não capturaste nada.</div>
-                <div className="empty-s">Tria um email do Outlook ou escreve à esquerda.<br />O que apanhares aparece aqui e segue para o Escritório.</div>
+                <div className="empty-s">Tria um email do Outlook ou escreve à esquerda.</div>
               </div>
             ) : lista.map((c) => {
               const isFile = c.tipo === 'ficheiro'

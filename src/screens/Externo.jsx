@@ -59,15 +59,15 @@ export default function Externo() {
         <span className="ext-ic">🧭</span>
         <div>
           <h1>Trabalho externo</h1>
-          <div className="ext-sub">o que se passa fora do escritório — reuniões, obras, clientes</div>
         </div>
         <div className="hoje-pill">hoje é <b>{hoje.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</b></div>
       </div>
 
       <div className="ext-canvas">
         <div className="ext-col esq">
-          <div className="panel p-sky">
-            <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>📡</span>Agora fora do escritório</div>
+          <div className="panel p-sky fora-panel">
+            <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>📡</span>Agora fora{(aDecorrer.length + proximo.length) > 0 && <span className="pt-cnt">{aDecorrer.length + proximo.length} em campo</span>}</div>
+            <div className="fora-scroll">
             {aDecorrer.length === 0 && proximo.length === 0 && (
               <div className="ext-vazio">toda a equipa está no escritório neste momento 🏢</div>
             )}
@@ -90,9 +90,10 @@ export default function Externo() {
                 </div>
               </div>
             ))}
+            </div>
           </div>
 
-          <div className="panel p-mustard">
+          <div className="panel p-mustard marcar-panel">
             <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>✈️</span>Marcar trabalho externo</div>
             <div className="f-lab">O que vais fazer</div>
             <input type="text" value={fTexto} onChange={(e) => setFTexto(e.target.value)}
@@ -108,19 +109,22 @@ export default function Externo() {
             <button className="marcar" onClick={marcar}>Marcar <span className="aviao">✈</span></button>
           </div>
 
-          <div className="panel p-forest">
-            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>🗓</span>Os teus próximos blocos</div>
+          <div className="panel p-forest blocos-panel">
+            <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>🗓</span>Os teus próximos blocos{meus.length > 0 && <span className="pt-cnt">{meus.length}</span>}</div>
             {meus.length === 0 ? (
               <div className="ext-vazio">nada marcado — o teu próximo trabalho externo aparece aqui</div>
-            ) : meus.map((b) => (
-              <div key={b.id} className="bl">
-                <span className="bl-h">{b.inicio}–{b.fim}</span>
-                <span className="bl-t">{b.texto}</span>
-                <span className="bl-d">{new Date(b.dia + 'T12:00').toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })}</span>
-                <button className="bl-x" title="apagar" onClick={() => apagarExterno(b.id)}>✕</button>
+            ) : (
+              <div className="bl-scroll">
+              {meus.map((b) => (
+                <div key={b.id} className="bl">
+                  <span className="bl-h">{b.inicio}–{b.fim}</span>
+                  <span className="bl-t">{b.texto}</span>
+                  <span className="bl-d">{new Date(b.dia + 'T12:00').toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })}</span>
+                  <button className="bl-x" title="apagar" onClick={() => apagarExterno(b.id)}>✕</button>
+                </div>
+              ))}
               </div>
-            ))}
-            
+            )}
           </div>
         </div>
 
@@ -144,6 +148,7 @@ export default function Externo() {
                   d.getMonth() !== mesVista.getMonth() ? 'fora-mes' : '',
                   chaveSemana(d) === semanaHoje ? 'semana-atual' : '',
                   dISO === hojeISO ? 'hoje' : '',
+                  evs.length >= 4 ? 'cheio' : '',
                   dISO === diaSel ? 'sel' : ''].filter(Boolean).join(' ')
                 return (
                   <div key={dISO} className={cls} style={{ animationDelay: (i * 9) + 'ms' }} onClick={() => setDiaSel(dISO)}>
@@ -161,8 +166,8 @@ export default function Externo() {
               })}
             </div>
             <div className="dia-det">
-              <div className="dd-t">agenda de {dSel.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-              <div className="dd-list">
+              <div className="dd-t">agenda de {dSel.toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long' })}{evsSel.length > 0 && <span className={'dd-cnt' + (evsSel.length >= 5 ? ' cheio' : '')}>{evsSel.length} em campo</span>}</div>
+              <div className={'dd-list' + (evsSel.length >= 5 ? ' cheia' : '')}>
                 {evsSel.length === 0
                   ? <div className="ext-vazio">ninguém tem trabalho externo neste dia</div>
                   : evsSel.map((e, ix) => (

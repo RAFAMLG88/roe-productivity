@@ -383,3 +383,13 @@
 .capturar .ci.tag-ic-gold{background:var(--mustard-soft)}
 .capturar .ci.tag-ic-sky{background:var(--sky-soft)}
 .capturar .ci.tag-ic-forest{background:var(--forest-soft)}
+
+/* ═══ v36 · prioridade + duração lado a lado, lista emails com scroll ═══ */
+.capturar .pri-dur-duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.capturar .pri-dur-duo .pdd-col{min-width:0}
+.capturar .pri-dur-duo .pri-row{flex-direction:column;gap:6px}
+.capturar .pri-dur-duo .pri-chip{width:100%;justify-content:flex-start}
+.capturar .pri-dur-duo .dur-chips{grid-template-columns:repeat(3,1fr)}
+@media (max-width:1100px){.capturar .pri-dur-duo{grid-template-columns:1fr;gap:0}.capturar .pri-dur-duo .pri-row{flex-direction:row}.capturar .pri-dur-duo .dur-chips{grid-template-columns:repeat(6,1fr)}}
+/* lista de emails Outlook com scroll (preserva a listagem completa) */
+.capturar .ol-scroll{max-height:240px;overflow-y:auto;scrollbar-width:thin;margin-right:-5px;padding-right:5px}

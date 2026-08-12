@@ -101,3 +101,33 @@
 
 @media (max-width:1340px){.externo{padding:14px 14px}.externo .ext-col.esq{width:310px}}
 @media (prefers-reduced-motion:reduce){.externo .ext-ic,.externo .fora-card.viva,.externo .fc-dot,.externo .sem-tag::after,.externo .dia,.externo .dd-item{animation:none}}
+
+/* ═══ v36 · ajustes de layout (maqueta aprovada) ═══ */
+/* contagem no título de painel */
+.externo .pt-cnt{margin-left:auto;font-family:var(--font-mono);font-size:9px;font-weight:700;color:var(--soft);background:var(--cream-2);border-radius:99px;padding:3px 9px}
+/* agora fora — scroll interno para vários em campo */
+.externo .fora-scroll{max-height:200px;overflow-y:auto;scrollbar-width:thin;margin-right:-6px;padding-right:6px}
+/* marcar — compacto (reequilíbrio: encolhe para dar altura aos blocos) */
+.externo .marcar-panel{padding:14px 16px}
+.externo .marcar-panel .f-lab{margin:8px 0 4px}
+.externo .marcar-panel .f-lab:first-of-type{margin-top:0}
+.externo .marcar-panel input{padding:8px 11px;border-radius:9px}
+.externo .marcar-panel .marcar{margin-top:10px;padding:10px 0;border-radius:10px;font-size:13px}
+/* próximos blocos — estica para o resto da coluna, scroll próprio */
+.externo .blocos-panel{flex:1 1 auto;display:flex;flex-direction:column;min-height:120px}
+.externo .blocos-panel .bl-scroll{flex:1;overflow-y:auto;scrollbar-width:thin;margin-right:-6px;padding-right:6px;min-height:0}
+/* a coluna esquerda deixa de rolar toda — cada painel gere o seu scroll */
+.externo .ext-col.esq{overflow:visible;display:flex;flex-direction:column}
+.externo .ext-col.esq>*{flex:none}
+.externo .ext-col.esq .blocos-panel{flex:1 1 auto}
+/* contagem do dia + estado cheio */
+.externo .dd-cnt{margin-left:8px;font-family:var(--font-mono);font-size:8.5px;font-weight:700;color:var(--soft);background:var(--cream-2);border-radius:99px;padding:3px 8px;vertical-align:1px}
+.externo .dd-cnt.cheio{background:var(--red);color:#fff}
+/* dia à cunha: célula com moldura vermelha quando há muitos eventos */
+.externo .dia.cheio{border-color:var(--red)!important;box-shadow:0 0 0 2px rgba(255,31,61,.16)!important}
+.externo .dia.cheio .d-num{color:var(--red-ink)}
+.externo .ev-mais{color:#8A6D00;font-weight:700}
+/* detalhe do dia cheio: grelha adapta a 3 colunas com scroll */
+.externo .dd-list.cheia{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;max-height:150px;overflow-y:auto;scrollbar-width:thin;margin-right:-6px;padding-right:6px}
+.externo .dd-list.cheia .dd-item{max-width:none}
+.externo .dd-list.cheia .dd-tx{max-width:none;min-width:0}

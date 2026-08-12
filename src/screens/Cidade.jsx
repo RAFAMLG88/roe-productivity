@@ -174,7 +174,6 @@ export default function Cidade({ onNavigate }) {
               <>
                 <div className="cl">{recente ? 'Edifício novo · erguido agora mesmo' : 'Último edifício'}</div>
                 <div className="ct">{ultima.texto}</div>
-                <div className="cd">visita a cidade em 3D para a explorares rua a rua</div>
               </>
             )}
           </div>
@@ -183,7 +182,6 @@ export default function Cidade({ onNavigate }) {
         <div className="col-r">
           <div className="panel enter" style={{ animationDelay: '.15s' }}>
             <div className="pt">A tua cidade</div>
-            <div className="ps">o que ergueste até hoje</div>
             <div className="stats3">
               <div className="st h"><div className="si">🏙️</div><div><div className="sv">{nHab}</div><div className="sl">habitantes</div></div></div>
               <div className="st b"><div className="si">🏢</div><div><div className="sv">{nEd}</div><div className="sl">edifícios erguidos</div></div></div>
@@ -192,7 +190,7 @@ export default function Cidade({ onNavigate }) {
           </div>
           <div className="panel era enter" style={{ animationDelay: '.3s' }}>
             <div className="et">{nEd === 0 ? '🌱 Primeiro marco: a primeira casa' : '🌇 A cidade cresce contigo'}</div>
-            <div className="ed">{nEd === 0 ? 'Conclui uma tarefa no Foco e vê nascer o primeiro edifício.' : 'Cada tarefa concluída ergue mais um edifício. Continua.'}</div>
+            {nEd === 0 && <div className="ed">Conclui uma tarefa no Foco e vê nascer o primeiro edifício.</div>}
           </div>
           <div className="panel enter" style={{ animationDelay: '.45s', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <div className="pt" style={{ marginBottom: 11 }}>Crónica recente</div>

@@ -346,3 +346,18 @@
 .briefing .badge-tipo.bt-gold{background:var(--mustard-soft);color:var(--mustard-ink)}
 .briefing .badge-tipo.bt-sky{background:var(--sky-soft);color:var(--sky-ink)}
 .briefing .badge-tipo.bt-forest{background:var(--forest-soft);color:var(--forest-ink)}
+
+/* ═══ v36 · coluna direita a altura total + eleitas/fila com scroll ═══ */
+/* eleitas (picks) com scroll quando há volume */
+.briefing .load{display:flex;flex-direction:column;min-height:0}
+.briefing .picks{overflow-y:auto;scrollbar-width:thin;max-height:340px;padding-right:5px;align-content:start}
+/* a fila (waiting) já estica; garantir scroll interno */
+.briefing .waiting .wait-list{flex:1;min-height:0}
+/* coluna direita: começar (fixo) + sugestão e delegadas dividem a altura, cada uma com scroll */
+.briefing .col:last-child{min-height:0}
+.briefing .col:last-child .ricta.topo{flex:none}
+.briefing .sugestao{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
+.briefing .sugestao .sug-list{flex:1;overflow-y:auto;scrollbar-width:thin;min-height:0;padding-right:4px}
+.briefing .sugestao .sug-aplicar{flex:none;margin-top:10px}
+.briefing .delega{flex:1 1 0;display:flex;flex-direction:column;min-height:120px}
+.briefing .delega .dl-list{flex:1;overflow-y:auto;scrollbar-width:thin;min-height:0;padding-right:4px}

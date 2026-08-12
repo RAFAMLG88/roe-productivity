@@ -1,11 +1,19 @@
 :root{
-  --cream:#F4EEE0; --cream-2:#ECE4D2; --card:#FFFFFF; --line:#E8DECB;
+  --cream:#F4EEE0; --cream-2:#ECE4D2; --cream-3:#E4DAC4; --card:#FFFFFF; --line:#E8DECB;
   --black:#141207; --ink:#211E14; --soft:#7C7466; --faint:#ADA590;
   --red:#FF1F3D; --forest:#00C865; --mustard:#FFCE0A; --sky:#1FB8E0;
   --red-soft:#FFF0F2; --forest-soft:#EBFCF3; --mustard-soft:#FFFBE6; --sky-soft:#EAF7FC;
   --red-ink:#D81030; --forest-ink:#00A352; --mustard-ink:#B89400; --sky-ink:#1496C4;
+  --gold-line:#B98F00;
   --font-display:'Fredoka',sans-serif; --font-body:'Quicksand',sans-serif; --font-mono:'JetBrains Mono',monospace;
 }
+/* ── FRONTEIRA B (separador de zona, partilhado Capturar/Escritório) ── */
+.sepB{display:flex;align-items:center;gap:12px;margin:18px 0 13px}
+.sepB::before,.sepB::after{content:'';flex:1;height:2px;border-radius:2px;opacity:.55}
+.sepB::before{background:linear-gradient(90deg,transparent,var(--gold-line))}
+.sepB::after{background:linear-gradient(90deg,var(--gold-line),transparent)}
+.sepB .lab{font:700 9.5px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-line);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.sepB .lab .dot{width:6px;height:6px;border-radius:50%;background:var(--gold-line)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%}
 body{background:var(--cream);font-family:var(--font-body);font-weight:500;-webkit-font-smoothing:antialiased;color:var(--ink)}

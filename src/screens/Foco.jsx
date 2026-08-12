@@ -256,7 +256,7 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
   const sel = aberto ? linhas.find((l) => l.id === aberto) : null
 
   if (colegas.length === 0) return (
-    <div className="eq-vazio">Ainda estás sozinho na ROE — partilha o link e o código de convite, e a tua equipa aparece aqui, ao vivo.</div>
+    <div className="eq-vazio">Ainda estás só na ROE. A tua equipa aparece aqui, ao vivo.</div>
   )
   return (
     <>
@@ -554,7 +554,7 @@ export default function Foco({ onNavigate }) {
               {porFocar.length === 0 ? (
                 <div className="foco-empty">
                   <div className="fe-t">Nada eleito para hoje.</div>
-                  <div className="fe-s">Vai ao Escritório eleger tarefas — aparecem aqui para focares.</div>
+                  <div className="fe-s">Elege tarefas no Escritório.</div>
                 </div>
               ) : (
                 <div className="foco-list">
@@ -626,7 +626,7 @@ export default function Foco({ onNavigate }) {
               {task && <div className="orbit" style={{ left: 'calc(50% - 6px)', top: 'calc(50% - 6px)', transform: `translate(${Math.cos(orbitAng) * R}px,${Math.sin(orbitAng) * R}px)`, background: col }} />}
               <div className="ring-center">
                 {task ? (<><div className="time" style={{ color: timeCol }}>{timeStr}</div><div className="est">de ~{task.min} min</div></>)
-                       : (<><div className="time idle">--:--</div><div className="est">escolhe uma tarefa à esquerda</div></>)}
+                       : (<><div className="time idle">--:--</div><div className="est">timer em pausa</div></>)}
               </div>
             </div>
           </div>
@@ -640,7 +640,6 @@ export default function Foco({ onNavigate }) {
           )}
           {task && (
             <div className="mais-tempo">
-              <span className="mt-l">a precisar de mais?</span>
               <button className="mt-btn" onClick={() => maisTempo(5)}>＋5 min</button>
               <button className="mt-btn" onClick={() => maisTempo(15)}>＋15 min</button>
             </div>
@@ -655,7 +654,7 @@ export default function Foco({ onNavigate }) {
 
         <div className="col right">
           <div className="panel player enter">
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎵</span>A tocar agora <span style={{ marginLeft: 'auto', fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--faint)' }}>TOCA AQUI DENTRO</span></div>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎵</span>A tocar agora</div>
             <div className="src-tabs">
               <button className={`srct ${fonte === 'yt' ? 'on' : ''}`} onClick={() => { setFonte('yt'); setUrlErro('') }}><span className="si">🔴</span>YouTube</button>
               <button className={`srct ${fonte === 'sp' ? 'on' : ''}`} onClick={() => { setFonte('sp'); setUrlErro('') }}><span className="si">🟢</span>Spotify</button>
@@ -682,7 +681,7 @@ export default function Foco({ onNavigate }) {
           </div>
 
           <div className="panel equipa enter" style={{ animationDelay: '.1s' }}>
-            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>A tua equipa agora<span className="eq-live">● ao vivo</span></div>
+            <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>👥</span>Equipa<span className="eq-live">● ao vivo</span></div>
             <EquipaAgora colegas={colegas} presencas={presencas} tarefasDe={tarefasDe} agenda={agenda} />
           </div>
         </div>
