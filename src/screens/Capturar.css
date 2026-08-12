@@ -385,11 +385,21 @@
 .capturar .ci.tag-ic-forest{background:var(--forest-soft)}
 
 /* ═══ v36 · prioridade + duração lado a lado, lista emails com scroll ═══ */
-.capturar .pri-dur-duo{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-.capturar .pri-dur-duo .pdd-col{min-width:0}
-.capturar .pri-dur-duo .pri-row{flex-direction:column;gap:6px}
-.capturar .pri-dur-duo .pri-chip{width:100%;justify-content:flex-start}
-.capturar .pri-dur-duo .dur-chips{grid-template-columns:repeat(3,1fr)}
-@media (max-width:1100px){.capturar .pri-dur-duo{grid-template-columns:1fr;gap:0}.capturar .pri-dur-duo .pri-row{flex-direction:row}.capturar .pri-dur-duo .dur-chips{grid-template-columns:repeat(6,1fr)}}
+.capturar .pri-dur-duo{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;align-items:stretch;margin-bottom:11px}
+.capturar .pri-dur-duo .pdd-col{min-width:0;display:flex;flex-direction:column}
+.capturar .pri-dur-duo .pri-row{display:flex;flex-direction:column;gap:7px;margin-bottom:0}
+.capturar .pri-dur-duo .pri-chip{flex:1;width:100%;justify-content:flex-start;padding:10px 12px}
+.capturar .pri-dur-duo .dur-row{flex-direction:column;align-items:stretch;gap:9px;margin-bottom:0}
+.capturar .pri-dur-duo .dur-stepper{justify-content:center}
+.capturar .pri-dur-duo .dur-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;flex:none}
+@media (max-width:1100px){.capturar .pri-dur-duo{grid-template-columns:1fr;gap:0}.capturar .pri-dur-duo .pri-row{flex-direction:row;margin-bottom:11px}.capturar .pri-dur-duo .dur-chips{grid-template-columns:repeat(6,1fr)}}
 /* lista de emails Outlook com scroll (preserva a listagem completa) */
 .capturar .ol-scroll{max-height:240px;overflow-y:auto;scrollbar-width:thin;margin-right:-5px;padding-right:5px}
+
+/* ═══ v37 · estado da obra (vendida / a orçamentar) ═══ */
+.capturar .obra-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.capturar .obra-chip{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;border-radius:13px;border:2px solid var(--line);background:var(--card);cursor:pointer;transition:all .25s;font-family:var(--font-display);font-size:12.5px;font-weight:600;color:var(--soft)}
+.capturar .obra-chip:hover{transform:translateY(-2px)}
+.capturar .obra-chip .ob-ic{font-size:15px}
+.capturar .obra-chip.vendida.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest-ink);box-shadow:0 6px 16px rgba(0,200,101,.18)}
+.capturar .obra-chip.orcamentar.on{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-ink);box-shadow:0 6px 16px rgba(31,184,224,.18)}

@@ -56,17 +56,37 @@ export default function Observatorio({ feitas }) {
       )}
 
       {/* 1 · correlações */}
-      {co && <PainelCorrelacoes co={co} />}
+      {co ? <PainelCorrelacoes co={co} /> : (
+        <div className="panel obs-panel obs-espera">
+          <div className="oe-t">🔗 Correntes ainda a formar-se</div>
+          <div className="oe-s">Precisam de mais dias distintos de trabalho para revelarem padrões fiáveis.</div>
+        </div>
+      )}
 
       <div className="obs-grid2">
         {/* 2 · energia */}
-        {en && <PainelEnergia en={en} />}
+        {en ? <PainelEnergia en={en} /> : (
+          <div className="panel obs-panel obs-espera">
+            <div className="oe-t">⚡ Curva de energia a nascer</div>
+            <div className="oe-s">Conclui tarefas ao longo do dia para veres o teu ritmo real.</div>
+          </div>
+        )}
         {/* 3 · fluxo */}
-        {fl && <PainelFluxo fl={fl} />}
+        {fl ? <PainelFluxo fl={fl} /> : (
+          <div className="panel obs-panel obs-espera">
+            <div className="oe-t">🌊 Fluxo do tempo a nascer</div>
+            <div className="oe-s">Falta duração real registada nas tarefas para repartir o tempo.</div>
+          </div>
+        )}
       </div>
 
-      {/* 4 · evolução */}
-      {ev && ev.semDados >= 2 && <PainelEvolucao ev={ev} />}
+      {/* 4 · evolução — aparece assim que houver 2+ semanas com dados */}
+      {ev && ev.semDados >= 2 ? <PainelEvolucao ev={ev} /> : (
+        <div className="panel obs-panel obs-espera">
+          <div className="oe-t">📈 Evolução por semana</div>
+          <div className="oe-s">Aparece a partir de duas semanas distintas com trabalho fechado{ev && ev.semDados === 1 ? ' — já tens uma, falta a próxima.' : '.'}</div>
+        </div>
+      )}
     </div>
   )
 }

@@ -207,6 +207,7 @@ export default function Capturar() {
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
   const [pri, setPri] = useState('normal')
+  const [obra, setObra] = useState(null) // null | 'vendida' | 'orcamentar'
   const [para, setPara] = useState('eu') // 'eu' ou id do colega
   const toggleTag = (k) => setTags((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])
   const [editAberta, setEditAberta] = useState(null) // tarefa da fila com o editor aberto
@@ -249,9 +250,9 @@ export default function Capturar() {
     const destino = para !== 'eu' ? equipaPorId[para] : null
     const orig = pendentes.length > 0 ? pendentes[0].origemEm : null
     const ehFicheiro = pendentes.length > 0
-    capturar({ texto: txt, tipo: ehFicheiro ? 'ficheiro' : (tags[0] || 'outros'), tags: ehFicheiro ? [] : tags, min, prioridade: pri, para: destino ? destino.id : undefined, origemEm: orig || undefined })
+    capturar({ texto: txt, tipo: ehFicheiro ? 'ficheiro' : (tags[0] || 'outros'), tags: ehFicheiro ? [] : tags, min, prioridade: pri, obra: obra || undefined, para: destino ? destino.id : undefined, origemEm: orig || undefined })
     if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
-    setTexto(''); setPri('normal'); setMin(15); setPara('eu'); setTags([])
+    setTexto(''); setPri('normal'); setMin(15); setPara('eu'); setTags([]); setObra(null)
     if (pendentes.length > 0) {
       const p0 = pendentes[0]
       if (p0 && p0.ol) despacharOl(p0.ol) // capturado → o marcador Outlook avança
@@ -394,6 +395,16 @@ export default function Capturar() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="cap-sec-lab">estado da obra · opcional</div>
+            <div className="obra-row">
+              <button className={'obra-chip vendida ' + (obra === 'vendida' ? 'on' : '')} onClick={() => setObra(obra === 'vendida' ? null : 'vendida')}>
+                <span className="ob-ic">✅</span>Obra vendida
+              </button>
+              <button className={'obra-chip orcamentar ' + (obra === 'orcamentar' ? 'on' : '')} onClick={() => setObra(obra === 'orcamentar' ? null : 'orcamentar')}>
+                <span className="ob-ic">📝</span>Obra a orçamentar
+              </button>
             </div>
 
           </div>

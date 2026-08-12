@@ -82,8 +82,9 @@ export default function Analise({ onNavigate }) {
           <div className="sg d enter" style={{ animationDelay: '.3s' }}><div className="v">{desvio.n > 0 ? (desvio.avg > 0 ? `+${desvio.avg}m` : desvio.avg < 0 ? `−${Math.abs(desvio.avg)}m` : '±0m') : '—'}</div><div className="l">desvio ao previsto</div></div>
         </div>
 
+        <div className="pgrid">
         <div className="painel-simples panel enter" style={{ animationDelay: '.3s' }}>
-          <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>✓</span>Concluídas nesta sessão</div>
+          <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>✓</span>Concluídas nesta sessão{feitas.length > 0 && <span className="hist-tag">{feitas.length}</span>}</div>
           <div className="feitas-list">
             {[...feitas].reverse().map((t) => (
               <div key={t.id} className="feita-row">
@@ -101,6 +102,18 @@ export default function Analise({ onNavigate }) {
           <div className="estado-row"><span>Eleitas por fazer</span><b>{eleitas.length}</b></div>
           <div className="estado-row"><span>Na fila</span><b>{fila.length}</b></div>
           <div className="estado-row"><span>Concluídas</span><b style={{ color: 'var(--forest-ink)' }}>{feitas.length}</b></div>
+          {(() => {
+            const vendida = feitas.filter((t) => t.obra === 'vendida').length
+            const orcamentar = feitas.filter((t) => t.obra === 'orcamentar').length
+            if (vendida + orcamentar === 0) return null
+            return (
+              <div className="obra-stat">
+                <div className="obra-stat-row"><span className="os-dot vendida" />Obra vendida<b>{vendida}</b></div>
+                <div className="obra-stat-row"><span className="os-dot orcamentar" />Obra a orçamentar<b>{orcamentar}</b></div>
+              </div>
+            )
+          })()}
+        </div>
         </div>
 
         {(() => {
@@ -109,7 +122,7 @@ export default function Analise({ onNavigate }) {
           if (comHora.length < 3) return (
             <div className="painel-simples panel enter" style={{ animationDelay: '.5s' }}>
               <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>📈</span>Histórico</div>
-              <div className="hist-vazio">Conclui mais algumas tarefas e aqui nascem os teus padrões: prime time, ritmo dos últimos 14 dias e onde vai o teu tempo.</div>
+              <div className="hist-vazio">Ainda sem histórico suficiente para os teus padrões.</div>
             </div>
           )
 
@@ -155,6 +168,7 @@ export default function Analise({ onNavigate }) {
 
           return (
             <>
+              <div className="pgrid">
               <div className="painel-simples panel enter" style={{ animationDelay: '.5s' }}>
                 <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>⏰</span>O teu prime time
                   <span className="hist-tag">{prime.ic} {prime.l}</span>
@@ -169,7 +183,6 @@ export default function Analise({ onNavigate }) {
                     </div>
                   ))}
                 </div>
-                <div className="hist-nota">Concluis mais {prime.l.toLowerCase()} ({prime.h}h) — elege aí o que exige cabeça fresca.</div>
               </div>
 
               <div className="painel-simples panel enter" style={{ animationDelay: '.55s' }}>
@@ -185,10 +198,10 @@ export default function Analise({ onNavigate }) {
                     </div>
                   ))}
                 </div>
-                <div className="hist-nota">{totalDias} dia{totalDias === 1 ? '' : 's'} com trabalho fechado nas últimas duas semanas.</div>
+              </div>
               </div>
 
-              <div className="painel-simples panel enter" style={{ animationDelay: '.6s' }}>
+              <div className="painel-simples panel enter wide" style={{ animationDelay: '.6s' }}>
                 <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🧭</span>Onde vai o teu tempo</div>
                 {porTipo.map(([k, v]) => (
                   <div key={k} className="tipo-row">
