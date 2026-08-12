@@ -260,3 +260,12 @@
 .analise .obs-espera{display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:120px;text-align:center;background:linear-gradient(135deg,var(--cream-2),var(--card))}
 .analise .obs-espera .oe-t{font:600 14px var(--font-display);color:var(--ink)}
 .analise .obs-espera .oe-s{font:500 11.5px var(--font-body);color:var(--soft);line-height:1.4;max-width:340px;margin:0 auto}
+
+/* ═══ v37b · Print 4 — garantir que os gráficos do Observatório têm altura sempre ═══ */
+/* SVGs com viewBox precisam de altura intrínseca garantida (alguns browsers colapsam height:auto a 0) */
+.analise .corr-svg{width:100%;height:auto;min-height:300px;display:block}
+.analise .obs-svg{width:100%;height:auto;min-height:200px;display:block}
+.analise .op-svg{width:100%;height:auto;min-height:200px;display:block}
+/* os painéis do observatório nunca colapsam */
+.analise .obs-panel{min-height:120px}
+.analise .obs-grid2 > .obs-panel{min-height:280px}

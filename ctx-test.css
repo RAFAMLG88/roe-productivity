@@ -1981,6 +1981,15 @@
   flex: 1;
   min-height: 0;
 }
+.briefing .col:first-child {
+  overflow: hidden;
+}
+.briefing .panel.load {
+  flex: 0 0 auto;
+}
+.briefing .bloco-eleicao {
+  flex: 0 0 auto;
+}
 .briefing .panel.load {
   padding-top: 14px;
   padding-bottom: 14px;
@@ -2006,19 +2015,22 @@
   font-size: 11.5px;
   line-height: 1.35;
 }
+.briefing .col:last-child {
+  overflow: hidden;
+}
 .briefing .col:last-child .ricta.topo {
-  flex: none;
+  flex: 0 0 auto;
   order: 0;
 }
 .briefing .col:last-child .delega {
   order: 1;
-  flex: 2 1 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 140px;
+  min-height: 0;
 }
 .briefing .col:last-child .delega .dl-list {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   scrollbar-width: thin;
   min-height: 0;
@@ -2026,21 +2038,39 @@
 }
 .briefing .col:last-child .sugestao {
   order: 2;
-  flex: 1 1 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 120px;
+  min-height: 0;
 }
 .briefing .col:last-child .sugestao .sug-list {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   scrollbar-width: thin;
   min-height: 0;
   padding-right: 4px;
 }
 .briefing .col:last-child .sugestao .sug-aplicar {
-  flex: none;
+  flex: 0 0 auto;
   margin-top: 10px;
+}
+.briefing .col:last-child .sugestao .sug-head,
+.briefing .col:last-child .sugestao .sug-empty,
+.briefing .col:last-child .sugestao .sug-fora {
+  flex: 0 0 auto;
+}
+.briefing .col > .panel {
+  min-height: 0;
+  max-height: 100%;
+}
+.briefing .col {
+  overflow: hidden;
+}
+.briefing .picks,
+.briefing .wait-list,
+.briefing .dl-list,
+.briefing .sug-list {
+  overscroll-behavior: contain;
 }
 
 /* src/screens/Capturar.css */
@@ -9785,6 +9815,30 @@
   line-height: 1.4;
   max-width: 340px;
   margin: 0 auto;
+}
+.analise .corr-svg {
+  width: 100%;
+  height: auto;
+  min-height: 300px;
+  display: block;
+}
+.analise .obs-svg {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  display: block;
+}
+.analise .op-svg {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  display: block;
+}
+.analise .obs-panel {
+  min-height: 120px;
+}
+.analise .obs-grid2 > .obs-panel {
+  min-height: 280px;
 }
 
 /* src/screens/Cidade.css */

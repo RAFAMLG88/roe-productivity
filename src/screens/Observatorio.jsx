@@ -4,6 +4,24 @@ import React, { useMemo, useState, useRef } from 'react'
 import { curvaEnergia, fluxoTempo, evolucaoSemanal, correlacoes, insightsDestaque } from '../lib/observatorio.js'
 import { fmtMin } from '../utils/formato.js'
 
+// Rede de segurança: se um painel rebentar no browser, mostra o motivo em vez de
+// desaparecer silenciosamente (foi o que aconteceu — peças invisíveis sem pista).
+class PainelSafe extends React.Component {
+  constructor(p) { super(p); this.state = { erro: null } }
+  static getDerivedStateFromError(e) { return { erro: e } }
+  render() {
+    if (this.state.erro) {
+      return (
+        <div className="panel obs-panel obs-espera">
+          <div className="oe-t">⚠️ {this.props.nome}</div>
+          <div className="oe-s">Este gráfico não conseguiu desenhar-se: {String(this.state.erro && this.state.erro.message || this.state.erro)}</div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 const NODE_META = {
   urg:   { lab: 'Urgente cedo',    sub: '1ª do dia',    x: 150, y: 80,  c: 'var(--red)' },
   manha: { lab: 'Manhã',           sub: '09–12h30',     x: 150, y: 250, c: 'var(--mustard)' },
@@ -56,7 +74,7 @@ export default function Observatorio({ feitas }) {
       )}
 
       {/* 1 · correlações */}
-      {co ? <PainelCorrelacoes co={co} /> : (
+      {co ? <PainelSafe nome="Correntes invisíveis"><PainelCorrelacoes co={co} /></PainelSafe> : (
         <div className="panel obs-panel obs-espera">
           <div className="oe-t">🔗 Correntes ainda a formar-se</div>
           <div className="oe-s">Precisam de mais dias distintos de trabalho para revelarem padrões fiáveis.</div>
@@ -65,14 +83,14 @@ export default function Observatorio({ feitas }) {
 
       <div className="obs-grid2">
         {/* 2 · energia */}
-        {en ? <PainelEnergia en={en} /> : (
+        {en ? <PainelSafe nome="A tua energia real"><PainelEnergia en={en} /></PainelSafe> : (
           <div className="panel obs-panel obs-espera">
             <div className="oe-t">⚡ Curva de energia a nascer</div>
             <div className="oe-s">Conclui tarefas ao longo do dia para veres o teu ritmo real.</div>
           </div>
         )}
         {/* 3 · fluxo */}
-        {fl ? <PainelFluxo fl={fl} /> : (
+        {fl ? <PainelSafe nome="O fluxo do teu tempo"><PainelFluxo fl={fl} /></PainelSafe> : (
           <div className="panel obs-panel obs-espera">
             <div className="oe-t">🌊 Fluxo do tempo a nascer</div>
             <div className="oe-s">Falta duração real registada nas tarefas para repartir o tempo.</div>
@@ -81,7 +99,7 @@ export default function Observatorio({ feitas }) {
       </div>
 
       {/* 4 · evolução — aparece assim que houver 2+ semanas com dados */}
-      {ev && ev.semDados >= 2 ? <PainelEvolucao ev={ev} /> : (
+      {ev && ev.semDados >= 2 ? <PainelSafe nome="A tua evolução"><PainelEvolucao ev={ev} /></PainelSafe> : (
         <div className="panel obs-panel obs-espera">
           <div className="oe-t">📈 Evolução por semana</div>
           <div className="oe-s">Aparece a partir de duas semanas distintas com trabalho fechado{ev && ev.semDados === 1 ? ' — já tens uma, falta a próxima.' : '.'}</div>
