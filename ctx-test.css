@@ -1282,15 +1282,12 @@
   font-size: 10px;
 }
 .briefing .canvas .col:nth-child(2) {
-  overflow-y: auto;
-  scrollbar-width: thin;
-  padding-right: 3px;
-}
-.briefing .canvas .col:nth-child(2) > * {
-  flex: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .briefing .dl-list {
-  max-height: 186px;
+  max-height: none;
   overflow-y: auto;
   scrollbar-width: thin;
   padding-right: 3px;
@@ -1390,12 +1387,19 @@
 }
 .briefing .canvas .col:first-child {
   min-height: 0;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  padding-right: 3px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
-.briefing .canvas .col:first-child > * {
-  flex: none;
+.briefing .canvas .col:first-child > .panel.load {
+  flex: 0 0 auto;
+}
+.briefing .canvas .col:first-child > .bloco-eleicao {
+  flex: 0 0 auto;
+}
+.briefing .canvas .col:first-child > .panel.waiting {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .briefing .novidades {
   position: relative;
@@ -1981,39 +1985,42 @@
   flex: 1;
   min-height: 0;
 }
+.briefing .panel.load {
+  flex: 0 0 auto;
+  height: 98px;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
 .briefing .col:first-child {
   overflow: hidden;
 }
-.briefing .panel.load {
-  flex: 0 0 auto;
-}
-.briefing .bloco-eleicao {
-  flex: 0 0 auto;
-}
-.briefing .panel.load {
-  padding-top: 14px;
-  padding-bottom: 14px;
-}
 .briefing .load .pt {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .briefing .load .big {
-  font-size: 26px;
+  font-size: 24px;
 }
 .briefing .load .lt {
-  margin-bottom: 9px;
+  margin-bottom: 7px;
 }
 .briefing .track {
-  height: 9px;
+  height: 8px;
   margin-top: 0;
 }
 .briefing .track .cap::after {
-  top: -14px;
+  top: -13px;
+  font-size: 7px;
 }
 .briefing .load .verdict {
-  margin-top: 9px;
-  font-size: 11.5px;
-  line-height: 1.35;
+  margin-top: 7px;
+  font-size: 10.5px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .briefing .col:last-child {
   overflow: hidden;
