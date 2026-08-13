@@ -3,7 +3,7 @@
 // + grelha de meses (só os com dados). Cada mês: valores, natureza-mãe, tags, prioridade.
 import React, { useState, useMemo } from 'react'
 import { historico, fmtDur, KEY_SCAT } from '../lib/analytics.js'
-import { TAG_POR_KEY, metaTag } from '../lib/tags.js'
+import { TAG_POR_KEY, metaTag, TAGS } from '../lib/tags.js'
 import { corTag } from '../lib/categorias.js'
 
 const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (metaTag(k) ? metaTag(k).lab : k))
@@ -37,21 +37,25 @@ function PrioMini({ prio }) {
   )
 }
 
-// tags top 3 + resto
+// todas as tags do sistema — as usadas com o seu %, as não usadas a 0%
 function TagsTop({ tags, total }) {
-  const top = tags.slice(0, 3)
-  const resto = tags.slice(3)
-  const pctResto = resto.reduce((s, t) => s + t.pct, 0)
+  const usadasPorKey = Object.fromEntries(tags.map((t) => [t.key, t]))
+  // completa com as tags do sistema que não apareceram este mês (pct 0)
+  const doSistema = TAGS.map((def) => usadasPorKey[def.key] || { key: def.key, pct: 0, min: 0, n: 0 })
+  // "Por catalogar" não é tag do sistema mas deve aparecer se existir
+  const scat = usadasPorKey[KEY_SCAT] ? [usadasPorKey[KEY_SCAT]] : []
+  const todas = [...doSistema, ...scat]
+  // ordena: mais tempo primeiro; as de 0% ficam no fim
+  todas.sort((a, b) => b.pct - a.pct)
   return (
     <div className="tags-mini">
-      {top.map((t) => (
-        <div key={t.key} className="tagm">
-          <span className="tagm-dot" style={{ background: corTag(t.key) }} />
+      {todas.map((t) => (
+        <div key={t.key} className={'tagm' + (t.pct === 0 ? ' zero' : '')}>
+          <span className="tagm-dot" style={{ background: t.pct === 0 ? 'var(--faint)' : corTag(t.key) }} />
           <span className="tagm-lab">{labTag(t.key)}</span>
           <span className="tagm-pct">{Math.round(t.pct)}%</span>
         </div>
       ))}
-      {resto.length > 0 && <div className="tags-resto">+ {resto.length} {resto.length === 1 ? 'tipo' : 'tipos'} · {Math.round(pctResto)}%</div>}
     </div>
   )
 }
@@ -79,7 +83,7 @@ function BoxMes({ mes }) {
       )}
       {mes.tags.length > 0 && (
         <div className="mes-bloco">
-          <div className="mb-tit">tags de tipo · top 3</div>
+          <div className="mb-tit">tags de tipo</div>
           <TagsTop tags={mes.tags} total={mes.n} />
         </div>
       )}

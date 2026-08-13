@@ -11472,6 +11472,12 @@
     grid-template-columns: 1fr;
   }
 }
+.tagm.zero {
+  opacity: .4;
+}
+.tagm.zero .tagm-pct {
+  color: var(--faint);
+}
 
 /* src/screens/Cidade.css */
 .cidade {

@@ -603,3 +603,7 @@
 .dci-nome{font:600 10.5px var(--font-body);color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dci-pct{font:700 11px var(--font-mono);color:var(--soft);flex:none}
 @media (max-width:1100px){.dci-grid{grid-template-columns:1fr}}
+
+/* ═══ v46 · tags a 0% no histórico (presentes mas esbatidas) ═══ */
+.tagm.zero{opacity:.4}
+.tagm.zero .tagm-pct{color:var(--faint)}
