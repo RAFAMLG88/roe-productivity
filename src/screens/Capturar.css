@@ -403,3 +403,7 @@
 .capturar .obra-chip .ob-ic{font-size:15px}
 .capturar .obra-chip.vendida.on{border-color:var(--forest);background:var(--forest-soft);color:var(--forest-ink);box-shadow:0 6px 16px rgba(0,200,101,.18)}
 .capturar .obra-chip.orcamentar.on{border-color:var(--sky);background:var(--sky-soft);color:var(--sky-ink);box-shadow:0 6px 16px rgba(31,184,224,.18)}
+
+/* ═══ v40 · categoria-mãe com 3 opções (+ prescrição) ═══ */
+.capturar .obra-row.tri{grid-template-columns:1fr 1fr 1fr}
+.capturar .obra-chip.prescricao.on{border-color:#8B5CF6;background:#F3EEFE;color:#7C4FE0;box-shadow:0 6px 16px rgba(139,92,246,.18)}

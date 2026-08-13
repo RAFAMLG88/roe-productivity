@@ -71,6 +71,42 @@ for (const [nome, C] of Object.entries(novos)) {
   } catch (e) { console.log(`✗ ${nome} FALHOU:`, e.message); falhas++ }
 }
 
+// 3b) v40: motor analytics + Histórico com dados sintéticos (caminho CHEIO)
+try {
+  const A = await import('./src/lib/analytics.js')
+  const DIA = 864e5
+  const feitas = Array.from({ length: 40 }, (_, i) => {
+    const d = new Date(Date.now() - i * 3 * DIA); d.setHours(9 + (i % 9), 0, 0, 0)
+    const cats = ['vendida', 'orcamentar', 'prescricao', null]
+    const tg = ['orc_cliente', 'presc_arq', 'alteracoes', 'concorrencia', 'admin']
+    return { id: 'x' + i, texto: 'T' + i, feitaEm: d.getTime(), criadaEm: d.getTime() - 36e5,
+      min: 30 + (i % 4) * 15, realMin: 25 + (i % 5) * 12,
+      prioridade: i % 6 === 0 ? 'urgente' : (i % 3 === 0 ? 'importante' : 'normal'),
+      tags: [tg[i % tg.length]], obra: cats[i % 4] }
+  })
+  const checks = {
+    tempoPorTag: A.tempoPorTag(feitas).length > 0,
+    porCategoria: A.porCategoria(feitas).length === 3,
+    cruzamento: A.cruzamento(feitas).length === 3,
+    tendenciaSemanal: A.tendenciaSemanal(feitas).nSemanas > 0,
+    historico: A.historico(feitas).anos.length > 0,
+    consistencia: A.consistencia(feitas).cels.length === 14,
+    planeadoVsReal: A.planeadoVsReal(feitas) != null,
+  }
+  const maus = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k)
+  if (maus.length) { console.log('✗ motor analytics FALHOU em:', maus.join(', ')); falhas++ }
+  else console.log(`✓ motor analytics · ${Object.keys(checks).length} funções OK`)
+
+  const Historico = (await import('./src/screens/Historico.jsx')).default
+  const hH = renderToString(<Historico feitas={feitas} />)
+  console.log(`${hH.length > 300 ? '✓' : '✗'} Historico c/ dados · ${hH.length} chars`)
+  if (hH.length <= 300) falhas++
+
+  const hHv = renderToString(<Historico feitas={[]} />)
+  console.log(`${hHv.length > 50 ? '✓' : '✗'} Historico vazio · ${hHv.length} chars`)
+  if (hHv.length <= 50) falhas++
+} catch (e) { console.log('✗ motor/Historico FALHOU:', e.message); falhas++ }
+
 // 4) Entrada (fora do provider — é o ecrã de login)
 try {
   const Entrada = (await import('./src/screens/Entrada.jsx')).default

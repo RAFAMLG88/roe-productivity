@@ -2,35 +2,52 @@ import React, { useState, useEffect, useMemo } from 'react'
 import './Analise.css'
 import { useRoe } from '../state/RoeContext.jsx'
 import { supabase } from '../lib/supabase.js'
-import { fmtMin, desvioMedio } from '../utils/formato.js'
-import { TAG_POR_KEY, tagsDe } from '../lib/tags.js'
+import { fmtMin } from '../utils/formato.js'
+import {
+  tempoPorTag, porCategoria, cruzamento, porPrioridade,
+  precisaoPorTag, delegacaoPorTag, trabalhoReativo, fmtDur,
+} from '../lib/analytics.js'
+import { TAG_POR_KEY } from '../lib/tags.js'
+import { corTag, catCor, CATEGORIAS } from '../lib/categorias.js'
+import { LegendaChave, BarraTag, CartaoCategoria, LinhaCruzamento, LegendaTags } from './analytics-ui.jsx'
 import Observatorio from './Observatorio.jsx'
+import Historico from './Historico.jsx'
 
-const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
-const diaISO = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+const labTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k)
+const icTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌')
 
 export default function Analise({ onNavigate }) {
-  const { feitas, eleitas, fila, perfil } = useRoe()
-  const [hist, setHist] = useState({ carregando: true, agua: [] })
-  const [aba, setAba] = useState('resumo') // 'resumo' | 'observatorio'
+  const { feitas, perfil } = useRoe()
+  const [aba, setAba] = useState('resumo') // 'resumo' | 'observatorio' | 'historico'
 
-  // histórico de água (as tarefas já vêm todas do contexto)
-  useEffect(() => {
-    if (!perfil?.id) return
-    let vivo = true
-    supabase.from('agua').select('dia,ml').eq('user_id', perfil.id).order('dia', { ascending: false }).limit(30)
-      .then(({ data, error }) => { if (vivo) setHist({ carregando: false, agua: error ? [] : (data || []) }) })
-    return () => { vivo = false }
-  }, [perfil?.id])
   const temDados = feitas.length > 0
+
+  // ── cálculos do Resumo (memoizados) ──
+  const porTag = useMemo(() => tempoPorTag(feitas), [feitas])
+  const cats = useMemo(() => porCategoria(feitas), [feitas])
+  const cruz = useMemo(() => cruzamento(feitas), [feitas])
+  const prio = useMemo(() => porPrioridade(feitas), [feitas])
+  const precisao = useMemo(() => precisaoPorTag(feitas), [feitas])
+  const deleg = useMemo(() => delegacaoPorTag(feitas, perfil?.id), [feitas, perfil?.id])
+  const reativo = useMemo(() => trabalhoReativo(feitas), [feitas])
+
+  const maxTagMin = porTag.length ? porTag[0].min : 1
+  const maxCatMin = Math.max(...cats.map((c) => c.min), 1)
+  const totalMin = feitas.reduce((s, t) => s + (t.realMin || t.min || 0), 0)
+  const chavesTags = [...new Set(cruz.flatMap((c) => c.tags.map((t) => t.key)))]
 
   if (!temDados) {
     return (
       <div className="analise">
         <div className="topbar">
           <div><div className="l2">A tua análise</div></div>
+          <div className="ana-abas">
+            <button className="ana-aba on">Resumo</button>
+            <button className="ana-aba" onClick={() => {}}>Observatório</button>
+            <button className="ana-aba" onClick={() => {}}>Histórico</button>
+          </div>
         </div>
-        <div className="canvas">
+        <div className="canvas cheia">
           <div className="empty-analise">
             <div className="ea-ic">
               <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
@@ -40,27 +57,13 @@ export default function Analise({ onNavigate }) {
               </svg>
             </div>
             <div className="ea-t">Ainda não há nada para analisar.</div>
-            <div className="ea-s">
-              A tua análise constrói-se sozinha à medida que concluis tarefas.<br />
-              Elege no Escritório, foca-te e conclui — e aqui vais ver os teus padrões.
-            </div>
-            <div className="ea-preview">
-              <div className="eap"><span className="eap-ic">🎯</span><div><div className="eap-t">Foco no importante</div><div className="eap-s">quanto do teu tempo vai ao que interessa</div></div></div>
-              <div className="eap"><span className="eap-ic">✓</span><div><div className="eap-t">Tarefas concluídas</div><div className="eap-s">o que fechaste hoje</div></div></div>
-              <div className="eap"><span className="eap-ic">🏢</span><div><div className="eap-t">Cidade a crescer</div><div className="eap-s">edifícios erguidos pelo teu foco</div></div></div>
-            </div>
+            <div className="ea-s">A tua análise constrói-se à medida que concluis tarefas.</div>
             <button className="ea-cta" onClick={() => onNavigate && onNavigate('briefing')}>Ir ao Escritório organizar o dia →</button>
           </div>
         </div>
       </div>
     )
   }
-
-  // com dados reais desta sessão
-  const totalMin = feitas.reduce((s, t) => s + (t.realMin || t.min), 0)
-  const importantes = feitas.filter((t) => t.prioridade === 'urgente' || t.prioridade === 'importante').length
-  const pctImp = feitas.length > 0 ? Math.round(importantes / feitas.length * 100) : 0
-  const desvio = desvioMedio(feitas)
 
   return (
     <div className="analise">
@@ -69,155 +72,124 @@ export default function Analise({ onNavigate }) {
         <div className="ana-abas">
           <button className={'ana-aba ' + (aba === 'resumo' ? 'on' : '')} onClick={() => setAba('resumo')}>Resumo</button>
           <button className={'ana-aba ' + (aba === 'observatorio' ? 'on' : '')} onClick={() => setAba('observatorio')}>Observatório</button>
+          <button className={'ana-aba ' + (aba === 'historico' ? 'on' : '')} onClick={() => setAba('historico')}>Histórico</button>
         </div>
       </div>
-      {aba === 'observatorio' ? (
-        <div className="canvas cheia"><Observatorio feitas={feitas} /></div>
-      ) : (
-      <div className="canvas cheia">
-        <div className="sgrid">
-          <div className="sg b enter"><div className="v">{feitas.length}</div><div className="l">tarefas concluídas</div></div>
-          <div className="sg a enter" style={{ animationDelay: '.1s' }}><div className="v">{pctImp}%</div><div className="l">eram importantes</div></div>
-          <div className="sg c enter" style={{ animationDelay: '.2s' }}><div className="v">{fmtMin(totalMin)}</div><div className="l">de foco real</div></div>
-          <div className="sg d enter" style={{ animationDelay: '.3s' }}><div className="v">{desvio.n > 0 ? (desvio.avg > 0 ? `+${desvio.avg}m` : desvio.avg < 0 ? `−${Math.abs(desvio.avg)}m` : '±0m') : '—'}</div><div className="l">desvio ao previsto</div></div>
-        </div>
 
-        <div className="pgrid">
-        <div className="painel-simples panel enter" style={{ animationDelay: '.3s' }}>
-          <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>✓</span>Concluídas nesta sessão{feitas.length > 0 && <span className="hist-tag">{feitas.length}</span>}</div>
-          <div className="feitas-list">
-            {[...feitas].reverse().map((t) => (
-              <div key={t.id} className="feita-row">
-                <span className="fr-check">✓</span>
-                <span className="fr-txt">{t.texto}</span>
-                {(t.prioridade === 'urgente' || t.prioridade === 'importante') && <span className="fr-imp">{t.prioridade}</span>}
-                <span className="fr-min">{t.realMin ? `${fmtMin(t.realMin)} · previa ${fmtMin(t.min)}` : `~${fmtMin(t.min)}`}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+      {aba === 'observatorio' && <div className="canvas cheia"><Observatorio feitas={feitas} meuId={perfil?.id} /></div>}
+      {aba === 'historico' && <div className="canvas cheia"><Historico feitas={feitas} /></div>}
 
-        <div className="painel-simples panel enter" style={{ animationDelay: '.4s' }}>
-          <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>📊</span>Estado de hoje</div>
-          <div className="estado-row"><span>Eleitas por fazer</span><b>{eleitas.length}</b></div>
-          <div className="estado-row"><span>Na fila</span><b>{fila.length}</b></div>
-          <div className="estado-row"><span>Concluídas</span><b style={{ color: 'var(--forest-ink)' }}>{feitas.length}</b></div>
-          {(() => {
-            const vendida = feitas.filter((t) => t.obra === 'vendida').length
-            const orcamentar = feitas.filter((t) => t.obra === 'orcamentar').length
-            if (vendida + orcamentar === 0) return null
-            return (
-              <div className="obra-stat">
-                <div className="obra-stat-row"><span className="os-dot vendida" />Obra vendida<b>{vendida}</b></div>
-                <div className="obra-stat-row"><span className="os-dot orcamentar" />Obra a orçamentar<b>{orcamentar}</b></div>
-              </div>
-            )
-          })()}
-        </div>
-        </div>
+      {aba === 'resumo' && (
+        <div className="canvas cheia">
+          <LegendaChave />
 
-        {(() => {
-          // ── HISTÓRICO: tudo o que já acumulaste na base de dados ──
-          const comHora = feitas.filter((t) => t.feitaEm)
-          if (comHora.length < 3) return (
-            <div className="painel-simples panel enter" style={{ animationDelay: '.5s' }}>
-              <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>📈</span>Histórico</div>
-              <div className="hist-vazio">Ainda sem histórico suficiente para os teus padrões.</div>
+          {/* ── 1 · tempo por tipo ── */}
+          <div className="sec-tit">Onde vai o teu tempo, por tipo</div>
+          <div className="pgrid">
+            <div className="painel-simples panel wide">
+              <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🧭</span>Tempo por tipo de trabalho<span className="pt-tag">total {fmtDur(totalMin)}</span></div>
+              {porTag.length === 0 && <div className="vazio-nota">Ainda sem tarefas com tipo atribuído.</div>}
+              {porTag.map((item) => <BarraTag key={item.key} item={item} max={maxTagMin} />)}
             </div>
-          )
+          </div>
 
-          // prime time: 4 faixas do dia
-          const FAIXAS = [
-            { k: 'manha', l: 'Manhã', h: '06–12', ini: 6, fim: 12, ic: '🌅' },
-            { k: 'tarde', l: 'Tarde', h: '12–18', ini: 12, fim: 18, ic: '☀️' },
-            { k: 'noite', l: 'Noite', h: '18–24', ini: 18, fim: 24, ic: '🌆' },
-            { k: 'madrug', l: 'Madrugada', h: '00–06', ini: 0, fim: 6, ic: '🌙' },
-          ]
-          const porFaixa = FAIXAS.map((f) => ({
-            ...f, n: comHora.filter((t) => { const h = new Date(t.feitaEm).getHours(); return h >= f.ini && h < f.fim }).length,
-          }))
-          const maxFaixa = Math.max(1, ...porFaixa.map((f) => f.n))
-          const prime = [...porFaixa].sort((a, b) => b.n - a.n)[0]
+          {/* ── 2 · categorias-mãe ── */}
+          <div className="sec-tit">Tempo por natureza de trabalho</div>
+          <div className="pgrid">
+            <div className="painel-simples panel wide">
+              <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>🗂</span>As três naturezas</div>
+              <div className="cat3">
+                {cats.map((c) => <CartaoCategoria key={c.key} c={c} max={maxCatMin} />)}
+              </div>
+            </div>
+          </div>
 
-          // últimos 14 dias
-          const hoje = new Date()
-          const dias = Array.from({ length: 14 }, (_, i) => {
-            const d = new Date(hoje); d.setDate(d.getDate() - (13 - i))
-            const iso = diaISO(d)
-            const doDia = comHora.filter((t) => diaISO(new Date(t.feitaEm)) === iso)
-            return { d, iso, n: doDia.length, min: doDia.reduce((s, t) => s + (t.realMin || t.min), 0) }
-          })
-          const maxDia = Math.max(1, ...dias.map((x) => x.n))
-          const totalDias = dias.filter((x) => x.n > 0).length
-          const mediaDia = totalDias > 0 ? (dias.reduce((s, x) => s + x.n, 0) / totalDias).toFixed(1) : '0'
+          {/* ── 3 · cruzamento ── */}
+          <div className="sec-tit">Dentro de cada natureza, como se reparte o tempo</div>
+          <div className="pgrid">
+            <div className="painel-simples panel wide">
+              <div className="pt"><span className="pico" style={{ background: 'var(--violet)' }}>🔀</span>Repartição por tipo, dentro de cada natureza</div>
+              {cruz.map((c) => <LinhaCruzamento key={c.key} c={c} />)}
+              <LegendaTags chaves={chavesTags} />
+            </div>
+          </div>
 
-          // onde vai o tempo — por TAG (v34). Tarefas com várias tags contam em cada uma.
-          // Tarefas antigas (tipo simples fora da taxonomia) caem em "Sem tipo".
-          const porTipo = Object.entries(comHora.reduce((m, t) => {
-            const ks = tagsDe(t)
-            const mins = t.realMin || t.min
-            if (ks.length === 0) { m['__sem'] = (m['__sem'] || 0) + mins; return m }
-            ks.forEach((k) => { const key = TAG_POR_KEY[k] ? k : '__sem'; m[key] = (m[key] || 0) + mins })
-            return m
-          }, {}))
-            .sort((a, b) => b[1] - a[1])
-          const totalTipo = porTipo.reduce((s, [, v]) => s + v, 0) || 1
-          const rotuloTipo = (k) => (k === '__sem' ? 'Sem tipo' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
-
-          const aguaOk = hist.agua.filter((a) => (a.ml || 0) >= 2000).length
-
-          return (
-            <>
-              <div className="pgrid">
-              <div className="painel-simples panel enter" style={{ animationDelay: '.5s' }}>
-                <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>⏰</span>O teu prime time
-                  <span className="hist-tag">{prime.ic} {prime.l}</span>
-                </div>
-                <div className="pt-faixas">
-                  {porFaixa.map((f) => (
-                    <div key={f.k} className={'ptf ' + (f.k === prime.k ? 'on' : '')}>
-                      <div className="ptf-bar"><div className="ptf-fill" style={{ height: Math.round(f.n / maxFaixa * 100) + '%' }} /></div>
-                      <div className="ptf-n">{f.n}</div>
-                      <div className="ptf-l">{f.l}</div>
-                      <div className="ptf-h">{f.h}</div>
+          {/* ── 4 · precisão + delegação ── */}
+          <div className="sec-tit">Precisão da estimativa & delegação</div>
+          <div className="pgrid">
+            <div className="painel-simples panel">
+              <div className="pt"><span className="pico" style={{ background: 'var(--mustard-soft)' }}>🎯</span>Precisão da estimativa, por tipo</div>
+              {precisao.length === 0 && <div className="vazio-nota">Precisa de tarefas com tempo real e estimado.</div>}
+              {precisao.slice(0, 6).map((p) => {
+                const cor = corTag(p.key)
+                const dm = Math.round(p.desvioMedio)
+                const txt = Math.abs(dm) <= 5 ? 'no ponto · ±' + Math.abs(dm) + '%' : (dm > 0 ? 'subestimas +' + dm + '%' : 'sobrestimas ' + dm + '%')
+                const larg = Math.min(100, Math.abs(dm) * 2 + 20)
+                return (
+                  <div key={p.key} className="tagbar">
+                    <span className="tb-ic" style={{ background: cor + '22' }}>{icTag(p.key)}</span>
+                    <div className="tb-body">
+                      <div className="tb-top"><span className="tb-lab">{labTag(p.key)}</span><span className="tb-abs" style={{ color: cor }}>{txt}</span></div>
+                      <div className="tb-track"><div className="tb-fill" style={{ width: larg + '%', background: cor }} /></div>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="painel-simples panel enter" style={{ animationDelay: '.55s' }}>
-                <div className="pt"><span className="pico" style={{ background: 'var(--forest-soft)' }}>📅</span>Últimos 14 dias
-                  <span className="hist-tag">{mediaDia}/dia ativo</span>
-                </div>
-                <div className="hist-barras">
-                  {dias.map((x) => (
-                    <div key={x.iso} className="hb" title={x.n + ' tarefa' + (x.n === 1 ? '' : 's') + ' · ' + fmtMin(x.min)}>
-                      <div className="hb-col"><div className="hb-fill" style={{ height: Math.max(x.n > 0 ? 8 : 2, Math.round(x.n / maxDia * 100)) + '%', opacity: x.n > 0 ? 1 : .3 }} /></div>
-                      <div className="hb-d">{DIAS_SEMANA[x.d.getDay()]}</div>
-                      <div className="hb-n">{x.d.getDate()}</div>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="painel-simples panel">
+              <div className="pt"><span className="pico" style={{ background: '#F3EEFE' }}>👥</span>% delegado, por tipo</div>
+              {deleg.length === 0 && <div className="vazio-nota">Ainda sem tarefas delegadas registadas.</div>}
+              {deleg.slice(0, 6).map((d) => {
+                const cor = corTag(d.key)
+                return (
+                  <div key={d.key} className="tagbar">
+                    <span className="tb-ic" style={{ background: cor + '22' }}>{icTag(d.key)}</span>
+                    <div className="tb-body">
+                      <div className="tb-top"><span className="tb-lab">{labTag(d.key)}</span><span className="tb-pct" style={{ color: cor }}>{Math.round(d.pct)}%</span></div>
+                      <div className="tb-track"><div className="tb-fill" style={{ width: d.pct + '%', background: cor }} /></div>
                     </div>
-                  ))}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* ── 5 · trabalho reativo ── */}
+          <div className="sec-tit">Ângulos de otimização</div>
+          <div className="pgrid">
+            <div className="painel-simples panel">
+              <div className="pt"><span className="pico" style={{ background: 'var(--red-soft)' }}>🧨</span>Peso do trabalho reativo</div>
+              <div className="reativo-box">
+                <div className="reativo-ring">
+                  <svg viewBox="0 0 42 42" width="110" height="110">
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--forest)" strokeWidth="7" />
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--red)" strokeWidth="7"
+                      strokeDasharray={`${Math.round(reativo.pctReativo)} ${100 - Math.round(reativo.pctReativo)}`} strokeDashoffset="25" strokeLinecap="round" />
+                  </svg>
+                  <div className="reativo-c"><div className="rc-v" style={{ color: 'var(--red-ink)' }}>{Math.round(reativo.pctReativo)}%</div><div className="rc-l">REATIVO</div></div>
+                </div>
+                <div className="reativo-txt">
+                  <b>{Math.round(reativo.pctReativo)}%</b> do teu tempo foi urgências e concorrência. <b style={{ color: 'var(--forest-ink)' }}>{Math.round(reativo.pctPlaneado)}%</b> foi trabalho planeado.
                 </div>
               </div>
-              </div>
-
-              <div className="painel-simples panel enter wide" style={{ animationDelay: '.6s' }}>
-                <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🧭</span>Onde vai o teu tempo</div>
-                {porTipo.map(([k, v]) => (
-                  <div key={k} className="tipo-row">
-                    <span className="tr-l">{rotuloTipo(k)}</span>
-                    <span className="tr-bar"><span className="tr-fill" style={{ width: Math.round(v / totalTipo * 100) + '%' }} /></span>
-                    <span className="tr-v">{fmtMin(v)}</span>
+            </div>
+            <div className="painel-simples panel">
+              <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🎯</span>Tempo por natureza · fatia</div>
+              <div className="risco-bar">
+                {cats.filter((c) => c.min > 0).map((c) => (
+                  <div key={c.key} className="risco-seg" style={{ width: c.pct + '%', background: c.cor }} title={c.lab + ' ' + Math.round(c.pct) + '%'}>
+                    {c.pct >= 14 ? Math.round(c.pct) + '%' : ''}
                   </div>
                 ))}
-                {hist.agua.length > 0 && (
-                  <div className="hist-agua">💧 {aguaOk} de {hist.agua.length} dias registados com 2L ou mais</div>
-                )}
               </div>
-            </>
-          )
-        })()}
-      </div>
+              <div className="cruz-leg">
+                {cats.filter((c) => c.min > 0).map((c) => (
+                  <span key={c.key} className="cl-chip"><span className="cl-dot" style={{ background: c.cor }} />{c.lab}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -15,6 +15,7 @@ export const TAGS = [
   { key: 'alteracoes',   lab: 'Pedidos de Alteração',     ic: '✏️', cls: 'gold' },
   { key: 'apoio_tec',    lab: 'Apoio Técnico',            ic: '🛠', cls: 'sky' },
   { key: 'admin',        lab: 'Administrativo',           ic: '🗂', cls: 'forest' },
+  { key: 'concorrencia', lab: 'Origem Concorrência',      ic: '🎯', cls: 'red' },
 ]
 
 export const TAG_POR_KEY = Object.fromEntries(TAGS.map((t) => [t.key, t]))

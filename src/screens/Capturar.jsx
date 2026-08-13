@@ -207,7 +207,7 @@ export default function Capturar() {
   const [texto, setTexto] = useState('')
   const [min, setMin] = useState(15)
   const [pri, setPri] = useState('normal')
-  const [obra, setObra] = useState(null) // null | 'vendida' | 'orcamentar'
+  const [obra, setObra] = useState(null) // null | 'vendida' | 'orcamentar' | 'prescricao'
   const [para, setPara] = useState('eu') // 'eu' ou id do colega
   const toggleTag = (k) => setTags((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])
   const [editAberta, setEditAberta] = useState(null) // tarefa da fila com o editor aberto
@@ -397,13 +397,16 @@ export default function Capturar() {
               </div>
             </div>
 
-            <div className="cap-sec-lab">estado da obra · opcional</div>
-            <div className="obra-row">
+            <div className="cap-sec-lab">categoria da obra · opcional</div>
+            <div className="obra-row tri">
               <button className={'obra-chip vendida ' + (obra === 'vendida' ? 'on' : '')} onClick={() => setObra(obra === 'vendida' ? null : 'vendida')}>
                 <span className="ob-ic">✅</span>Obra vendida
               </button>
               <button className={'obra-chip orcamentar ' + (obra === 'orcamentar' ? 'on' : '')} onClick={() => setObra(obra === 'orcamentar' ? null : 'orcamentar')}>
                 <span className="ob-ic">📝</span>Obra a orçamentar
+              </button>
+              <button className={'obra-chip prescricao ' + (obra === 'prescricao' ? 'on' : '')} onClick={() => setObra(obra === 'prescricao' ? null : 'prescricao')}>
+                <span className="ob-ic">📐</span>Prescrição
               </button>
             </div>
 
