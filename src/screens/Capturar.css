@@ -417,3 +417,6 @@
 .capturar .ce-obra-vendida.on{border-color:#00C865;background:#EBFCF3;color:#00A352}
 .capturar .ce-obra-orcamentar.on{border-color:#1FB8E0;background:#EAF7FC;color:#1496C4}
 .capturar .ce-obra-prescricao.on{border-color:#8B5CF6;background:#F3EEFE;color:#7C4FE0}
+
+/* ═══ v45 · badge da categoria-mãe no cartão da fila ═══ */
+.capturar .cap .tg.obra-mae{border:1.5px solid;font-weight:700;display:inline-flex;align-items:center;gap:4px}

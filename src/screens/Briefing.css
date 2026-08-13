@@ -391,3 +391,6 @@
 .briefing .wait-list,
 .briefing .dl-list,
 .briefing .sug-list{overscroll-behavior:contain}
+
+/* ═══ v45 · badge da categoria-mãe nos cartões de tarefa ═══ */
+.briefing .badge-obra{font-size:9px;font-family:var(--font-mono);padding:3px 9px;border-radius:9px;font-weight:700;border:1.5px solid;display:inline-flex;align-items:center;gap:4px}

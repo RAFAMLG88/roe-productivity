@@ -2090,6 +2090,17 @@
 .briefing .sug-list {
   overscroll-behavior: contain;
 }
+.briefing .badge-obra {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 3px 9px;
+  border-radius: 9px;
+  font-weight: 700;
+  border: 1.5px solid;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 
 /* src/screens/Capturar.css */
 .capturar {
@@ -4263,6 +4274,13 @@
   border-color: #8B5CF6;
   background: #F3EEFE;
   color: #7C4FE0;
+}
+.capturar .cap .tg.obra-mae {
+  border: 1.5px solid;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* src/screens/Foco.css */

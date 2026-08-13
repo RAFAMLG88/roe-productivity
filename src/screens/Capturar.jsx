@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase.js'
 import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
 import { pedirUndo, useEscondidas } from '../state/undo.js'
 import { TAGS, metaTag, tagsDe } from '../lib/tags.js'
-import { CATEGORIAS } from '../lib/categorias.js'
+import { CATEGORIAS, CAT_POR_KEY } from '../lib/categorias.js'
 
 const PRIS = ['urgente', 'importante', 'normal']
 const PRI_LABEL = { urgente: 'Urgente', importante: 'Importante', normal: 'Normal' }
@@ -448,6 +448,11 @@ export default function Capturar() {
                             {metaTag(k) ? metaTag(k).lab : k}
                           </span>
                         ))}
+                        {c.obra && CAT_POR_KEY[c.obra] && (
+                          <span className="tg obra-mae" style={{ background: CAT_POR_KEY[c.obra].corSoft, color: CAT_POR_KEY[c.obra].corInk, borderColor: CAT_POR_KEY[c.obra].cor }}>
+                            {c.obra === 'vendida' ? '✅' : c.obra === 'orcamentar' ? '📝' : '📐'} {CAT_POR_KEY[c.obra].lab}
+                          </span>
+                        )}
                         {(() => { const de = c.delegadaPor || c.criadaPor; return de && perfil && de !== perfil.id ? (
                           <span className="tg deleg" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>de {((equipaPorId[de] || {}).nome || 'colega').split(' ')[0]}</span>
                         ) : null })()}

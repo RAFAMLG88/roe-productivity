@@ -5,6 +5,7 @@ import { useRoe, PRI_PESO } from '../state/RoeContext.jsx'
 import ArcoDia from '../components/ArcoDia.jsx'
 import { pedirUndo } from '../state/undo.js'
 import { metaTag, tagsDe } from '../lib/tags.js'
+import { CAT_POR_KEY } from '../lib/categorias.js'
 
 const curto = (t, n = 34) => (t.length > n ? t.slice(0, n - 1) + '…' : t)
 // meta visual do cartão a partir da 1ª tag (cor do ícone/moldura); reconhece tipos antigos e novos
@@ -308,6 +309,11 @@ export default function Briefing({ onNavigate }) {
                           {m.tags.map((k) => (
                             <span key={k} className={`badge-tipo ${metaTag(k) ? 'bt-' + metaTag(k).cls : ''}`}>{metaTag(k) ? metaTag(k).lab : k}</span>
                           ))}
+                          {p.obra && CAT_POR_KEY[p.obra] && (
+                            <span className="badge-obra" style={{ background: CAT_POR_KEY[p.obra].corSoft, color: CAT_POR_KEY[p.obra].corInk, borderColor: CAT_POR_KEY[p.obra].cor }}>
+                              {p.obra === 'vendida' ? '✅' : p.obra === 'orcamentar' ? '📝' : '📐'} {CAT_POR_KEY[p.obra].lab}
+                            </span>
+                          )}
                           <span className="badge-min">~{p.min} min</span>
                           <span className="badge-idade" title="entrada na fila">🕘 {fmtEntrada(p.criadaEm)}</span>
                           {(() => { const de = p.delegadaPor || p.criadaPor; return de && perfil && de !== perfil.id ? (
@@ -376,6 +382,11 @@ export default function Briefing({ onNavigate }) {
                             {m.tags.map((k) => (
                               <span key={k} className={`badge-tipo ${metaTag(k) ? 'bt-' + metaTag(k).cls : ''}`}>{metaTag(k) ? metaTag(k).lab : k}</span>
                             ))}
+                            {q.obra && CAT_POR_KEY[q.obra] && (
+                              <span className="badge-obra" style={{ background: CAT_POR_KEY[q.obra].corSoft, color: CAT_POR_KEY[q.obra].corInk, borderColor: CAT_POR_KEY[q.obra].cor }}>
+                                {q.obra === 'vendida' ? '✅' : q.obra === 'orcamentar' ? '📝' : '📐'} {CAT_POR_KEY[q.obra].lab}
+                              </span>
+                            )}
                             <span className="badge-min">~{q.min} min</span>
                             {(() => { const de = q.delegadaPor || q.criadaPor; return de && perfil && de !== perfil.id ? (
                               <span className="badge-de" style={{ background: (equipaPorId[de] || {}).cor || 'var(--soft)' }}>
