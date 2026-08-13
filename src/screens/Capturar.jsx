@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase.js'
 import { outlookConta, outlookLigar, outlookSair, outlookEmailsDesde } from '../lib/outlook.js'
 import { pedirUndo, useEscondidas } from '../state/undo.js'
 import { TAGS, metaTag, tagsDe } from '../lib/tags.js'
+import { CATEGORIAS } from '../lib/categorias.js'
 
 const PRIS = ['urgente', 'importante', 'normal']
 const PRI_LABEL = { urgente: 'Urgente', importante: 'Importante', normal: 'Normal' }
@@ -476,6 +477,27 @@ export default function Capturar() {
                                 atualizar(c.id, { tags: novo, tipo: novo[0] || 'outros' })
                               }}>
                               {t.ic} {t.lab}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      <div className="ce-lab">prioridade</div>
+                      <div className="ce-pri">
+                        {PRIS.map((pk) => (
+                          <button key={pk} className={`ce-chip ce-pri-${pk} ${(c.prioridade || 'normal') === pk ? 'on' : ''}`}
+                            onClick={() => atualizar(c.id, { prioridade: pk })}>
+                            {pk === 'urgente' ? '🔥' : pk === 'importante' ? '⭐' : '○'} {PRI_LABEL[pk]}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="ce-lab">categoria da obra · opcional</div>
+                      <div className="ce-obra">
+                        {CATEGORIAS.map((cat) => {
+                          const on = c.obra === cat.key
+                          return (
+                            <button key={cat.key} className={`ce-chip ce-obra-${cat.key} ${on ? 'on' : ''}`}
+                              onClick={() => atualizar(c.id, { obra: on ? null : cat.key })}>
+                              {cat.key === 'vendida' ? '✅' : cat.key === 'orcamentar' ? '📝' : '📐'} {cat.lab}
                             </button>
                           )
                         })}

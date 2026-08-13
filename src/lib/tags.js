@@ -9,7 +9,6 @@ export const TAGS = [
   { key: 'interno',      lab: 'Pedido Interno',           ic: '👤', cls: 'red' },
   { key: 'orc_cliente',  lab: 'Orçamento Cliente',        ic: '💰', cls: 'gold' },
   { key: 'orc_constr',   lab: 'Orçamento Construtora',    ic: '🏢', cls: 'gold' },
-  { key: 'presc_arq',    lab: 'Prescrições Arquitectura', ic: '📐', cls: 'sky' },
   { key: 'telefone',     lab: 'Via Telefone',             ic: '✆',  cls: 'forest' },
   { key: 'urgencias',    lab: 'Urgências',                ic: '🚨', cls: 'red' },
   { key: 'alteracoes',   lab: 'Pedidos de Alteração',     ic: '✏️', cls: 'gold' },
@@ -24,9 +23,10 @@ export const TAG_POR_KEY = Object.fromEntries(TAGS.map((t) => [t.key, t]))
 // Dá-lhes cor e ícone para as tarefas existentes continuarem vivas no Escritório,
 // até serem recatalogadas. 'interno' e 'telefone' já existem nas keys novas.
 const LEGADO = {
-  obra:     { lab: 'Obra',   ic: '🏗', cls: 'sky' },
-  outros:   { lab: 'Outros', ic: '📌', cls: 'gold' },
-  ficheiro: { lab: 'Email',  ic: '📧', cls: 'forest' },
+  obra:      { lab: 'Obra',                    ic: '🏗', cls: 'sky' },
+  outros:    { lab: 'Outros',                  ic: '📌', cls: 'gold' },
+  ficheiro:  { lab: 'Email',                   ic: '📧', cls: 'forest' },
+  presc_arq: { lab: 'Prescrições Arquitectura', ic: '📐', cls: 'sky' },
 }
 
 // resolve uma key (nova OU antiga) para o seu meta visual; null se mesmo desconhecida

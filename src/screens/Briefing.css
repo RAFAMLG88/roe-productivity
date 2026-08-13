@@ -92,7 +92,7 @@
 .briefing .pick.tp-obra .pk-ic,.briefing .pick.tp-email .pk-ic{background:linear-gradient(135deg,var(--sky),#1496C4)}
 .briefing .pick.tp-ideia .pk-ic{background:linear-gradient(135deg,var(--mustard),#E5B400);color:var(--black)}
 .briefing .pick .body{flex:1;min-width:0}
-.briefing .pick .a{font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1.3;color:var(--ink)}
+.briefing .pick .a{font-family:var(--font-display);font-size:15px;font-weight:600;line-height:1.3;color:var(--ink);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .briefing .pick .b{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .briefing .badge-imp{font-size:9px;font-family:var(--font-mono);background:var(--red);color:#fff;padding:3px 10px;border-radius:9px;box-shadow:0 2px 8px rgba(255,31,61,.3);font-weight:600}
 .briefing .badge-tipo{font-size:9px;font-family:var(--font-mono);background:var(--cream-2);color:var(--soft);padding:3px 10px;border-radius:9px}
@@ -354,16 +354,18 @@
 .briefing .picks{overflow-y:auto;scrollbar-width:thin;max-height:340px;padding-right:5px;align-content:start}
 .briefing .waiting .wait-list{flex:1;min-height:0}
 
-/* ── PRINT 2 · Peso do dia mais fino, MESMA ALTURA do botão Começar (98px) ── */
+/* ── PRINT 2 (v40 fix) · Peso do dia com a barra visível, MESMA ALTURA do botão Começar ── */
 /* altura fixa igual ao ricta.topo; o conteúdo distribui-se lá dentro */
-.briefing .panel.load{flex:0 0 auto;height:98px;padding:12px 18px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.briefing .panel.load{flex:0 0 auto;height:112px;padding:12px 18px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .briefing .col:first-child{overflow:hidden}
-.briefing .load .pt{margin-bottom:6px}
-.briefing .load .big{font-size:24px}
-.briefing .load .lt{margin-bottom:7px}
-.briefing .track{height:8px;margin-top:0}
+.briefing .load .pt{margin-bottom:5px}
+.briefing .load .big{font-size:23px}
+.briefing .load .lt{margin-bottom:6px}
+.briefing .track{height:8px;margin-top:0;flex:0 0 auto}
 .briefing .track .cap::after{top:-13px;font-size:7px}
 .briefing .load .verdict{margin-top:7px;font-size:10.5px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* o botão do dia acompanha a mesma altura fixa, para os blocos por baixo alinharem (Print 1) */
+.briefing .ricta.topo{min-height:112px;height:112px}
 
 /* ── PRINT 1 (revisto) · coluna direita: botão fixo, Delegadas e Sugestão equilibradas ── */
 /* a coluna direita é flex-column (herda da .col); o botão fica fixo no topo */

@@ -30,10 +30,11 @@ export const COR_TAG = {
   urgencias:    '#FF1F3D',
   interno:      '#FF1F3D',
   telefone:     '#00C865',
+  _scat:        '#C9BFA8', // "por catalogar" — cinza-marfim neutro
   // legado
   obra:         '#1FB8E0',
-  outros:       '#FFCE0A',
-  ficheiro:     '#00C865',
+  outros:       '#C9BFA8',
+  ficheiro:     '#C9BFA8',
 }
 export const corTag = (key) => COR_TAG[key] || '#ADA590'
 

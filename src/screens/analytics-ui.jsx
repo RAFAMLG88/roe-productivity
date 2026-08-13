@@ -3,10 +3,10 @@
 import React from 'react'
 import { TAG_POR_KEY } from '../lib/tags.js'
 import { corTag } from '../lib/categorias.js'
-import { fmtDur } from '../lib/analytics.js'
+import { fmtDur, KEY_SCAT } from '../lib/analytics.js'
 
-const labTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k)
-const icTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌')
+const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
+const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌'))
 
 // legenda-chave da leitura dupla (barra vs. selo)
 export function LegendaChave({ comMarca }) {
@@ -96,6 +96,53 @@ export function LegendaTags({ chaves }) {
       {chaves.map((k) => (
         <span key={k} className="cl-chip"><span className="cl-dot" style={{ background: corTag(k) }} />{labTag(k)}</span>
       ))}
+    </div>
+  )
+}
+
+// donut de fatias para as naturezas-mãe (recebe [{lab, cor, pct, min}])
+// Desenha um anel dividido em arcos proporcionais ao tempo, com legenda ao lado.
+export function DonutNaturezas({ fatias, titulo }) {
+  const ativas = fatias.filter((f) => f.min > 0)
+  const total = ativas.reduce((s, f) => s + f.min, 0)
+  if (!total) return <div className="vazio-nota">Sem tempo registado por natureza ainda.</div>
+
+  const R = 15.9155, C = 2 * Math.PI * R // circunferência ≈ 100
+  let offset = 0
+  const arcos = ativas.map((f) => {
+    const frac = f.min / total
+    const dash = frac * C
+    const arco = { ...f, dash, gap: C - dash, dashOffset: -offset * C, pct: frac * 100 }
+    offset += frac
+    return arco
+  })
+
+  return (
+    <div className="donut-box">
+      <div className="donut-svg-wrap">
+        <svg viewBox="0 0 42 42" className="donut-svg">
+          <circle cx="21" cy="21" r={R} fill="none" stroke="var(--cream-2)" strokeWidth="5.5" />
+          {arcos.map((a) => (
+            <circle key={a.key} cx="21" cy="21" r={R} fill="none" stroke={a.cor} strokeWidth="5.5"
+              strokeDasharray={`${a.dash} ${a.gap}`} strokeDashoffset={a.dashOffset}
+              transform="rotate(-90 21 21)" strokeLinecap="butt" />
+          ))}
+        </svg>
+        <div className="donut-centro">
+          <div className="donut-c-v">{fmtDur(total)}</div>
+          <div className="donut-c-l">total</div>
+        </div>
+      </div>
+      <div className="donut-leg">
+        {arcos.map((a) => (
+          <div key={a.key} className="donut-li">
+            <span className="donut-dot" style={{ background: a.cor }} />
+            <span className="donut-nome">{a.lab}</span>
+            <span className="donut-pct">{Math.round(a.pct)}%</span>
+            <span className="donut-min">{fmtDur(a.min)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

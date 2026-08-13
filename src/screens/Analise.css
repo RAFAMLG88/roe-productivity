@@ -523,3 +523,19 @@
 @media (max-width:720px){
   .meses-grid,.cat3,.trend-grid,.ar-grid{grid-template-columns:1fr}
 }
+
+/* ═══ v40 · donut de naturezas (Prints 3 e 4) ═══ */
+.donut-box{display:flex;align-items:center;gap:24px;padding:6px 0}
+.donut-svg-wrap{position:relative;width:130px;height:130px;flex:none}
+.donut-svg{width:130px;height:130px;transform:rotate(0deg)}
+.donut-centro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.donut-c-v{font:700 20px var(--font-display);line-height:1;color:var(--ink)}
+.donut-c-l{font:600 8px var(--font-mono);text-transform:uppercase;letter-spacing:.05em;color:var(--soft);margin-top:3px}
+.donut-leg{flex:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+.donut-li{display:flex;align-items:center;gap:10px}
+.donut-dot{width:12px;height:12px;border-radius:4px;flex:none}
+.donut-nome{font:600 13px var(--font-body);color:var(--ink);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.donut-pct{font:700 15px var(--font-display);color:var(--ink);flex:none;width:46px;text-align:right}
+.donut-min{font:600 11px var(--font-mono);color:var(--soft);flex:none;width:56px;text-align:right}
+.cruz-sep{height:1px;background:var(--line);margin:16px 0}
+@media (max-width:720px){.donut-box{flex-direction:column;gap:16px}}

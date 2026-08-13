@@ -2,11 +2,11 @@
 // Anos em acordeão: o atual aberto, anteriores recolhidos. Cada ano tem box-resumo
 // + grelha de meses (só os com dados). Cada mês: valores, natureza-mãe, tags, prioridade.
 import React, { useState, useMemo } from 'react'
-import { historico, fmtDur } from '../lib/analytics.js'
+import { historico, fmtDur, KEY_SCAT } from '../lib/analytics.js'
 import { TAG_POR_KEY } from '../lib/tags.js'
 import { corTag } from '../lib/categorias.js'
 
-const labTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k)
+const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
 
 // mini-barra de naturezas (recebe cats já ordenadas com pct)
 function NatMini({ cats }) {

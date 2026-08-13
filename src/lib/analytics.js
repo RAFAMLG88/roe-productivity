@@ -6,6 +6,20 @@
 import { tagsDe } from './tags.js'
 import { CATEGORIAS } from './categorias.js'
 
+// Chaves que NÃO são tipos de trabalho reais, mas sim "ainda por catalogar":
+// 'ficheiro' = email capturado sem tipo · 'outros' = captura sem tipo · 'obra' = legado vago.
+const POR_CATALOGAR = new Set(['ficheiro', 'outros', 'obra'])
+export const KEY_SCAT = '_scat' // chave sintética "por catalogar"
+
+// tags de uma tarefa PARA ANÁLISE: tipos reais tal como estão; se só tiver
+// chaves-por-catalogar (ou nenhuma tag), colapsa numa única '_scat'.
+function tagsAnalise(t) {
+  const brutas = tagsDe(t)
+  const reais = brutas.filter((k) => !POR_CATALOGAR.has(k))
+  if (reais.length) return reais
+  return [KEY_SCAT]
+}
+
 // tempo "real" de uma tarefa em minutos (real, senão estimado)
 export const tempoDe = (t) => (t.realMin != null ? t.realMin : (t.min || 0))
 // só tarefas com algum tempo > 0 contam para médias de tempo
@@ -26,7 +40,7 @@ export function tempoPorTag(feitas) {
   const acc = {} // key → { min, n }
   feitas.forEach((t) => {
     const m = tempoDe(t)
-    tagsDe(t).forEach((k) => {
+    tagsAnalise(t).forEach((k) => {
       if (!acc[k]) acc[k] = { min: 0, n: 0 }
       acc[k].min += m
       acc[k].n += 1
@@ -106,7 +120,7 @@ export function precisaoPorTag(feitas) {
   comTempo(feitas).forEach((t) => {
     if (t.min > 0 && t.realMin != null) {
       const desvio = (t.realMin - t.min) / t.min // fração
-      tagsDe(t).forEach((k) => {
+      tagsAnalise(t).forEach((k) => {
         if (!acc[k]) acc[k] = { soma: 0, n: 0 }
         acc[k].soma += desvio
         acc[k].n += 1
@@ -126,7 +140,7 @@ export function delegacaoPorTag(feitas, meuId) {
   const acc = {} // key → { deleg, total }
   feitas.forEach((t) => {
     const foiDelegada = t.delegadaPor === meuId || (t.ownerId && t.ownerId !== meuId && t.criadaPor === meuId)
-    tagsDe(t).forEach((k) => {
+    tagsAnalise(t).forEach((k) => {
       if (!acc[k]) acc[k] = { deleg: 0, total: 0 }
       acc[k].total += 1
       if (foiDelegada) acc[k].deleg += 1
@@ -146,7 +160,7 @@ export function trabalhoReativo(feitas) {
   comTempo(feitas).forEach((t) => {
     const m = tempoDe(t)
     total += m
-    const tags = tagsDe(t)
+    const tags = tagsAnalise(t)
     if (t.prioridade === 'urgente' || tags.includes('urgencias') || tags.includes('concorrencia')) reativo += m
   })
   total = total || 1

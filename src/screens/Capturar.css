@@ -407,3 +407,13 @@
 /* ═══ v40 · categoria-mãe com 3 opções (+ prescrição) ═══ */
 .capturar .obra-row.tri{grid-template-columns:1fr 1fr 1fr}
 .capturar .obra-chip.prescricao.on{border-color:#8B5CF6;background:#F3EEFE;color:#7C4FE0;box-shadow:0 6px 16px rgba(139,92,246,.18)}
+
+/* ═══ v40 · prioridade e categoria-mãe no modo de edição (Print 6) ═══ */
+.capturar .ce-pri{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.capturar .ce-obra{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.capturar .ce-pri-urgente.on{border-color:var(--red);background:var(--red);color:#fff}
+.capturar .ce-pri-importante.on{border-color:var(--mustard);background:var(--mustard);color:var(--ink)}
+.capturar .ce-pri-normal.on{border-color:var(--sky);background:var(--sky);color:#fff}
+.capturar .ce-obra-vendida.on{border-color:#00C865;background:#EBFCF3;color:#00A352}
+.capturar .ce-obra-orcamentar.on{border-color:#1FB8E0;background:#EAF7FC;color:#1496C4}
+.capturar .ce-obra-prescricao.on{border-color:#8B5CF6;background:#F3EEFE;color:#7C4FE0}

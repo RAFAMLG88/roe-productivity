@@ -5,16 +5,16 @@ import { supabase } from '../lib/supabase.js'
 import { fmtMin } from '../utils/formato.js'
 import {
   tempoPorTag, porCategoria, cruzamento, porPrioridade,
-  precisaoPorTag, delegacaoPorTag, trabalhoReativo, fmtDur,
+  precisaoPorTag, delegacaoPorTag, trabalhoReativo, fmtDur, KEY_SCAT,
 } from '../lib/analytics.js'
 import { TAG_POR_KEY } from '../lib/tags.js'
 import { corTag, catCor, CATEGORIAS } from '../lib/categorias.js'
-import { LegendaChave, BarraTag, CartaoCategoria, LinhaCruzamento, LegendaTags } from './analytics-ui.jsx'
+import { LegendaChave, BarraTag, CartaoCategoria, LinhaCruzamento, LegendaTags, DonutNaturezas } from './analytics-ui.jsx'
 import Observatorio from './Observatorio.jsx'
 import Historico from './Historico.jsx'
 
-const labTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k)
-const icTag = (k) => (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌')
+const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
+const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌'))
 
 export default function Analise({ onNavigate }) {
   const { feitas, perfil } = useRoe()
@@ -109,6 +109,8 @@ export default function Analise({ onNavigate }) {
           <div className="pgrid">
             <div className="painel-simples panel wide">
               <div className="pt"><span className="pico" style={{ background: 'var(--violet)' }}>🔀</span>Repartição por tipo, dentro de cada natureza</div>
+              <DonutNaturezas fatias={cats} />
+              <div className="cruz-sep" />
               {cruz.map((c) => <LinhaCruzamento key={c.key} c={c} />)}
               <LegendaTags chaves={chavesTags} />
             </div>
@@ -175,18 +177,7 @@ export default function Analise({ onNavigate }) {
             </div>
             <div className="painel-simples panel">
               <div className="pt"><span className="pico" style={{ background: 'var(--sky-soft)' }}>🎯</span>Tempo por natureza · fatia</div>
-              <div className="risco-bar">
-                {cats.filter((c) => c.min > 0).map((c) => (
-                  <div key={c.key} className="risco-seg" style={{ width: c.pct + '%', background: c.cor }} title={c.lab + ' ' + Math.round(c.pct) + '%'}>
-                    {c.pct >= 14 ? Math.round(c.pct) + '%' : ''}
-                  </div>
-                ))}
-              </div>
-              <div className="cruz-leg">
-                {cats.filter((c) => c.min > 0).map((c) => (
-                  <span key={c.key} className="cl-chip"><span className="cl-dot" style={{ background: c.cor }} />{c.lab}</span>
-                ))}
-              </div>
+              <DonutNaturezas fatias={cats} />
             </div>
           </div>
         </div>
