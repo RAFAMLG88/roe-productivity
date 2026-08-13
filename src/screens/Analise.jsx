@@ -49,7 +49,7 @@ export default function Analise({ onNavigate }) {
         {aba === 'equipa'
           ? <div className="canvas cheia"><EquipaAnalise /></div>
           : (
-        <div className="canvas cheia">
+        <div className="canvas cheia empty-center">
           <div className="empty-analise">
             <div className="ea-ic">
               <svg width="72" height="72" viewBox="0 0 72 72" fill="none">

@@ -96,6 +96,9 @@
 .analise .res-note{font-size:10px;font-family:var(--font-mono);color:var(--faint);margin-top:14px;line-height:1.6}
 .analise .canvas{align-items:center;justify-content:center}
 .analise .empty-analise{max-width:560px;text-align:center;display:flex;flex-direction:column;align-items:center;padding:20px}
+/* Print 4: empty-state centrado no ecrã, com o botão bem afastado do texto */
+.analise .canvas.cheia.empty-center{align-items:center;justify-content:center}
+.analise .empty-analise .ea-cta{margin-top:38px}
 .analise .ea-ic{width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.6);border:1px solid var(--line);display:grid;place-items:center;margin-bottom:22px}
 .analise .ea-t{font-family:var(--font-display);font-size:22px;font-weight:600;color:var(--ink)}
 .analise .ea-s{font-size:13px;color:var(--soft);margin-top:12px;line-height:1.7}
