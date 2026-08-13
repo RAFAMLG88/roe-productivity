@@ -12,6 +12,7 @@ import { corTag, catCor, CATEGORIAS } from '../lib/categorias.js'
 import { LegendaChave, BarraTag, CartaoCategoria, LinhaCruzamento, LegendaTags, DonutNaturezas } from './analytics-ui.jsx'
 import Observatorio from './Observatorio.jsx'
 import Historico from './Historico.jsx'
+import EquipaAnalise from './EquipaAnalise.jsx'
 
 const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
 const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌'))
@@ -42,11 +43,13 @@ export default function Analise({ onNavigate }) {
         <div className="topbar">
           <div><div className="l2">A tua análise</div></div>
           <div className="ana-abas">
-            <button className="ana-aba on">Resumo</button>
-            <button className="ana-aba" onClick={() => {}}>Observatório</button>
-            <button className="ana-aba" onClick={() => {}}>Histórico</button>
+            <button className={'ana-aba ' + (aba === 'resumo' ? 'on' : '')} onClick={() => setAba('resumo')}>Resumo</button>
+            <button className={'ana-aba ' + (aba === 'equipa' ? 'on' : '')} onClick={() => setAba('equipa')}>Equipa</button>
           </div>
         </div>
+        {aba === 'equipa'
+          ? <div className="canvas cheia"><EquipaAnalise /></div>
+          : (
         <div className="canvas cheia">
           <div className="empty-analise">
             <div className="ea-ic">
@@ -61,6 +64,7 @@ export default function Analise({ onNavigate }) {
             <button className="ea-cta" onClick={() => onNavigate && onNavigate('briefing')}>Ir ao Escritório organizar o dia →</button>
           </div>
         </div>
+        )}
       </div>
     )
   }
@@ -73,11 +77,13 @@ export default function Analise({ onNavigate }) {
           <button className={'ana-aba ' + (aba === 'resumo' ? 'on' : '')} onClick={() => setAba('resumo')}>Resumo</button>
           <button className={'ana-aba ' + (aba === 'observatorio' ? 'on' : '')} onClick={() => setAba('observatorio')}>Observatório</button>
           <button className={'ana-aba ' + (aba === 'historico' ? 'on' : '')} onClick={() => setAba('historico')}>Histórico</button>
+          <button className={'ana-aba ' + (aba === 'equipa' ? 'on' : '')} onClick={() => setAba('equipa')}>Equipa</button>
         </div>
       </div>
 
       {aba === 'observatorio' && <div className="canvas cheia"><Observatorio feitas={feitas} meuId={perfil?.id} /></div>}
       {aba === 'historico' && <div className="canvas cheia"><Historico feitas={feitas} /></div>}
+      {aba === 'equipa' && <div className="canvas cheia"><EquipaAnalise /></div>}
 
       {aba === 'resumo' && (
         <div className="canvas cheia">

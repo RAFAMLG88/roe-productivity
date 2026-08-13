@@ -417,6 +417,17 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     return (data || []).map(daBD)
   }, [avisaErro])
 
+  // ── análise de EQUIPA: todas as tarefas concluídas de toda a gente ──
+  // Carregada on-demand (só ao abrir a aba Equipa) para não pesar no arranque.
+  // Espelho neutro: devolve as feitas do grupo com o ownerId, sem juízo por pessoa.
+  const feitasEquipa = useCallback(async () => {
+    const { data, error } = await supabase.from('tarefas').select('*')
+      .eq('estado', 'feita')
+      .order('feita_em', { ascending: false })
+    if (error) { avisaErro(error); return null }
+    return (data || []).map(daBD)
+  }, [avisaErro])
+
   const gravaAgua = useCallback((copos) => {
     if (!uid) return
     supabase.from('agua').upsert({ user_id: uid, dia: hojeStr(), ml: copos * 250 })
@@ -441,7 +452,7 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     tarefas, fila, eleitas, feitas, pronto,
     capturar, atualizar, eleger, paraFila, concluir, apagar,
     equipa, colegas, equipaPorId, delegadas, delegar,
-    presencas, setPresenca, tarefasDe,
+    presencas, setPresenca, tarefasDe, feitasEquipa,
     agenda, marcarExterno, apagarExterno,
     ultimaVisita, pedirNotificacoes,
     agua, addAgua, removeAgua,

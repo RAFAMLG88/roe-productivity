@@ -539,3 +539,45 @@
 .donut-min{font:600 11px var(--font-mono);color:var(--soft);flex:none;width:56px;text-align:right}
 .cruz-sep{height:1px;background:var(--line);margin:16px 0}
 @media (max-width:720px){.donut-box{flex-direction:column;gap:16px}}
+
+/* ═══════════════════════════════════════════════════════════════ */
+/* ═══ v42 · ANÁLISE DE EQUIPA (espelho neutro do grupo) ═══ */
+/* ═══════════════════════════════════════════════════════════════ */
+
+/* loading / vazio */
+.eq-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;font:500 13px var(--font-body);color:var(--soft)}
+.eq-spin{width:32px;height:32px;border:3px solid var(--cream-2);border-top-color:var(--gold-line);border-radius:50%;animation:eqspin .8s linear infinite}
+@keyframes eqspin{to{transform:rotate(360deg)}}
+.eq-vazio{padding:50px 24px;text-align:center;font:500 13px var(--font-body);color:var(--faint);max-width:460px;margin:0 auto;line-height:1.6}
+
+/* hero panorama */
+.eq-hero{background:linear-gradient(135deg,var(--ink),#3A352450);background:linear-gradient(135deg,#2A2618,#4A4230);border-radius:20px;padding:22px 26px;margin-bottom:16px;color:var(--cream)}
+.eq-hero-t{font:600 12px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mustard);margin-bottom:16px}
+.eq-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.eq-k-v{font:700 30px var(--font-display);line-height:1;color:#fff}
+.eq-k-l{font:600 9px var(--font-mono);text-transform:uppercase;letter-spacing:.04em;color:#C9BFA8;margin-top:6px}
+
+/* pulso do grupo */
+.eq-pulso{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.eq-p{text-align:center;padding:12px;background:var(--cream-2);border-radius:12px}
+.eq-p-v{font:700 22px var(--font-display);line-height:1}
+.eq-p-l{font:600 9px var(--font-mono);text-transform:uppercase;color:var(--soft);margin-top:5px}
+.eq-p-d{font:600 9px var(--font-mono);margin-top:7px;padding:2px 6px;border-radius:99px;display:inline-block}
+.eq-p-d.up{background:var(--forest-soft);color:var(--forest-ink)}
+.eq-p-d.dn{background:var(--red-soft);color:var(--red-ink)}
+
+/* equilíbrio de carga */
+.eq-bal{display:flex;align-items:center;gap:28px}
+.eq-bal-gauge{flex:1}
+.eq-bal-v{font:700 44px var(--font-display);line-height:1}
+.eq-bal-l{font:600 11px var(--font-body);color:var(--soft);margin:6px 0 12px}
+.eq-bal-track{height:12px;background:var(--cream-2);border-radius:99px;overflow:hidden}
+.eq-bal-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.2,.9,.3,1)}
+.eq-bal-info{flex:none;width:220px;display:flex;flex-direction:column;gap:9px}
+.eq-bal-row{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.eq-bal-row:last-child{border-bottom:0}
+.eq-bal-k{font:600 11px var(--font-body);color:var(--soft)}
+.eq-bal-x{font:700 14px var(--font-display);color:var(--ink)}
+.eq-nota-neutra{margin-top:16px;padding:11px 14px;background:var(--cream-2);border-radius:10px;font:500 11px var(--font-body);color:var(--soft);font-style:italic;text-align:center}
+
+@media (max-width:900px){.eq-kpis{grid-template-columns:1fr 1fr}.eq-pulso{grid-template-columns:1fr}.eq-bal{flex-direction:column;gap:18px}.eq-bal-info{width:100%}}

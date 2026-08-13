@@ -393,3 +393,80 @@ export function historico(feitas) {
 
   return { anos, anoAtual }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// 13 · ANÁLISE DE EQUIPA (espelho neutro do grupo, sem expor pessoas)
+// ═══════════════════════════════════════════════════════════════
+
+// número de pessoas distintas que concluíram algo (para médias por pessoa)
+function nPessoas(feitas) {
+  const ids = new Set()
+  feitas.forEach((t) => { if (t.ownerId) ids.add(t.ownerId) })
+  return ids.size || 1
+}
+
+// panorama do grupo: volume, médias por pessoa, sem nomes
+export function equipaPanorama(feitas) {
+  const nP = nPessoas(feitas)
+  const min = feitas.reduce((s, t) => s + tempoDe(t), 0)
+  const ct = comTempo(feitas)
+  const mediaTarefa = ct.length ? min / ct.length : 0
+  return {
+    nPessoas: nP,
+    totalTarefas: feitas.length,
+    totalMin: min,
+    mediaTarefa,
+    tarefasPorPessoa: feitas.length / nP,
+    minPorPessoa: min / nP,
+  }
+}
+
+// pulso semanal do grupo: esta semana vs. anterior (agregado, neutro)
+export function equipaPulso(feitas) {
+  const t = tendenciaSemanal(feitas) // reutiliza o motor; agrega tudo
+  return {
+    foco: t.foco,
+    tarefas: t.tarefas,
+    reativo: t.reativo,
+    nSemanas: t.nSemanas,
+  }
+}
+
+// carga distribuída: como o volume do grupo se reparte por natureza-mãe e por tipo
+// (é o "no que a equipa gasta o tempo", não quem)
+export function equipaCarga(feitas) {
+  return {
+    porNatureza: porCategoria(feitas),
+    porTipo: tempoPorTag(feitas),
+    reativo: trabalhoReativo(feitas),
+  }
+}
+
+// saúde coletiva: consistência do grupo (dias com atividade de alguém) + precisão média
+export function equipaSaude(feitas) {
+  const consist = consistencia(feitas, 14) // dias em que o GRUPO teve atividade
+  const pvr = planeadoVsReal(feitas)
+  const prio = porPrioridade(feitas)
+  return { consist, pvr, prio }
+}
+
+// distribuição do esforço SEM nomes: quantas pessoas em cada faixa de volume.
+// Dá noção de equilíbrio (todos a puxar?) sem apontar a ninguém.
+export function equipaEquilibrio(feitas) {
+  const porPessoa = {}
+  feitas.forEach((t) => {
+    if (!t.ownerId) return
+    if (!porPessoa[t.ownerId]) porPessoa[t.ownerId] = 0
+    porPessoa[t.ownerId] += tempoDe(t)
+  })
+  const volumes = Object.values(porPessoa).sort((a, b) => a - b)
+  if (!volumes.length) return null
+  const total = volumes.reduce((s, v) => s + v, 0)
+  const media = total / volumes.length
+  const max = volumes[volumes.length - 1]
+  const min = volumes[0]
+  // índice de equilíbrio: 100 = perfeitamente igual; desce com a dispersão
+  const desvioMedio = volumes.reduce((s, v) => s + Math.abs(v - media), 0) / volumes.length
+  const equilibrio = media > 0 ? Math.max(0, 100 - (desvioMedio / media * 100)) : 100
+  return { nPessoas: volumes.length, media, max, min, equilibrio, total }
+}

@@ -107,6 +107,31 @@ try {
   if (hHv.length <= 50) falhas++
 } catch (e) { console.log('✗ motor/Historico FALHOU:', e.message); falhas++ }
 
+// 3c) v42: motor de EQUIPA + render do ecrã (multi-pessoa)
+try {
+  const A = await import('./src/lib/analytics.js')
+  const DIA = 864e5
+  const eqFeitas = []
+  ;['ana', 'pedro', 'luara'].forEach((p, pi) => {
+    for (let i = 0; i < 6 + pi * 3; i++) {
+      const d = new Date(Date.now() - i * 2 * DIA); d.setHours(9 + (i % 8), 0, 0, 0)
+      eqFeitas.push({ id: p + i, ownerId: p, texto: 'T', feitaEm: d.getTime(), criadaEm: d.getTime() - 36e5,
+        min: 30 + (i % 4) * 15, realMin: 25 + (i % 5) * 12, prioridade: i % 5 === 0 ? 'urgente' : 'normal',
+        tags: [['orc_cliente', 'alteracoes', 'apoio_tec'][i % 3]], obra: ['vendida', 'orcamentar', null][i % 3] })
+    }
+  })
+  const ck = {
+    panorama: A.equipaPanorama(eqFeitas).nPessoas === 3,
+    pulso: A.equipaPulso(eqFeitas).nSemanas > 0,
+    carga: A.equipaCarga(eqFeitas).porNatureza.length === 3,
+    saude: A.equipaSaude(eqFeitas).consist.cels.length === 14,
+    equilibrio: A.equipaEquilibrio(eqFeitas) != null && A.equipaEquilibrio(eqFeitas).nPessoas === 3,
+  }
+  const mausEq = Object.entries(ck).filter(([, v]) => !v).map(([k]) => k)
+  if (mausEq.length) { console.log('✗ motor equipa FALHOU em:', mausEq.join(', ')); falhas++ }
+  else console.log(`✓ motor equipa · ${Object.keys(ck).length} funções OK`)
+} catch (e) { console.log('✗ motor equipa FALHOU:', e.message); falhas++ }
+
 // 4) Entrada (fora do provider — é o ecrã de login)
 try {
   const Entrada = (await import('./src/screens/Entrada.jsx')).default
