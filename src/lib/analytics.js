@@ -129,7 +129,7 @@ export function precisaoPorTag(feitas) {
   })
   return Object.entries(acc)
     .map(([key, x]) => ({ key, desvioMedio: x.n ? x.soma / x.n * 100 : 0, n: x.n }))
-    .filter((x) => x.n >= 2)
+    .filter((x) => x.n >= 1)
     .sort((a, b) => Math.abs(b.desvioMedio) - Math.abs(a.desvioMedio))
 }
 
@@ -148,7 +148,7 @@ export function delegacaoPorTag(feitas, meuId) {
   })
   return Object.entries(acc)
     .map(([key, x]) => ({ key, pct: x.total ? x.deleg / x.total * 100 : 0, n: x.total }))
-    .filter((x) => x.n >= 2)
+    .filter((x) => x.n >= 1)
     .sort((a, b) => b.pct - a.pct)
 }
 

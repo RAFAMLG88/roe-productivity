@@ -1,12 +1,12 @@
 // ── ROE: componentes visuais reutilizáveis das Análises ──
 // Harmonia de números: barra + % = tempo total (absoluto); selo ⏱ = média por tarefa.
 import React from 'react'
-import { TAG_POR_KEY } from '../lib/tags.js'
+import { TAG_POR_KEY, metaTag } from '../lib/tags.js'
 import { corTag } from '../lib/categorias.js'
 import { fmtDur, KEY_SCAT } from '../lib/analytics.js'
 
-const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
-const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌'))
+const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (metaTag(k) ? metaTag(k).lab : k))
+const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (metaTag(k) ? metaTag(k).ic : '📌'))
 
 // legenda-chave da leitura dupla (barra vs. selo)
 export function LegendaChave({ comMarca }) {
@@ -143,6 +143,67 @@ export function DonutNaturezas({ fatias, titulo }) {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// donut compacto da repartição INTERNA de uma natureza (as suas tags).
+// Usado no cruzamento: um destes por natureza-mãe.
+function DonutInterno({ nat }) {
+  const R = 15.9155, C = 2 * Math.PI * R
+  if (!nat.n) {
+    return (
+      <div className="dci vazio">
+        <div className="dci-head"><span className={'cruz-badge ' + nat.key}>{nat.lab}</span></div>
+        <div className="dci-vazio">sem dados ainda</div>
+      </div>
+    )
+  }
+  const tags = nat.tags.filter((t) => t.pctCat >= 1)
+  let offset = 0
+  const arcos = tags.map((t) => {
+    const frac = t.pctCat / 100
+    const dash = frac * C
+    const a = { ...t, dash, gap: C - dash, dashOffset: -offset * C }
+    offset += frac
+    return a
+  })
+  return (
+    <div className="dci">
+      <div className="dci-head">
+        <span className={'cruz-badge ' + nat.key}>{nat.lab}</span>
+        <span className="dci-tot"><b>{fmtDur(nat.totalMin)}</b> · <span className="clock">⏱</span>{fmtDur(nat.media)}</span>
+      </div>
+      <div className="dci-body">
+        <div className="dci-svg-wrap">
+          <svg viewBox="0 0 42 42" className="dci-svg">
+            <circle cx="21" cy="21" r={R} fill="none" stroke="var(--cream-2)" strokeWidth="6" />
+            {arcos.map((a) => (
+              <circle key={a.key} cx="21" cy="21" r={R} fill="none" stroke={corTag(a.key)} strokeWidth="6"
+                strokeDasharray={`${a.dash} ${a.gap}`} strokeDashoffset={a.dashOffset}
+                transform="rotate(-90 21 21)" />
+            ))}
+          </svg>
+        </div>
+        <div className="dci-leg">
+          {arcos.map((a) => (
+            <div key={a.key} className="dci-li">
+              <span className="dci-dot" style={{ background: corTag(a.key) }} />
+              <span className="dci-nome">{labTag(a.key)}</span>
+              <span className="dci-pct">{Math.round(a.pctCat)}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// grelha dos donuts internos, um por natureza
+export function DonutCruzamento({ naturezas }) {
+  return (
+    <div className="dci-grid">
+      {naturezas.map((n) => <DonutInterno key={n.key} nat={n} />)}
     </div>
   )
 }

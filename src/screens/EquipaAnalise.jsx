@@ -119,7 +119,6 @@ export default function EquipaAnalise() {
               <div className="eq-bal-row"><span className="eq-bal-k">quem fez mais</span><span className="eq-bal-x">{fmtDur(equil.max)}</span></div>
             </div>
           </div>
-          <div className="eq-nota-neutra">Sem nomes, de propósito — isto mostra o equilíbrio do grupo, não compara pessoas.</div>
         </div>
       </div>
     </div>

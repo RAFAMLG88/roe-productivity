@@ -7,15 +7,15 @@ import {
   tempoPorTag, porCategoria, cruzamento, porPrioridade,
   precisaoPorTag, delegacaoPorTag, trabalhoReativo, fmtDur, KEY_SCAT,
 } from '../lib/analytics.js'
-import { TAG_POR_KEY } from '../lib/tags.js'
+import { TAG_POR_KEY, metaTag } from '../lib/tags.js'
 import { corTag, catCor, CATEGORIAS } from '../lib/categorias.js'
-import { LegendaChave, BarraTag, CartaoCategoria, LinhaCruzamento, LegendaTags, DonutNaturezas } from './analytics-ui.jsx'
+import { LegendaChave, BarraTag, CartaoCategoria, DonutNaturezas, DonutCruzamento } from './analytics-ui.jsx'
 import Observatorio from './Observatorio.jsx'
 import Historico from './Historico.jsx'
 import EquipaAnalise from './EquipaAnalise.jsx'
 
-const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].lab : k))
-const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (TAG_POR_KEY[k] ? TAG_POR_KEY[k].ic : '📌'))
+const labTag = (k) => (k === KEY_SCAT ? 'Por catalogar' : (metaTag(k) ? metaTag(k).lab : k))
+const icTag = (k) => (k === KEY_SCAT ? '🏷️' : (metaTag(k) ? metaTag(k).ic : '📌'))
 
 export default function Analise({ onNavigate }) {
   const { feitas, perfil } = useRoe()
@@ -35,7 +35,6 @@ export default function Analise({ onNavigate }) {
   const maxTagMin = porTag.length ? porTag[0].min : 1
   const maxCatMin = Math.max(...cats.map((c) => c.min), 1)
   const totalMin = feitas.reduce((s, t) => s + (t.realMin || t.min || 0), 0)
-  const chavesTags = [...new Set(cruz.flatMap((c) => c.tags.map((t) => t.key)))]
 
   if (!temDados) {
     return (
@@ -117,8 +116,7 @@ export default function Analise({ onNavigate }) {
               <div className="pt"><span className="pico" style={{ background: 'var(--violet)' }}>🔀</span>Repartição por tipo, dentro de cada natureza</div>
               <DonutNaturezas fatias={cats} />
               <div className="cruz-sep" />
-              {cruz.map((c) => <LinhaCruzamento key={c.key} c={c} />)}
-              <LegendaTags chaves={chavesTags} />
+              <DonutCruzamento naturezas={cruz} />
             </div>
           </div>
 
@@ -131,7 +129,7 @@ export default function Analise({ onNavigate }) {
               {precisao.slice(0, 6).map((p) => {
                 const cor = corTag(p.key)
                 const dm = Math.round(p.desvioMedio)
-                const txt = Math.abs(dm) <= 5 ? 'no ponto · ±' + Math.abs(dm) + '%' : (dm > 0 ? 'subestimas +' + dm + '%' : 'sobrestimas ' + dm + '%')
+                const txt = Math.abs(dm) <= 5 ? 'no ponto · ±' + Math.abs(dm) + '%' : (dm > 0 ? 'demora +' + dm + '% do previsto' : 'mais rápido −' + Math.abs(dm) + '%')
                 const larg = Math.min(100, Math.abs(dm) * 2 + 20)
                 return (
                   <div key={p.key} className="tagbar">
