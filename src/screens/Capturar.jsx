@@ -221,8 +221,11 @@ export default function Capturar() {
   const fileRef = useRef(null)
   const [pendentes, setPendentes] = useState([])  // {texto, ol} à espera de catalogação
   const despacharOl = (ol) => {
-    if (!perfil) return
-    supabase.from('outlook_despachados')
+    if (!perfil) return Promise.resolve()
+    // devolve a promise: quem chama pode esperar pela escrita real antes de
+    // dar o email como "despachado" — sem isto, um refresh rápido a seguir
+    // podia apanhar o marcador ainda por atualizar e o email reaparecia
+    return supabase.from('outlook_despachados')
       .upsert({ user_id: perfil.id, email_id: ol.id, recebido_em: ol.recebido })
       .then(({ error }) => { if (error) console.warn('[ROE outlook] despacho:', error.message) })
   }
@@ -231,6 +234,10 @@ export default function Capturar() {
   }
 
   const lista = fila.filter((t) => !escondidas.has(t.id)) // v33: fora as que estão na janela de desfazer
+  const [buscaFila, setBuscaFila] = useState('')
+  const filaFiltrada = buscaFila.trim()
+    ? lista.filter((c) => c.texto.toLowerCase().includes(buscaFila.trim().toLowerCase()))
+    : lista
   const showToast = (msg) => {
     setToast(msg); clearTimeout(toastT.current)
     toastT.current = setTimeout(() => setToast(''), 3000)
@@ -245,18 +252,21 @@ export default function Capturar() {
     }
   }, [pendentes])
 
-  const fazerCaptura = () => {
+  const fazerCaptura = async () => {
     const txt = texto.trim()
     if (!txt) return
     const destino = para !== 'eu' ? equipaPorId[para] : null
     const orig = pendentes.length > 0 ? pendentes[0].origemEm : null
-    const ehFicheiro = pendentes.length > 0
-    capturar({ texto: txt, tipo: ehFicheiro ? 'ficheiro' : (tags[0] || 'outros'), tags: ehFicheiro ? [] : tags, min, prioridade: pri, obra: obra || undefined, para: destino ? destino.id : undefined, origemEm: orig || undefined })
+    const veioDePendentes = pendentes.length > 0 // email do Outlook OU ficheiro carregado
+    const semTagsEscolhidas = tags.length === 0
+    // as tags escolhidas pelo utilizador NUNCA são descartadas — 'ficheiro' é só
+    // o rótulo de reserva para quando não se escolheu nenhuma tag de tipo
+    capturar({ texto: txt, tipo: semTagsEscolhidas ? (veioDePendentes ? 'ficheiro' : 'outros') : tags[0], tags, min, prioridade: pri, obra: obra || undefined, para: destino ? destino.id : undefined, origemEm: orig || undefined })
     if (destino) showToast('Delegada a ' + destino.nome.split(' ')[0] + ' \u2713 \u2014 j\u00e1 est\u00e1 na fila dele')
     setTexto(''); setPri('normal'); setMin(15); setPara('eu'); setTags([]); setObra(null)
     if (pendentes.length > 0) {
       const p0 = pendentes[0]
-      if (p0 && p0.ol) despacharOl(p0.ol) // capturado → o marcador Outlook avança
+      if (p0 && p0.ol) await despacharOl(p0.ol) // capturado → só avança o marcador Outlook depois de confirmado
       const resto = pendentes.slice(1)
       setPendentes(resto)
       showToast(resto.length > 0 ? `Capturado ✓ · falta${resto.length > 1 ? 'm' : ''} ${resto.length} email${resto.length > 1 ? 's' : ''}` : 'Capturado ✓')
@@ -331,7 +341,7 @@ export default function Capturar() {
                   <div className="ep-t">Email lido — cataloga e captura{pendentes[0] && pendentes[0].origemEm ? ' · chegou ' + new Date(pendentes[0].origemEm).toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</div>
                   <div className="ep-s">{pendentes.length > 1 ? `${pendentes.length - 1} outro${pendentes.length > 2 ? 's' : ''} em espera` : ''}</div>
                 </div>
-                <button className="ep-x" title="Descartar este email" onClick={() => { const p0 = pendentes[0]; if (p0 && p0.ol) despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
+                <button className="ep-x" title="Descartar este email" onClick={async () => { const p0 = pendentes[0]; if (p0 && p0.ol) await despacharOl(p0.ol); setPendentes((p) => p.slice(1)) }}>✕</button>
               </div>
             ) : (
               <div className="cap-sec-lab primeiro">nova tarefa</div>
@@ -420,6 +430,13 @@ export default function Capturar() {
 
         <div className="col cap-col">
           <div className="group-lab">Na fila{feitas.length > 0 && ` · ${feitas.length} concluída${feitas.length > 1 ? 's' : ''}`}</div>
+          {lista.length > 0 && (
+            <div className="busca-fila">
+              <span className="bf-ic">🔍</span>
+              <input className="bf-in" type="text" placeholder="Pesquisar na fila…" value={buscaFila} onChange={(ev) => setBuscaFila(ev.target.value)} />
+              {buscaFila && <button className="bf-x" title="limpar" onClick={() => setBuscaFila('')}>✕</button>}
+            </div>
+          )}
           <div id="list">
             {lista.length === 0 ? (
               <div className="empty-cap">
@@ -427,7 +444,13 @@ export default function Capturar() {
                 <div className="empty-t">Ainda não capturaste nada.</div>
                 <div className="empty-s">Tria um email do Outlook ou escreve à esquerda.</div>
               </div>
-            ) : lista.map((c) => {
+            ) : filaFiltrada.length === 0 ? (
+              <div className="empty-cap">
+                <div className="empty-ic">🔍</div>
+                <div className="empty-t">Nada encontrado para «{buscaFila}».</div>
+                <div className="empty-s">Tenta outra palavra, ou limpa a pesquisa.</div>
+              </div>
+            ) : filaFiltrada.map((c) => {
               const isFile = c.tipo === 'ficheiro'
               const cTags = tagsDe(c) // v34: array (novo) ou [tipo] (antigo)
               const primeira = cTags[0] ? metaTag(cTags[0]) : null
@@ -442,7 +465,7 @@ export default function Capturar() {
                       <div className="a">{c.texto}</div>
                       <div className="tags">
                         <button className={`tg pri ${p}`} title="Mudar prioridade" onClick={() => ciclarPri(c)}>{PRI_ICON[p]} {PRI_LABEL[p]}</button>
-                        {isFile && <span className="tg src-ficheiro">email</span>}
+                        {(c.origemEm || isFile) && <span className="tg src-ficheiro">📧 email</span>}
                         {!isFile && cTags.map((k) => (
                           <span key={k} className={`tg ${metaTag(k) ? 'tag-b-' + metaTag(k).cls : 'src-ideia'}`}>
                             {metaTag(k) ? metaTag(k).lab : k}

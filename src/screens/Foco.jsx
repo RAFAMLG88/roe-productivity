@@ -308,16 +308,21 @@ function EquipaAgora({ colegas, presencas, tarefasDe, agenda }) {
 }
 
 export default function Foco({ onNavigate }) {
-  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor, colegas, presencas, setPresenca, tarefasDe, agenda } = useRoe()
+  const { eleitas, concluir, atualizar, agua, addAgua, removeAgua, intencao, media, setMediaUrl, mediaTitle, setMediaTitulo, setPlayerAnchor, colegas, presencas, setPresenca, tarefasDe, agenda, focoAtiva, setFocoAtiva } = useRoe()
 
-  const [taskId, setTaskId] = useState(null)
+  // ── estado do cronómetro elevado ao CONTEXTO (não local ao ecrã) ──
+  // Isto sobrevive a navegar para outro ecrã e voltar — o Foco desmonta por completo
+  // ao trocar de aba, por isso qualquer useState aqui perdia-se. O progresso de tarefas
+  // que ficam pausadas ao trocar de foco guarda-se em `progresso` (mapa por id).
+  const fa = focoAtiva || { atual: null, running: false, secs: 0, total: 0, esgotado: false, anchorSecs: 0, anchorAt: 0, progresso: {} }
+  const taskId = fa.atual
   const task = eleitas.find((t) => t.id === taskId) || null
-  const [secs, setSecs] = useState(0)
-  const [esgotado, setEsgotado] = useState(false)
-  const [total, setTotal] = useState(0)
-  const [running, setRunning] = useState(false)
+  const secs = fa.secs
+  const esgotado = fa.esgotado
+  const total = fa.total
+  const running = fa.running
 
-  useEffect(() => { if (taskId && !eleitas.find((t) => t.id === taskId)) { setTaskId(null); setRunning(false); setSecs(0); setTotal(0) } }, [eleitas, taskId])
+  useEffect(() => { if (taskId && !eleitas.find((t) => t.id === taskId)) { setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, secs: 0, total: 0, esgotado: false })) } }, [eleitas, taskId])
 
   const frac = total > 0 ? secs / total : 1
   const col = frac > 0.5 ? C.much : frac > 0.2 ? C.half : C.low
@@ -326,12 +331,36 @@ export default function Foco({ onNavigate }) {
 
   useEffect(() => {
     if (!running) return
-    const t = setInterval(() => setSecs((s) => {
-      if (s === 1) { setEsgotado(true); setTimeout(() => playChime(), 50) }
-      return s > 0 ? s - 1 : s
-    }), 1000)
-    return () => clearInterval(t)
-  }, [running])
+    // ancorado no relógio real: a cada "tick" recalcula-se a partir do instante em
+    // que a contagem arrancou, em vez de simplesmente decrementar 1 por chamada.
+    // Assim, se o browser atrasar/pausar o setInterval (aba minimizada, ecrã bloqueado),
+    // ao regressar o tempo salta logo para o valor correto — não fica parado.
+    const tick = () => {
+      setFocoAtiva((p) => {
+        if (!p || !p.running) return p
+        const decorrido = Math.floor((Date.now() - p.anchorAt) / 1000)
+        const seguinte = Math.max(0, p.anchorSecs - decorrido)
+        if (seguinte === p.secs) return p
+        return { ...p, secs: seguinte, esgotado: seguinte === 0 ? true : p.esgotado }
+      })
+    }
+    tick() // corrige de imediato ao retomar/regressar
+    const t = setInterval(tick, 1000)
+    const aoFicarVisivel = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', aoFicarVisivel)
+    window.addEventListener('focus', aoFicarVisivel)
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', aoFicarVisivel); window.removeEventListener('focus', aoFicarVisivel) }
+  }, [running, taskId])
+
+  // o som de "esgotado" toca uma única vez, quando a contagem cruza o zero
+  const esgotadoTocadoRef = useRef(false)
+  useEffect(() => {
+    if (secs === 0 && running && task && !esgotadoTocadoRef.current) {
+      esgotadoTocadoRef.current = true
+      setTimeout(() => playChime(), 50)
+    }
+    if (secs > 0) esgotadoTocadoRef.current = false
+  }, [secs, running, task])
 
   // presença: publica só nas transições (iniciar/pausar/estender/concluir), nunca a cada segundo —
   // quem vê calcula o tempo localmente a partir de {restante, em}
@@ -344,7 +373,27 @@ export default function Foco({ onNavigate }) {
   }, [task?.id, running, total, setPresenca]) // total nas deps: +5/+15 min republicam o restante certo
   useEffect(() => () => setPresenca({ estado: 'livre', tarefa: null, min: null, restante: null }), [setPresenca])
 
-  const iniciar = (t) => { const m = t.min * 60; setTaskId(t.id); setSecs(m); setTotal(m); setRunning(true); setEsgotado(false) }
+  const iniciar = (t) => {
+    setFocoAtiva((p) => {
+      const prev = p || { progresso: {} }
+      const progresso = { ...(prev.progresso || {}) }
+      // guarda o progresso da tarefa que estava ativa, antes de trocar para esta
+      if (prev.atual && prev.atual !== t.id && prev.total > 0) progresso[prev.atual] = { secs: prev.secs, total: prev.total }
+      // se esta tarefa já tinha progresso guardado (foi pausada e trocada), retoma-o
+      const salvo = progresso[t.id]
+      if (salvo) delete progresso[t.id]
+      const novoSecs = salvo ? salvo.secs : t.min * 60
+      const novoTotal = salvo ? salvo.total : t.min * 60
+      return { atual: t.id, running: true, secs: novoSecs, total: novoTotal, esgotado: novoSecs === 0, anchorSecs: novoSecs, anchorAt: Date.now(), progresso }
+    })
+  }
+  const alternarRunning = () => {
+    setFocoAtiva((p) => {
+      if (!p) return p
+      const vaiCorrer = !p.running
+      return vaiCorrer ? { ...p, running: true, anchorSecs: p.secs, anchorAt: Date.now() } : { ...p, running: false }
+    })
+  }
   const concluirTask = () => {
     if (!task) return
     setCelebrate(true); setTimeout(spawnSparks, 30)
@@ -353,7 +402,8 @@ export default function Foco({ onNavigate }) {
     const texto = task.texto
     const realMin = Math.max(1, Math.round((total - secs) / 60)) // tempo efetivamente focado
     setTimeout(() => {
-      setCelebrate(false); concluir(id, realMin); setRunning(false); setSecs(0); setTotal(0); setEsgotado(false)
+      setCelebrate(false); concluir(id, realMin)
+      setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, secs: 0, total: 0, esgotado: false }))
       const tx = texto.length > 34 ? texto.slice(0, 33) + '…' : texto
       pedirUndo({ msg: `Concluída ✓ · «${tx}»`, onUndo: () => atualizar(id, { estado: 'eleita', feitaEm: null, realMin: null }) })
       if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
@@ -362,9 +412,12 @@ export default function Foco({ onNavigate }) {
   // 6) o previsto é uma estimativa — dá para esticar sem sair do foco
   const maisTempo = (m) => {
     if (!task) return
-    setSecs((x) => x + m * 60); setTotal((x) => x + m * 60)
+    setFocoAtiva((p) => {
+      if (!p) return p
+      const novoSecs = p.secs + m * 60
+      return { ...p, secs: novoSecs, total: p.total + m * 60, esgotado: false, anchorSecs: novoSecs, anchorAt: Date.now() }
+    })
     atualizar(task.id, { min: task.min + m })
-    setEsgotado(false)
   }
 
   const [dim, setDim] = useState(false)
@@ -558,12 +611,16 @@ export default function Foco({ onNavigate }) {
                 </div>
               ) : (
                 <div className="foco-list">
-                  {porFocar.map((t) => (
+                  {porFocar.map((t) => {
+                    const salvo = fa.progresso && fa.progresso[t.id]
+                    const restoTxt = salvo ? String(Math.floor(salvo.secs / 60)).padStart(2, '0') + ':' + String(salvo.secs % 60).padStart(2, '0') : null
+                    return (
                     <button key={t.id} className="foco-pick" onClick={() => iniciar(t)}>
-                      <div className="fp-body"><div className="fp-t">{t.texto}</div><div className="fp-s">~{t.min} min{t.importante ? ' · importante' : ''}</div></div>
+                      <div className="fp-body"><div className="fp-t">{t.texto}</div><div className="fp-s">{salvo ? '⏸ pausada · faltam ' + restoTxt : '~' + t.min + ' min' + (t.importante ? ' · importante' : '')}</div></div>
                       <span className="fp-go">▶</span>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -646,7 +703,7 @@ export default function Foco({ onNavigate }) {
           )}
           {task && (
             <div className="mid-cta">
-              <button className="cta ghost" onClick={() => setRunning((r) => !r)}>{running ? 'Pausar' : 'Retomar'}</button>
+              <button className="cta ghost" onClick={alternarRunning}>{running ? 'Pausar' : 'Retomar'}</button>
               <button className="cta primary" onClick={concluirTask}>Concluir ✓</button>
             </div>
           )}
@@ -763,7 +820,7 @@ export default function Foco({ onNavigate }) {
             <div className="tf-acts">
               <button className="tf-mais" onClick={() => maisTempo(5)}>＋5 min</button>
               <button className="tf-mais" onClick={() => maisTempo(15)}>＋15 min</button>
-              <button className="tf-ok" onClick={() => { setEsgotado(false); concluirTask() }}>Concluir ✓</button>
+              <button className="tf-ok" onClick={() => { setFocoAtiva((p) => ({ ...(p || {}), esgotado: false })); concluirTask() }}>Concluir ✓</button>
             </div>
           </div>
         </div>
@@ -783,7 +840,7 @@ export default function Foco({ onNavigate }) {
       )}
       {dim && (
         <div className="zen-actions">
-          <button className="za-btn" onClick={() => setRunning(false)}>⏸ pausar tarefa</button>
+          <button className="za-btn" onClick={alternarRunning}>⏸ pausar tarefa</button>
           <button className="za-btn" onClick={() => maisTempo(5)}>＋5 min</button>
           <button className="za-btn ok" onClick={concluirTask}>✓ concluir</button>
         </div>

@@ -55,6 +55,10 @@ export default function Briefing({ onNavigate }) {
   const delegadasFeitasDesde = ultimaVisita ? delegadas.filter((t) => t.estado === 'feita' && (t.feitaEm || 0) > ultimaVisita) : []
   const [permNotif, setPermNotif] = useState(() => (typeof Notification !== 'undefined' ? Notification.permission : 'default'))
   const [delegAberta, setDelegAberta] = useState(null) // tarefa da fila com o seletor de colega aberto
+  const [buscaEscritorio, setBuscaEscritorio] = useState('')
+  const filaVisivel = buscaEscritorio.trim()
+    ? fila.filter((q) => q.texto.toLowerCase().includes(buscaEscritorio.trim().toLowerCase()))
+    : fila
   const now = new Date()
   const week = useMemo(() => semanaUtil(now), [])
   const [showSunrise, setShowSunrise] = useState(false)
@@ -363,13 +367,24 @@ export default function Briefing({ onNavigate }) {
 
           <div className="panel waiting enter" style={{ animationDelay: '.15s' }}>
             <div className="sepB"><span className="lab"><span className="dot" />na fila{fila.length > 0 && <span style={{ color: 'var(--soft)', fontWeight: 600 }}> · {fila.length}</span>}</span></div>
+            {fila.length > 0 && (
+              <div className="busca-fila">
+                <span className="bf-ic">🔍</span>
+                <input className="bf-in" type="text" placeholder="Pesquisar na fila…" value={buscaEscritorio} onChange={(ev) => setBuscaEscritorio(ev.target.value)} />
+                {buscaEscritorio && <button className="bf-x" title="limpar" onClick={() => setBuscaEscritorio('')}>✕</button>}
+              </div>
+            )}
             {fila.length === 0 ? (
               <div className="empty small">
                 <div className="empty-s">Nada em espera. O que capturares aparece aqui, pronto a eleger.</div>
               </div>
+            ) : filaVisivel.length === 0 ? (
+              <div className="empty small">
+                <div className="empty-s">Nada encontrado para «{buscaEscritorio}».</div>
+              </div>
             ) : (
               <div className="wait-list">
-                {fila.map((q) => {
+                {filaVisivel.map((q) => {
                   const m = metaCartao(q)
                   return (
                     <div key={q.id} className={`wt tp-${m.cls} ${delegAberta === q.id ? 'com-deleg' : ''} ${diasDesde(q.criadaEm) >= 3 ? 'antiga' : ''}`}>

@@ -2101,6 +2101,48 @@
   align-items: center;
   gap: 4px;
 }
+.briefing .busca-fila {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 13px;
+  margin-bottom: 12px;
+}
+.briefing .busca-fila:focus-within {
+  border-color: var(--sky);
+}
+.briefing .bf-ic {
+  font-size: 12px;
+  opacity: .6;
+  flex: none;
+}
+.briefing .bf-in {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: 500 12.5px var(--font-body);
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+}
+.briefing .bf-in::placeholder {
+  color: var(--faint);
+}
+.briefing .bf-x {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  color: var(--soft);
+  border: none;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
+}
 
 /* src/screens/Capturar.css */
 .capturar {
@@ -4281,6 +4323,48 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+.capturar .busca-fila {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 9px 13px;
+  margin-bottom: 12px;
+}
+.capturar .busca-fila:focus-within {
+  border-color: var(--sky);
+}
+.capturar .bf-ic {
+  font-size: 12px;
+  opacity: .6;
+  flex: none;
+}
+.capturar .bf-in {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: 500 12.5px var(--font-body);
+  color: var(--ink);
+  outline: none;
+  min-width: 0;
+}
+.capturar .bf-in::placeholder {
+  color: var(--faint);
+}
+.capturar .bf-x {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--cream-2);
+  color: var(--soft);
+  border: none;
+  font-size: 10px;
+  display: grid;
+  place-items: center;
 }
 
 /* src/screens/Foco.css */
