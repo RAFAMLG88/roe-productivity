@@ -314,36 +314,31 @@ export default function Foco({ onNavigate }) {
   // Isto sobrevive a navegar para outro ecrã e voltar — o Foco desmonta por completo
   // ao trocar de aba, por isso qualquer useState aqui perdia-se. O progresso de tarefas
   // que ficam pausadas ao trocar de foco guarda-se em `progresso` (mapa por id).
-  const fa = focoAtiva || { atual: null, running: false, secs: 0, total: 0, esgotado: false, anchorSecs: 0, anchorAt: 0, progresso: {} }
+  const fa = focoAtiva || { atual: null, running: false, total: 0, anchorSecs: 0, anchorAt: 0, progresso: {} }
   const taskId = fa.atual
   const task = eleitas.find((t) => t.id === taskId) || null
-  const secs = fa.secs
-  const esgotado = fa.esgotado
+  // 'secs' NUNCA se guarda por si — deriva-se sempre da âncora (anchorSecs/anchorAt),
+  // running ou pausada. Isto é o que torna o valor sempre correto ao abrir a app de
+  // novo (reload, logout/login), sem depender de um número que podia ter ficado velho.
+  const secs = fa.running ? Math.max(0, fa.anchorSecs - Math.floor((Date.now() - fa.anchorAt) / 1000)) : fa.anchorSecs
+  const esgotado = secs === 0 && !!task
   const total = fa.total
   const running = fa.running
 
-  useEffect(() => { if (taskId && !eleitas.find((t) => t.id === taskId)) { setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, secs: 0, total: 0, esgotado: false })) } }, [eleitas, taskId])
+  useEffect(() => { if (taskId && !eleitas.find((t) => t.id === taskId)) { setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, total: 0 })) } }, [eleitas, taskId])
 
   const frac = total > 0 ? secs / total : 1
   const col = frac > 0.5 ? C.much : frac > 0.2 ? C.half : C.low
   const nowTxt = !task ? 'sem tarefa' : frac > 0.5 ? 'muito tempo' : frac > 0.2 ? 'a meio' : 'quase a acabar!'
   const timeCol = col === C.half ? '#B89400' : col === C.low ? '#D81030' : 'var(--ink)'
 
+  // o cronómetro no ecrã só precisa de "acordar" a cada segundo para o React voltar
+  // a calcular 'secs' (que é sempre derivado da âncora, nunca guardado) — por isso
+  // isto não mexe no focoAtiva/contexto, só força a nova renderização local.
+  const [, forcarTick] = useState(0)
   useEffect(() => {
     if (!running) return
-    // ancorado no relógio real: a cada "tick" recalcula-se a partir do instante em
-    // que a contagem arrancou, em vez de simplesmente decrementar 1 por chamada.
-    // Assim, se o browser atrasar/pausar o setInterval (aba minimizada, ecrã bloqueado),
-    // ao regressar o tempo salta logo para o valor correto — não fica parado.
-    const tick = () => {
-      setFocoAtiva((p) => {
-        if (!p || !p.running) return p
-        const decorrido = Math.floor((Date.now() - p.anchorAt) / 1000)
-        const seguinte = Math.max(0, p.anchorSecs - decorrido)
-        if (seguinte === p.secs) return p
-        return { ...p, secs: seguinte, esgotado: seguinte === 0 ? true : p.esgotado }
-      })
-    }
+    const tick = () => forcarTick((n) => n + 1)
     tick() // corrige de imediato ao retomar/regressar
     const t = setInterval(tick, 1000)
     const aoFicarVisivel = () => { if (document.visibilityState === 'visible') tick() }
@@ -377,21 +372,28 @@ export default function Foco({ onNavigate }) {
     setFocoAtiva((p) => {
       const prev = p || { progresso: {} }
       const progresso = { ...(prev.progresso || {}) }
-      // guarda o progresso da tarefa que estava ativa, antes de trocar para esta
-      if (prev.atual && prev.atual !== t.id && prev.total > 0) progresso[prev.atual] = { secs: prev.secs, total: prev.total }
+      // guarda o progresso da tarefa que estava ativa, antes de trocar para esta —
+      // "congela-a" no valor exato de agora, esteja a correr ou já pausada
+      if (prev.atual && prev.atual !== t.id && prev.total > 0) {
+        const congelado = prev.running ? Math.max(0, prev.anchorSecs - Math.floor((Date.now() - prev.anchorAt) / 1000)) : prev.anchorSecs
+        progresso[prev.atual] = { anchorSecs: congelado, total: prev.total }
+      }
       // se esta tarefa já tinha progresso guardado (foi pausada e trocada), retoma-o
       const salvo = progresso[t.id]
       if (salvo) delete progresso[t.id]
-      const novoSecs = salvo ? salvo.secs : t.min * 60
+      const novoSecs = salvo ? salvo.anchorSecs : t.min * 60
       const novoTotal = salvo ? salvo.total : t.min * 60
-      return { atual: t.id, running: true, secs: novoSecs, total: novoTotal, esgotado: novoSecs === 0, anchorSecs: novoSecs, anchorAt: Date.now(), progresso }
+      return { atual: t.id, running: true, total: novoTotal, anchorSecs: novoSecs, anchorAt: Date.now(), progresso }
     })
   }
   const alternarRunning = () => {
     setFocoAtiva((p) => {
       if (!p) return p
       const vaiCorrer = !p.running
-      return vaiCorrer ? { ...p, running: true, anchorSecs: p.secs, anchorAt: Date.now() } : { ...p, running: false }
+      // tanto a pausar como a retomar: a âncora congela/reinicia SEMPRE no valor
+      // atual — é isto que faz o tempo restante sobreviver a um reload ou logout
+      const secsAtuais = p.running ? Math.max(0, p.anchorSecs - Math.floor((Date.now() - p.anchorAt) / 1000)) : p.anchorSecs
+      return { ...p, running: vaiCorrer, anchorSecs: secsAtuais, anchorAt: Date.now() }
     })
   }
   const concluirTask = () => {
@@ -403,7 +405,7 @@ export default function Foco({ onNavigate }) {
     const realMin = Math.max(1, Math.round((total - secs) / 60)) // tempo efetivamente focado
     setTimeout(() => {
       setCelebrate(false); concluir(id, realMin)
-      setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, secs: 0, total: 0, esgotado: false }))
+      setFocoAtiva((p) => ({ ...(p || {}), atual: null, running: false, total: 0 }))
       const tx = texto.length > 34 ? texto.slice(0, 33) + '…' : texto
       pedirUndo({ msg: `Concluída ✓ · «${tx}»`, onUndo: () => atualizar(id, { estado: 'eleita', feitaEm: null, realMin: null }) })
       if (onNavigate) onNavigate('cidade3d') // direto à cidade 3D: a grua ergue o edifício
@@ -414,8 +416,8 @@ export default function Foco({ onNavigate }) {
     if (!task) return
     setFocoAtiva((p) => {
       if (!p) return p
-      const novoSecs = p.secs + m * 60
-      return { ...p, secs: novoSecs, total: p.total + m * 60, esgotado: false, anchorSecs: novoSecs, anchorAt: Date.now() }
+      const secsAtuais = p.running ? Math.max(0, p.anchorSecs - Math.floor((Date.now() - p.anchorAt) / 1000)) : p.anchorSecs
+      return { ...p, total: p.total + m * 60, anchorSecs: secsAtuais + m * 60, anchorAt: Date.now() }
     })
     atualizar(task.id, { min: task.min + m })
   }
@@ -613,7 +615,7 @@ export default function Foco({ onNavigate }) {
                 <div className="foco-list">
                   {porFocar.map((t) => {
                     const salvo = fa.progresso && fa.progresso[t.id]
-                    const restoTxt = salvo ? String(Math.floor(salvo.secs / 60)).padStart(2, '0') + ':' + String(salvo.secs % 60).padStart(2, '0') : null
+                    const restoTxt = salvo ? String(Math.floor(salvo.anchorSecs / 60)).padStart(2, '0') + ':' + String(salvo.anchorSecs % 60).padStart(2, '0') : null
                     return (
                     <button key={t.id} className="foco-pick" onClick={() => iniciar(t)}>
                       <div className="fp-body"><div className="fp-t">{t.texto}</div><div className="fp-s">{salvo ? '⏸ pausada · faltam ' + restoTxt : '~' + t.min + ' min' + (t.importante ? ' · importante' : '')}</div></div>
@@ -820,7 +822,7 @@ export default function Foco({ onNavigate }) {
             <div className="tf-acts">
               <button className="tf-mais" onClick={() => maisTempo(5)}>＋5 min</button>
               <button className="tf-mais" onClick={() => maisTempo(15)}>＋15 min</button>
-              <button className="tf-ok" onClick={() => { setFocoAtiva((p) => ({ ...(p || {}), esgotado: false })); concluirTask() }}>Concluir ✓</button>
+              <button className="tf-ok" onClick={concluirTask}>Concluir ✓</button>
             </div>
           </div>
         </div>

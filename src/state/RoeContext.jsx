@@ -64,6 +64,8 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   const [playerAnchor, setPlayerAnchor] = useState(null)
   const [diaComecou, setDiaComecou] = useState(false)
   const [focoAtiva, setFocoAtiva] = useState(null)
+  const focoCarregadoRef = useRef(false) // só grava depois de ler o que já existia (senão apagava-o com null)
+  const ultimoFocoGravadoRef = useRef('')
   const [media, setMedia] = useState({ yt: '', sp: '', sc: '' })
   const [mediaTitle, setMediaTitle] = useState({ yt: '', sp: '', sc: '' })
   const setMediaUrl = useCallback((fonte, url) => setMedia((m) => ({ ...m, [fonte]: url })), [])
@@ -87,6 +89,9 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
   useEffect(() => {
     if (!uid) return
     let vivo = true
+    focoCarregadoRef.current = false // bloqueia gravações até ler o que já existe PARA ESTE utilizador
+    ultimoFocoGravadoRef.current = ''
+    setFocoAtiva(null) // limpa o eventual estado de uma sessão anterior, antes de ler a de agora
     const carregar = () => Promise.all([
       supabase.from('tarefas').select('*')
         .or('owner_id.eq.' + uid + ',criada_por.eq.' + uid + ',delegada_por.eq.' + uid)
@@ -94,13 +99,20 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
       supabase.from('profiles').select('id,nome,cor').order('criado_em', { ascending: true }),
       supabase.from('agua').select('ml').eq('user_id', uid).eq('dia', hojeStr()).maybeSingle(),
       supabase.from('agenda_externa').select('*').order('dia').order('inicio'),
-    ]).then(([t, p, a, g]) => {
+      supabase.from('foco_estado').select('estado').eq('user_id', uid).maybeSingle(),
+    ]).then(([t, p, a, g, f]) => {
       if (!vivo) return
       if (t.error) avisaErro(t.error)
       else setTarefas((t.data || []).map(daBD))
       if (!p.error) setEquipa(p.data || [])
       if (!a.error && a.data) setAgua(Math.min(8, Math.round((a.data.ml || 0) / 250)))
       if (!g.error) setAgenda((g.data || []).map(daAg))
+      if (!f.error && f.data && f.data.estado) {
+        const carregado = f.data.estado
+        setFocoAtiva(carregado)
+        ultimoFocoGravadoRef.current = JSON.stringify(carregado) // evita regravar o que acabou de ler
+      }
+      focoCarregadoRef.current = true
       setPronto(true)
     })
     recarregarRef.current = () => {
@@ -112,6 +124,25 @@ export function RoeProvider({ children, perfil = null, sair = null }) {
     carregar()
     return () => { vivo = false; recarregarRef.current = null }
   }, [uid, avisaErro])
+
+  // ── foco: persiste no Supabase para sobreviver a reload/logout ──
+  // Só grava o que muda por AÇÃO (trocar de tarefa, pausar/retomar, esticar tempo,
+  // concluir) — nunca o "secs" que desce sozinho a cada segundo, porque esse valor
+  // é sempre recalculado a partir de anchorAt/anchorSecs (âncora no relógio real),
+  // tanto no ecrã como aqui. Gravar a cada tick sobrecarregaria a base sem necessidade.
+  const focoParaGravar = focoAtiva ? {
+    atual: focoAtiva.atual, running: focoAtiva.running, total: focoAtiva.total,
+    anchorSecs: focoAtiva.anchorSecs, anchorAt: focoAtiva.anchorAt, progresso: focoAtiva.progresso,
+  } : null
+  const focoAssinatura = focoParaGravar ? JSON.stringify(focoParaGravar) : ''
+  useEffect(() => {
+    if (!uid || !focoCarregadoRef.current) return
+    if (focoAssinatura === ultimoFocoGravadoRef.current) return
+    ultimoFocoGravadoRef.current = focoAssinatura
+    supabase.from('foco_estado')
+      .upsert({ user_id: uid, estado: focoParaGravar, atualizado_em: new Date().toISOString() })
+      .then(({ error }) => { if (error) console.warn('[ROE foco] gravar estado:', error.message) })
+  }, [uid, focoAssinatura]) // eslint-disable-line
 
   // ── tempo real: tarefas delegadas a mim aparecem ao segundo; o estado
   //    das que deleguei atualiza-se quando o colega mexe nelas ──

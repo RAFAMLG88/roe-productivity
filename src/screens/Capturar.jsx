@@ -56,17 +56,20 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
       }
       const { data: desp } = await supabase.from('outlook_despachados').select('email_id').eq('user_id', uid)
       const feito = new Set((desp || []).map((d) => d.email_id))
-      // o marcador avança sobre o prefixo já despachado (e limpa o rasto)
+      // o marcador avança sobre o prefixo já despachado, reduzindo a janela pedida
+      // ao Graph — mas os registos em outlook_despachados NUNCA se apagam: são a
+      // rede de segurança definitiva contra reaparecimentos. Apagá-los era arriscado
+      // porque o marco, ao passar por Date/ISOString, perde a precisão de sub-milissegundo
+      // que o Graph usa — um email cujo registo fosse podado podia "passar" outra vez
+      // no filtro `gt marco` por causa desse arredondamento, e reaparecer como novo.
       let novoMarco = null
-      const podados = []
       for (const e of res.emails) {
-        if (feito.has(e.id)) { novoMarco = e.recebido; podados.push(e.id) } else break
+        if (feito.has(e.id)) { novoMarco = e.recebido } else break
       }
       if (novoMarco) {
         await supabase.from('outlook_marco').update({ marco: novoMarco }).eq('user_id', uid)
-        await supabase.from('outlook_despachados').delete().eq('user_id', uid).in('email_id', podados)
       }
-      setLista(res.emails.filter((e) => !feito.has(e.id)))
+      setLista(res.emails.filter((e) => !feito.has(e.id) && !pendentes.some((p) => p.ol && p.ol.id === e.id)))
     } catch (e) { setErro('Algo falhou na sincronização.'); console.warn('[ROE outlook]', e) }
     setBusy(false)
   }

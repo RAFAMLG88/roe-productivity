@@ -4,7 +4,11 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 
 const CLIENT_ID = '474130a7-bc8c-40a3-b520-dc468654a04c'
-const SCOPES = ['Mail.Read']
+// 'offline_access' é o que permite um TOKEN DE ATUALIZAÇÃO duradouro — sem ele, a
+// Microsoft só dá um token válido para a sessão atual do browser, e ao fechar e
+// reabrir a app pede sempre novo login. Com ele, acquireTokenSilent() continua a
+// funcionar em aberturas futuras sem qualquer interação, enquanto a sessão não expirar.
+const SCOPES = ['Mail.Read', 'offline_access']
 
 let _msalPromise = null
 function getMsal() {
@@ -19,7 +23,7 @@ function getMsal() {
           authority: 'https://login.microsoftonline.com/common',
           redirectUri: window.location.origin,
         },
-        cache: { cacheLocation: 'localStorage' },
+        cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true },
       })
       await m.initialize()
       try { await m.handleRedirectPromise() } catch (e) { console.warn('[ROE outlook] regresso:', e) }
