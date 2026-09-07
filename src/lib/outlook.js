@@ -81,9 +81,15 @@ export async function outlookEmailsDesde(marcoISO) {
   const base = 'https://graph.microsoft.com/v1.0/me/mailFolders/'
   const q = '/messages?$filter=' + filtro + '&$orderby=receivedDateTime asc&$top=50&' + sel
   const pastas = ['inbox', 'junkemail']
-  const respostas = await Promise.all(pastas.map((pasta) =>
-    fetch(base + pasta + q, { headers: { Authorization: 'Bearer ' + tk } })
-  ))
+  let respostas
+  try {
+    respostas = await Promise.all(pastas.map((pasta) =>
+      fetch(base + pasta + q, { headers: { Authorization: 'Bearer ' + tk } })
+    ))
+  } catch (e) {
+    console.warn('[ROE outlook] falha de rede a contactar o Graph:', e)
+    return { erro: 'rede' }
+  }
   if (!respostas[0].ok) return { erro: 'graph-' + respostas[0].status }
   const corpos = await Promise.all(respostas.map((r) => r.ok ? r.json() : { value: [] }))
   const vistos = new Set()

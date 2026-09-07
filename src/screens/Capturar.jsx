@@ -45,7 +45,8 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
     if (!uid) return
     setBusy(true); setErro('')
     try {
-      const { data: mrow } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
+      const { data: mrow, error: errMarco } = await supabase.from('outlook_marco').select('marco').eq('user_id', uid).maybeSingle()
+      if (errMarco) throw new Error('outlook_marco (ler): ' + errMarco.message)
       if (!mrow) { setTemMarco(false); setBusy(false); return }
       setTemMarco(true); setMarcoInfo(mrow.marco)
       const res = await outlookEmailsDesde(mrow.marco)
@@ -54,7 +55,8 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
         setErro(res.erro === 'sessao' ? 'A sessão Microsoft expirou — religa o Outlook.' : 'O Outlook não respondeu (' + res.erro + ') — tenta atualizar.')
         setBusy(false); return
       }
-      const { data: desp } = await supabase.from('outlook_despachados').select('email_id').eq('user_id', uid)
+      const { data: desp, error: errDesp } = await supabase.from('outlook_despachados').select('email_id').eq('user_id', uid)
+      if (errDesp) throw new Error('outlook_despachados (ler): ' + errDesp.message)
       const feito = new Set((desp || []).map((d) => d.email_id))
       // o marcador avança sobre o prefixo já despachado, reduzindo a janela pedida
       // ao Graph — mas os registos em outlook_despachados NUNCA se apagam: são a
@@ -67,10 +69,15 @@ function OutlookCard({ perfil, aoCatalogar, despacharOl, onFicheiro }) {
         if (feito.has(e.id)) { novoMarco = e.recebido } else break
       }
       if (novoMarco) {
-        await supabase.from('outlook_marco').update({ marco: novoMarco }).eq('user_id', uid)
+        const { error: errUpd } = await supabase.from('outlook_marco').update({ marco: novoMarco }).eq('user_id', uid)
+        if (errUpd) throw new Error('outlook_marco (avançar): ' + errUpd.message)
       }
       setLista(res.emails.filter((e) => !feito.has(e.id) && !pendentes.some((p) => p.ol && p.ol.id === e.id)))
-    } catch (e) { setErro('Algo falhou na sincronização.'); console.warn('[ROE outlook]', e) }
+    } catch (e) {
+      const msg = (e && e.message) ? e.message : String(e)
+      setErro('Algo falhou na sincronização — ' + msg)
+      console.warn('[ROE outlook] sync:', e)
+    }
     setBusy(false)
   }
 
